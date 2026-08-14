@@ -143,12 +143,13 @@ Room 12
    │ Unknown door
    │
    ?
+```
 
 
 
 ## 5. Connection State
 
-Connections should support lightweight states such as:
+### Connections should support lightweight states such as:
 
 Open
 Closed
