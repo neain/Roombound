@@ -123,6 +123,24 @@ mapElement.addEventListener(
 );
 
 mapElement.addEventListener(
+    "click",
+    (event) => {
+        if (event.target !== mapElement && event.target !== mapWorld) {
+            return;
+        }
+
+        const editor =
+            document.querySelector(".room-editor");
+
+        if (!editor) {
+            return;
+        }
+
+        editor.querySelector(".room-editor-cancel").click();
+    }
+);
+
+mapElement.addEventListener(
     "wheel",
     (event) => {
         if (!event.ctrlKey) {

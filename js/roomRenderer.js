@@ -4,13 +4,14 @@ import { GRID_SIZE, gridToPixels, gridToWorldPixels, pixelsToGrid } from "./mapU
 // Connection rendering and connection geometry: renderConnections() and related helpers.
 import { renderConnections } from "./connectionRenderer.js";
 
-const hoverExceptions = ["roomID", "connections", "position", "size"];
+const hoverExceptions = ["roomID", "connections", "position", "size", "editorSize"];
 const readOnlyRoomProperties = ["name", "floor"];
 const roomTooltip = document.createElement("div");
 
 let selectedRoom = null;
 let roomEditor = null;
 let editorContent = null;
+let editorPosition = null;
 
 export function renderRooms(map, mapElement, connectionLayer, zoom = 1) {
     if (!roomTooltip.parentElement) {
@@ -179,6 +180,57 @@ function getRoomHoverInfo(room) {
         .join("\n");
 }
 
+function saveRoomEditor() {
+
+    const inputs =
+        editorContent.querySelectorAll("input");
+
+    const textarea =
+        editorContent.querySelector("textarea");
+
+    for (const input of inputs) {
+
+        const key =
+            input.previousElementSibling.textContent
+                .replace(": ", "");
+
+        selectedRoom[key] = input.value;
+    }
+
+    selectedRoom.notes = textarea.value;
+
+    selectedRoom.editorSize = {
+        width: roomEditor.offsetWidth,
+        height: roomEditor.offsetHeight
+    };
+
+    editorPosition = {
+        x: roomEditor.offsetLeft,
+        y: roomEditor.offsetTop
+    };
+
+
+    const roomElement =
+        document.querySelector(
+            `.room[data-room-id="${selectedRoom.roomID}"]`
+        );
+
+    if (roomElement) {
+        roomElement.textContent = selectedRoom.name;
+    }
+
+
+    closeRoomEditor();
+}
+
+function closeRoomEditor() {
+    roomEditor.remove();
+
+    roomEditor = null;
+    editorContent = null;
+    selectedRoom = null;
+}
+
 function selectRoom(room) {
     
     selectedRoom = room;
@@ -187,9 +239,26 @@ function selectRoom(room) {
         roomEditor = document.createElement("div");
         roomEditor.classList.add("room-editor");
 
+        roomEditor.style.width =
+            `${room.editorSize.width}px`;
+
+        roomEditor.style.height =
+            `${room.editorSize.height}px`;
+
         const editorHeader = document.createElement("div");
         editorHeader.classList.add("room-editor-header");
+
+        const editorTitle = document.createElement("span");
         editorHeader.textContent = "Room Editor";
+
+        const closeButton = document.createElement("button");
+        closeButton.textContent = "×";
+        closeButton.classList.add("room-editor-close");
+
+        closeButton.addEventListener("click", closeRoomEditor);
+
+        editorHeader.appendChild(editorTitle);
+        editorHeader.appendChild(closeButton);
 
         editorContent = document.createElement("div");
         editorContent.classList.add("room-editor-content");
@@ -197,9 +266,75 @@ function selectRoom(room) {
         roomEditor.appendChild(editorHeader);
         roomEditor.appendChild(editorContent);
 
+        const editorButtons = document.createElement("div");
+        editorButtons.classList.add("room-editor-buttons");
+
+        const saveButton = document.createElement("button");
+        saveButton.textContent = "Save";
+        saveButton.classList.add("room-editor-save");
+
+        const cancelButton = document.createElement("button");
+        cancelButton.textContent = "Cancel";
+        cancelButton.classList.add("room-editor-cancel");
+
+        saveButton.addEventListener(
+            "click",
+            saveRoomEditor
+        );
+
+        cancelButton.addEventListener(
+            "click",
+            closeRoomEditor
+        );
+
+        editorButtons.appendChild(saveButton);
+        editorButtons.appendChild(cancelButton);
+
+        roomEditor.appendChild(editorButtons);
+
         document.body.appendChild(roomEditor);
 
-        startEditorDragging(editorHeader);    }
+        if (editorPosition) {
+            roomEditor.style.left =
+                `${editorPosition.x}px`;
+
+            roomEditor.style.top =
+                `${editorPosition.y}px`;
+
+            roomEditor.style.right = "auto";
+        }
+
+        startEditorDragging(editorHeader);  
+        
+        editorContent.addEventListener(
+            "keydown",
+            (event) => {
+                if (event.key === "Escape") {
+                    event.preventDefault();
+                    closeRoomEditor();
+                    return;
+                }
+
+                if (event.key !== "Enter") {
+                    return;
+                }
+
+                if (event.target.tagName === "TEXTAREA") {
+                    return;
+                }
+
+                event.preventDefault();
+                saveRoomEditor();
+            }
+        );
+    }
+
+    roomEditor.style.width =
+        `${room.editorSize.width}px`;
+
+    roomEditor.style.height =
+        `${room.editorSize.height}px`;
+
 
     updateRoomEditor();
 }
@@ -210,6 +345,42 @@ function updateRoomEditor() {
     for (const [key, value] of Object.entries(selectedRoom)) {
 
         if (hoverExceptions.includes(key)) {
+            continue;
+        }
+
+        if (key === "name" || key === "floor") {
+            const fieldContainer = document.createElement("div");
+            fieldContainer.classList.add("room-editor-field");
+
+            const label = document.createElement("label");
+            label.textContent = `${key}: `;
+
+            const input = document.createElement("input");
+            input.type = "text";
+            input.value = value;
+
+            fieldContainer.appendChild(label);
+            fieldContainer.appendChild(input);
+            editorContent.appendChild(fieldContainer);
+
+            continue;
+        }
+        
+
+        if (key === "notes") {
+            const fieldContainer = document.createElement("div");
+            fieldContainer.classList.add("room-editor-notes");
+
+            const label = document.createElement("label");
+            label.textContent = "notes: ";
+
+            const textarea = document.createElement("textarea");
+            textarea.value = value;
+
+            fieldContainer.appendChild(label);
+            fieldContainer.appendChild(textarea);
+            editorContent.appendChild(fieldContainer);
+
             continue;
         }
 

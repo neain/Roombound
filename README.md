@@ -799,7 +799,10 @@ The current development progression is:
 13. Verify that rooms, connections, grid, and room text remain aligned during pan/zoom
 14. Return to the room editor and add editable room properties, as well as the ability to close the editor.
 15. Add free-form room notes
-16. Begin interactive room/connection creation and editing, this includes a zoom bar, visible ui zoom level, and possibly zoom shortcut keys.
+16. Begin interactive room/connection creation and editing, 
+16. 5. this includes a zoom bar, visible ui zoom level, and possibly zoom shortcut keys.
+17. Polish pass (this will keep growing until I get to this step at the very least).
+18. modify buttons and other graphics
 
 ### Current Position
 

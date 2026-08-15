@@ -5,6 +5,7 @@ const defaultMap = {
             roomID: "room_001",
             name: "Entrance Hall",
             floor: 1,
+            notes:"",
             connections: [
                 {
                     fromSide: "E",
@@ -30,10 +31,14 @@ const defaultMap = {
             ],
             position: {x: 0, y: 0},
             size: {width: 5, height: 5},
+            editorSize: {width: 200, height: 300}
+            
+
         },{
             roomID: "room_003",
             name: "Broom Closet",
             floor: 1,
+            notes:"",
             connections: [
                 {
                     fromSide: "E",
@@ -45,11 +50,13 @@ const defaultMap = {
             ],
             position: {x: 5, y: 15},
             size: {width: 5, height: 5},
+            editorSize: {width: 200, height: 300}
         },
         {
             roomID: "room_002",
             name: "Kitchen",
             floor: 1,
+            notes:"",
             connections: [
                 {
                     fromSide: "W",
@@ -61,6 +68,7 @@ const defaultMap = {
             ],
             position: {x: 20, y: 20},
             size: {width: 5, height: 5},
+            editorSize: {width: 200, height: 300}
         }
     ]
 
