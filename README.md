@@ -427,7 +427,7 @@ A custom status may be useful for situations that do not fit the standard explor
 
 ---
 
-10. Data Model
+## 10. Data Model
 
 The map is intentionally a simple data structure. Visualization and interaction logic should operate on the data rather than becoming part of the map itself.
 
@@ -624,7 +624,7 @@ from and to identify the two endpoints of a connection but do not currently impl
 
 Directional connections may be added later if needed.
 
-11. Visualization Model
+## 11. Visualization Model
 
 The visualization engine is intentionally separate from the underlying map meaning.
 
@@ -685,7 +685,7 @@ The user may eventually be able to promote selected information into the always-
 
 The exact interaction for this is not yet finalized.
 
-12. Current Implementation
+## 12. Current Implementation
 
 The project currently uses:
 
@@ -712,7 +712,7 @@ The current prototype does not yet render connections visually.
 
 The next major development step is expected to be connection visualization.
 
-13. Current Development Target
+## 13. Current Development Target
 
 The immediate goal is to establish the fundamental visual graph before adding editing, persistence, or other larger systems.
 
@@ -733,7 +733,7 @@ The next step is connection visualization.
 
 The purpose of this prototype is to discover problems with the interaction and data model while the project is still small.
 
-14. Initial MVP
+## 14. Initial MVP
 
 The eventual first usable version should contain:
 
@@ -760,7 +760,7 @@ Additional display functionality should eventually allow rooms with no connectio
 
 Anything beyond this should be considered post-MVP unless it becomes necessary for the core workflow.
 
-15. Future Possibilities
+## 15. Future Possibilities
 
 Potential future features include:
 
@@ -783,7 +783,7 @@ Additional room display controls
 
 These are ideas, not commitments.
 
-16. Scope Boundary
+## 16. Scope Boundary
 
 Roombound should remain a lightweight exploration and relationship-mapping tool.
 
@@ -797,9 +797,9 @@ In particular, Roombound should resist becoming a full virtual tabletop.
 
 A room does not need to become a detailed physical map simply because more information can be associated with it.
 
-17. Development Philosophy
+## 17. Development Philosophy
 
-The project should favor:
+### The project should favor:
 
 Simple implementations
 Small features
@@ -814,6 +814,58 @@ The application should be useful before it is pretty.
 
 When a design question is uncertain, prefer implementing the smallest version that can answer the question rather than attempting to predict the final solution in advance.
 
-18. License
+## 18. Development Structure
+### Current JavaScript Structure
+
+The JavaScript is divided by responsibility rather than keeping all functionality in `main.js`.
+
+- `main.js`
+  - Initializes the map and DOM elements.
+  - Imports the map data and rendering modules.
+  - Coordinates initial rendering.
+
+- `defaultMap.js`
+  - Contains the temporary test map used when the page loads.
+  - Intended to be removed/replaced when blank map creation and saving are implemented.
+
+- `mapUtils.js`
+  - Shared map/grid utilities.
+  - Defines `GRID_SIZE`.
+  - Provides grid/pixel conversion functions.
+  - Provides map room lookup functions.
+
+- `roomRenderer.js`
+  - Creates and renders room elements.
+  - Handles room dragging and grid-snapped movement.
+  - Receives map and DOM dependencies explicitly rather than accessing them globally.
+
+- `connectionRenderer.js`
+  - Analyzes room connections and determines attachment points.
+  - Renders connections as SVG lines.
+  - Supports multiple connections on the same wall by distributing attachment points evenly.
+  - Supports one-way and bidirectional connections.
+  - Uses SVG arrowheads to indicate connection direction.
+
+### Connection Data
+
+Connections belong to their source room and do not need a reciprocal connection in the destination room.
+
+```js
+{
+    fromSide: "E",
+    to: "room_002",
+    toSide: "W",
+    name: "Hallway",
+    bidirectional: true
+}
+```
+
+### Rendering Architecture
+
+Rendering functions receive the data and DOM elements they require as arguments rather than relying on global references. This keeps the individual modules independent and makes their dependencies explicit.
+
+
+19. License
 
 Roombound is currently not allowed to be copied or used without permission. This is intended to change in the future, but at the moment the project is not even alpha.
+
