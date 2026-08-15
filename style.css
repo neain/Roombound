@@ -37,13 +37,19 @@ body {
     position: relative;
     flex: 1 1 auto;
     overflow: auto;
+}
+
+.map-world {
+    position: relative;
 
     background-image:
         linear-gradient(#333333 1px, transparent 1px),
         linear-gradient(90deg, #333333 1px, transparent 1px);
 
     background-size: var(--grid-size) var(--grid-size);
-    background-position: 0 0;
+    background-position:
+    var(--map-origin)
+    var(--map-origin);
 }
 
 .room {

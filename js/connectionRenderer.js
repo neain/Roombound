@@ -14,7 +14,7 @@
  */
 
 // Shared map/grid utilities: GRID_SIZE, gridToPixels(), pixelsToGrid().
-import { GRID_SIZE, gridToPixels, pixelsToGrid, getRoom } from "./mapUtils.js";
+import { GRID_SIZE, gridToPixels, gridToWorldPixels, pixelsToGrid, getRoom } from "./mapUtils.js";
 
 const arrowSize = 4;
 
@@ -212,8 +212,8 @@ export function getConnectionPoint(
         count = 1,
         distance = 0
     ) {
-    const left = gridToPixels(room.position.x);
-    const top = gridToPixels(room.position.y);
+    const left = gridToWorldPixels(room.position.x);
+    const top = gridToWorldPixels(room.position.y);
     const width = gridToPixels(room.size.width);
     const height = gridToPixels(room.size.height);
     const offset = gridToPixels(distance);

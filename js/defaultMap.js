@@ -28,7 +28,7 @@ const defaultMap = {
                     bidirectional: true
                 }
             ],
-            position: {x: 5, y: 5},
+            position: {x: 0, y: 0},
             size: {width: 5, height: 5},
         },{
             roomID: "room_003",

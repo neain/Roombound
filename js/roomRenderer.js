@@ -1,5 +1,5 @@
 // Shared map/grid utilities: GRID_SIZE, gridToPixels(), pixelsToGrid().
-import { GRID_SIZE, gridToPixels, pixelsToGrid } from "./mapUtils.js";
+import { GRID_SIZE, gridToPixels, gridToWorldPixels, pixelsToGrid } from "./mapUtils.js";
 
 // Connection rendering and connection geometry: renderConnections() and related helpers.
 import { renderConnections } from "./connectionRenderer.js";
@@ -45,11 +45,11 @@ export function renderRooms(map, mapElement, connectionLayer) {
 
 
         roomElement.style.left =
-            `${gridToPixels(room.position.x)}px`;
+            `${gridToWorldPixels(room.position.x)}px`;
 
         roomElement.style.top =
-            `${gridToPixels(room.position.y)}px`;
-
+            `${gridToWorldPixels(room.position.y)}px`;
+            
         roomElement.style.width =
             `${gridToPixels(room.size.width)}px`;
 
@@ -84,6 +84,11 @@ export function renderRooms(map, mapElement, connectionLayer) {
 export function startDragging(event, room, roomElement, map, connectionLayer) {
 
     event.preventDefault();
+
+    if (event.button !== 0) {
+        return;
+    }
+
     roomTooltip.style.display = "none";
 
     const startMouseX = event.clientX;
@@ -117,10 +122,10 @@ export function startDragging(event, room, roomElement, map, connectionLayer) {
 
 
         roomElement.style.left =
-            `${gridToPixels(room.position.x)}px`;
+            `${gridToWorldPixels(room.position.x)}px`;
 
         roomElement.style.top =
-            `${gridToPixels(room.position.y)}px`;
+            `${gridToWorldPixels(room.position.y)}px`;
 
 
         renderConnections(map, connectionLayer);
