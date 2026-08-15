@@ -795,7 +795,7 @@ The current development progression is:
 11. Add map panning
 12. Add map zooming
 13. Verify that rooms, connections, grid, and room text remain aligned during pan/zoom
-14. Return to the room editor and add editable room properties
+14. Return to the room editor and add editable room properties, as well as the ability to close the editor.
 15. Add free-form room notes
 16. Begin interactive room/connection creation and editing
 
