@@ -799,7 +799,7 @@ The current development progression is:
 13. Verify that rooms, connections, grid, and room text remain aligned during pan/zoom
 14. Return to the room editor and add editable room properties, as well as the ability to close the editor.
 15. Add free-form room notes
-16. Begin interactive room/connection creation and editing, 
+16. Begin interactive room/connection creation and editing
 17. Polish pass (this will keep growing until I get to this step at the very least).
 18. modify buttons and other graphics
 19. include a zoom bar, visible ui zoom level, and possibly zoom shortcut keys.
@@ -807,20 +807,17 @@ The current development progression is:
 21. check that the tooltip popup for the new buttons (bottom right on the screen) looks fine.
 22. add context menu for new connection creation
 23. room names need to resize based on the size of the room so that they remain readable and the text doesnt go off the edge of the room
+24. Rooms need to be able to be recolored
 
 ### Current Position
 
-Steps 1–13 are currently working in prototype form.
+Steps 1–15 are currently working in prototype form.
 
-The project is currently at the transition between **room interaction** and **map navigation**.
+The project is currently at "Begin interactive room/connection creation and editing" and we are currently specificly at editing after doing the rest.
 
 The next implementation target is:
 
-> **Establish the map viewport/content separation and implement panning and zooming.**
-
-The camera system should be established before significantly expanding the room editor.
-
-This is intended to prevent later camera changes from requiring major changes to room rendering, connection rendering, room dragging, or editor behavior.
+> **Begin interactive room/connection creation and editing**
 
 ---
 
