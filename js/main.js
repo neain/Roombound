@@ -4,6 +4,8 @@ const map = defaultMap;
 
 const mapElement = document.getElementById("map");
 
+const arrowSize = 4;
+
 const connectionLayer = document.createElementNS(
     "http://www.w3.org/2000/svg",
     "svg"
@@ -180,6 +182,65 @@ function getConnectionPoints(connectionData) {
 
 function renderConnections(map) {
     connectionLayer.innerHTML = "";
+    const defs = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "defs"
+    );
+
+    const markerEnd = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "marker"
+    );
+
+    markerEnd.setAttribute("id", "arrowhead-end");
+    markerEnd.setAttribute("markerWidth", arrowSize);
+    markerEnd.setAttribute("markerHeight", arrowSize);
+    markerEnd.setAttribute("refX", arrowSize);
+    markerEnd.setAttribute("refY", arrowSize / 2);
+    markerEnd.setAttribute("orient", "auto");
+    markerEnd.setAttribute("markerUnits", "strokeWidth");
+
+    const arrowEnd = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path"
+    );
+
+    arrowEnd.setAttribute(
+        "d",
+        `M 0 0 L ${arrowSize} ${arrowSize / 2} L 0 ${arrowSize} Z`
+    );
+
+    markerEnd.appendChild(arrowEnd);
+    defs.appendChild(markerEnd);
+
+
+    const markerStart = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "marker"
+    );
+
+    markerStart.setAttribute("id", "arrowhead-start");
+    markerStart.setAttribute("markerWidth", arrowSize);
+    markerStart.setAttribute("markerHeight", arrowSize);
+    markerStart.setAttribute("refX", arrowSize);
+    markerStart.setAttribute("refY", arrowSize / 2);
+    markerStart.setAttribute("orient", "auto-start-reverse");
+    markerStart.setAttribute("markerUnits", "strokeWidth");
+
+    const arrowStart = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path"
+    );
+
+    arrowStart.setAttribute(
+        "d",
+        `M 0 0 L ${arrowSize} ${arrowSize / 2} L 0 ${arrowSize} Z`
+    );
+
+    markerStart.appendChild(arrowStart);
+    defs.appendChild(markerStart);
+
+    connectionLayer.appendChild(defs);
 
     const connectionData = analyzeConnections(map);
     const connectionPoints = getConnectionPoints(connectionData);
@@ -238,7 +299,6 @@ function renderConnections(map) {
                 );
             }
 
-
             const line = document.createElementNS(
                 "http://www.w3.org/2000/svg",
                 "line"
@@ -250,6 +310,13 @@ function renderConnections(map) {
             line.setAttribute("y2", toPoint.y);
 
             line.classList.add("connection");
+
+            if (connection.bidirectional) {
+                line.setAttribute("marker-start", "url(#arrowhead-start)");
+                line.setAttribute("marker-end", "url(#arrowhead-end)");            
+            } else {
+                line.setAttribute("marker-end", "url(#arrowhead-end)");
+            }
 
             connectionLayer.appendChild(line);
         }

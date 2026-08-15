@@ -10,19 +10,22 @@ const defaultMap = {
                     fromSide: "E",
                     to: "room_002",
                     toSide: "W",
-                    name: "Hallway"
+                    name: "Hallway",
+                    bidirectional: false
                 },
                 {
                     fromSide: "S",
                     to: null,
                     toSide: null,
-                    name: "Locked Door"
+                    name: "Locked Door",
+                    bidirectional: false
                 },
                 {
                     fromSide: "E",
                     to: "room_003",
                     toSide: "W",
-                    name: "Hallway"
+                    name: "Hallway",
+                    bidirectional: true
                 }
             ],
             position: {x: 5, y: 5},
@@ -36,7 +39,8 @@ const defaultMap = {
                     fromSide: "E",
                     to: "room_002",
                     toSide: "W",
-                    name: "Hallway"
+                    name: "Hallway",
+                    bidirectional: true
                 }
             ],
             position: {x: 5, y: 15},
@@ -51,7 +55,8 @@ const defaultMap = {
                     fromSide: "W",
                     to: "room_001",
                     toSide: "E",
-                    name: "Hallway"
+                    name: "Hallway",
+                    bidirectional: true
                 }
             ],
             position: {x: 20, y: 20},
