@@ -77,3 +77,48 @@ body {
     stroke: black;
     stroke-width: 3;
 }
+
+.room-tooltip {
+    display: none;
+    position: fixed;
+    white-space: pre-line;
+    pointer-events: none;
+
+    color: black;
+    background: white;
+    border: 1px solid black;
+    padding: 4px 6px;
+    z-index: 1000;
+}
+
+.room-editor {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+
+    width: 300px;
+    min-width: 200px;
+    min-height: 100px;
+
+    padding: 10px;
+
+    resize: both;
+    overflow: auto;
+
+    z-index: 1001;
+
+    color: black;
+    background: white;
+    border: 1px solid black;
+
+}
+
+.room-editor-header {
+    cursor: move;
+    user-select: none;
+
+    color: rgb(0, 0, 0);
+    background: rgb(38, 51, 230);
+    border: 1px solid black;
+
+}
