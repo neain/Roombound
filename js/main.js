@@ -5,10 +5,12 @@ import defaultMap from "./defaultMap.js";
 import { GRID_SIZE, MAP_SIZE, MAP_ORIGIN, gridToPixels, pixelsToGrid } from "./mapUtils.js";
 
 // Room rendering and room interaction: renderRooms(), startDragging().
-import { renderRooms, startDragging } from "./roomRenderer.js";
+import { renderRooms, startDragging, createRoom, getSelectedRoom } from "./roomRenderer.js";
 
 // Connection rendering and connection geometry: renderConnections() and related helpers.
 import { renderConnections } from "./connectionRenderer.js";
+
+import { createConnection } from "./connectionEditor.js";
 
 const connectionLayer = document.createElementNS(
     "http://www.w3.org/2000/svg",
@@ -99,6 +101,74 @@ function updateZoom() {
 }
 
 mapElement.appendChild(mapWorld);
+
+
+// this defines the bottom right bar. conceptualy at least
+const mapTools = document.createElement("div");
+mapTools.classList.add("map-tools");
+
+// this defines a button for making new connections
+const newConnectionButton = document.createElement("button");
+newConnectionButton.classList.add("map-tool-button");
+newConnectionButton.textContent = "→+";
+newConnectionButton.setAttribute("aria-label", "New Connection");
+
+// this defines a button for making new rooms
+const newRoomButton = document.createElement("button");
+newRoomButton.classList.add("map-tool-button");
+newRoomButton.textContent = "+";
+newRoomButton.setAttribute("aria-label", "New Room");
+
+newRoomButton.addEventListener(
+    "click",
+    () => {
+        createRoom(
+            map,
+            mapElement,
+            connectionLayer,
+            zoom
+        );
+    }
+);
+
+newConnectionButton.addEventListener(
+    "click",
+    () => {
+        const room = getSelectedRoom();
+
+        if (!room) {
+            return;
+        }
+
+        createConnection(
+            map,
+            room,
+            connectionLayer,
+            zoom
+        );
+    }
+);
+
+const newRoomTooltip =
+    document.createElement("div");
+
+newRoomTooltip.classList.add("map-tool-tooltip");
+newRoomTooltip.textContent = "New Room";
+
+newRoomButton.appendChild(newRoomTooltip);
+
+const newConnectionTooltip =
+    document.createElement("div");
+
+newConnectionTooltip.classList.add("map-tool-tooltip");
+newConnectionTooltip.textContent = "New Connection";
+
+newConnectionButton.appendChild(newConnectionTooltip);
+
+mapTools.appendChild(newConnectionButton);
+mapTools.appendChild(newRoomButton);
+
+document.body.appendChild(mapTools);
 
 connectionLayer.classList.add("connections");
 mapWorld.appendChild(connectionLayer);

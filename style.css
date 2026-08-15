@@ -197,3 +197,68 @@ body {
 
     cursor: pointer;
 }
+
+.map-tools {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+
+    z-index: 1000;
+}
+
+.map-tool-button {
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    color: white;
+    background: #333333;
+    border: 2px solid white;
+
+    font-size: 24px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.map-tool-tooltip {
+    position: absolute;
+
+    right: 0;
+    bottom: 48px;
+
+    padding: 4px 8px;
+
+    white-space: nowrap;
+
+    color: black;
+    background: white;
+    border: 1px solid black;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+        opacity 0.2s ease,
+        visibility 0.2s ease;
+
+    transition-delay: 0.5s;
+
+    pointer-events: none;
+}
+
+.map-tool-button:hover .map-tool-tooltip {
+    opacity: 1;
+    visibility: visible;
+
+    transition-delay: 0.5s;
+}

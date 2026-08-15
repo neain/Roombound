@@ -1,17 +1,18 @@
 // Shared map/grid utilities: GRID_SIZE, gridToPixels(), pixelsToGrid().
-import { GRID_SIZE, gridToPixels, gridToWorldPixels, pixelsToGrid } from "./mapUtils.js";
+import { GRID_SIZE, MAP_ORIGIN, gridToPixels, gridToWorldPixels, pixelsToGrid } from "./mapUtils.js";
 
 // Connection rendering and connection geometry: renderConnections() and related helpers.
 import { renderConnections } from "./connectionRenderer.js";
 
 const hoverExceptions = ["roomID", "connections", "position", "size", "editorSize"];
-const readOnlyRoomProperties = ["name", "floor"];
 const roomTooltip = document.createElement("div");
 
 let selectedRoom = null;
 let roomEditor = null;
 let editorContent = null;
 let editorPosition = null;
+let isNewRoom = false;
+let editorContext = null;
 
 export function renderRooms(map, mapElement, connectionLayer, zoom = 1) {
     if (!roomTooltip.parentElement) {
@@ -83,12 +84,114 @@ export function renderRooms(map, mapElement, connectionLayer, zoom = 1) {
         roomElement.addEventListener(
             "click",
             () => {
-                selectRoom(room);
+                selectRoom(room, map, mapElement, connectionLayer, zoom);
             }
         );
 
         mapElement.appendChild(roomElement);
     }
+}
+
+export function createRoom(map, mapElement, connectionLayer, zoom = 1) {
+
+    let highestRoomNumber = 0;
+
+    for (const room of map.rooms) {
+        const match = room.roomID.match(/^room_(\d+)$/);
+
+        if (!match) {
+            continue;
+        }
+
+        highestRoomNumber =
+            Math.max(
+                highestRoomNumber,
+                Number(match[1])
+            );
+    }
+
+    const roomNumber =
+        String(highestRoomNumber + 1).padStart(3, "0");
+
+    const centerX =
+        mapElement.scrollLeft +
+        mapElement.clientWidth / 2;
+
+    const centerY =
+        mapElement.scrollTop +
+        mapElement.clientHeight / 2;
+
+    const worldX =
+        (centerX - MAP_ORIGIN * zoom) /
+        (GRID_SIZE * zoom);
+
+    const worldY =
+        (centerY - MAP_ORIGIN * zoom) /
+        (GRID_SIZE * zoom);
+
+    const room = {
+        roomID: `room_${roomNumber}`,
+        name: "New Room",
+        floor: 1,
+        notes: "",
+        connections: [],
+        position: {
+            x: Math.round(worldX - 2.5),
+            y: Math.round(worldY - 2.5)
+        },
+        size: {
+            width: 5,
+            height: 5
+        },
+        editorSize: {
+            width: 200,
+            height: 300
+        }
+    };
+
+    map.rooms.push(room);
+
+    renderRooms(
+        map,
+        mapElement,
+        connectionLayer,
+        zoom
+    );
+
+    renderConnections(
+        map,
+        connectionLayer,
+        zoom
+    );
+
+    isNewRoom = true;
+    selectRoom(room, map, mapElement, connectionLayer, zoom);
+}
+
+export function deleteRoom(map, roomID, mapElement, connectionLayer, zoom = 1) {
+    const roomIndex =
+        map.rooms.findIndex(
+            (room) => room.roomID === roomID
+        );
+
+    if (roomIndex === -1) {
+        return;
+    }
+
+    map.rooms.splice(roomIndex, 1);
+
+    renderRooms(
+        map,
+        mapElement,
+        connectionLayer,
+        zoom
+    );
+
+    renderConnections(
+        map,
+        connectionLayer,
+        zoom
+    );
 }
 
 export function startDragging(event, room, roomElement, map, connectionLayer, zoom = 1) {
@@ -173,6 +276,10 @@ export function startDragging(event, room, roomElement, map, connectionLayer, zo
     );
 }
 
+export function getSelectedRoom() {
+    return selectedRoom;
+}
+
 function getRoomHoverInfo(room) {
     return Object.entries(room)
         .filter(([key]) => !hoverExceptions.includes(key))
@@ -204,6 +311,8 @@ function saveRoomEditor() {
         height: roomEditor.offsetHeight
     };
 
+    isNewRoom = false;
+
     editorPosition = {
         x: roomEditor.offsetLeft,
         y: roomEditor.offsetTop
@@ -223,6 +332,23 @@ function saveRoomEditor() {
     closeRoomEditor();
 }
 
+function cancelRoomEditor() {
+
+    if (isNewRoom) {
+        deleteRoom(
+            editorContext.map,
+            selectedRoom.roomID,
+            editorContext.mapElement,
+            editorContext.connectionLayer,
+            editorContext.zoom
+        );
+    }
+
+    isNewRoom = false;
+
+    closeRoomEditor();
+}
+
 function closeRoomEditor() {
     roomEditor.remove();
 
@@ -231,9 +357,16 @@ function closeRoomEditor() {
     selectedRoom = null;
 }
 
-function selectRoom(room) {
+function selectRoom(room, map, mapElement, connectionLayer, zoom) {
     
     selectedRoom = room;
+    editorContext = {
+        map,
+        mapElement,
+        connectionLayer,
+        zoom
+    };
+
 
     if (!roomEditor) {
         roomEditor = document.createElement("div");
@@ -255,7 +388,7 @@ function selectRoom(room) {
         closeButton.textContent = "×";
         closeButton.classList.add("room-editor-close");
 
-        closeButton.addEventListener("click", closeRoomEditor);
+        closeButton.addEventListener("click", cancelRoomEditor);
 
         editorHeader.appendChild(editorTitle);
         editorHeader.appendChild(closeButton);
@@ -284,7 +417,7 @@ function selectRoom(room) {
 
         cancelButton.addEventListener(
             "click",
-            closeRoomEditor
+            cancelRoomEditor
         );
 
         editorButtons.appendChild(saveButton);
@@ -311,7 +444,7 @@ function selectRoom(room) {
             (event) => {
                 if (event.key === "Escape") {
                     event.preventDefault();
-                    closeRoomEditor();
+                    cancelRoomEditor();
                     return;
                 }
 
