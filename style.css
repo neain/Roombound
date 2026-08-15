@@ -36,5 +36,28 @@ body {
 #map {
     position: relative;
     flex: 1 1 auto;
+    overflow: auto;
+
+    background-image:
+        linear-gradient(#333333 1px, transparent 1px),
+        linear-gradient(90deg, #333333 1px, transparent 1px);
+
+    background-size: var(--grid-size) var(--grid-size);
+    background-position: 0 0;
+}
+
+.room {
+    position: absolute;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 2px solid #ffffff;
+    background: #333333;
+
+    color: #ffffff;
+    text-align: center;
+
     overflow: hidden;
 }

@@ -427,307 +427,369 @@ A custom status may be useful for situations that do not fit the standard explor
 
 ---
 
-## 10. Notes
+10. Data Model
 
-Notes are a core feature rather than an afterthought.
+The map is intentionally a simple data structure. Visualization and interaction logic should operate on the data rather than becoming part of the map itself.
 
-Rooms should eventually support freeform notes such as:
+Map
 
-> Three sarcophagi. One is empty. Door to the north is locked. We heard something behind the eastern wall.
+The map currently consists of:
 
-Connections should also be able to contain notes.
+Map
+└── rooms[]
 
-Example:
+The map itself does not need to understand floors, visual layout, or connection rendering.
 
-> Locked. Need a key.
+Room
 
-Notes should remain lightweight and should not attempt to become a full campaign-management or wiki system.
+The current conceptual Room structure is:
 
----
+Room
+├── roomID
+├── name
+├── floor
+├── position
+├── size
+└── connections[]
+roomID
 
-## 11. External Links
+An internal unique identifier used to reference and serialize rooms.
 
-Rooms may optionally contain external URLs.
+It is not intended to normally be visible to the user.
 
-The initial implementation should treat these simply as links.
+Room names should not be used as IDs, since multiple rooms may have the same name.
+
+name
+
+The human-visible name of the room.
+
+floor
+
+An integer representing the floor associated with the room.
 
 Examples:
 
-* Battlemap
-* Campaign wiki
-* Google Docs
-* Images
-* PDFs
-* Other mapping tools
-* GM notes
+1   = first floor
+2   = second floor
+5   = fifth floor
 
-Roombound does not initially need to understand or integrate with the linked resource.
+-1  = first basement
+-2  = second basement
 
-This allows GM-oriented use without requiring Roombound to become a battlemap application.
+0 is currently unused.
 
----
+The floor is simply a property of the room. It does not create a separate floor structure, and rooms on different floors can still be connected directly.
 
-## 12. Player / GM Use
+position
 
-Roombound is intended to support both player and GM use without creating separate core mapping systems.
+The room's position on Roombound's abstract grid.
 
-### Player Use
+The position uses grid coordinates rather than screen pixels.
 
-A player can use Roombound to record:
+The position represents the top-left corner of the room.
 
-* Where have we been?
-* What connects to what?
-* What doors remain unexplored?
-* What did we find?
-* Which locations are difficult to navigate between?
+For example:
 
-This is particularly useful when players are given individual battle maps or room descriptions without being given an overall map of the location.
+position:
+    x: 10
+    y: 5
 
-Roombound can help reconstruct the relationships between those rooms when the overall layout is not obvious.
+The visualization layer converts these grid coordinates into screen coordinates.
 
-### GM Use
+size
 
-A GM can use the same system for:
+The room's size on the abstract grid.
 
-* Dungeon brainstorming
-* Location organization
-* Planning connections
-* Exploring possible room relationships
-* Linking detailed maps or notes
-* Building a rough location structure before creating detailed maps
+Size is represented independently from position:
 
-The underlying map model should not need to know whether the person using it is a player or a GM.
+size:
+    width: 10
+    height: 10
 
----
+The initial default room size is 10 × 10 grid units.
 
-## 13. Visual Philosophy
+Room size is not intended to represent physical dimensions in the game world. It primarily controls the visual footprint of the room in Roombound.
 
-The map should prioritize:
+Keeping size as room data allows rooms to eventually be resized to accommodate additional visible information without turning the application into a battlemap.
 
-**Clarity > Accuracy > Decoration**
+connections[]
 
-Rooms should be visually distinct and easy to rearrange.
+A room may have any number of connections, including zero.
 
-Connections should remain readable when rooms move.
+An empty connection list is valid.
 
-The application should avoid unnecessary visual complexity associated with traditional battlemap software.
+This is important both for:
 
-The map should feel more like:
+The initial room in a new map
+A newly created room that has not yet been connected
+A room that genuinely has no known connections
 
-> An interactive notebook / relationship diagram
+The visualization layer may eventually display rooms with zero connections differently.
 
-than:
+Connection
 
-> A tactical map.
+Connections are independent objects representing transitions between rooms.
 
-The visualization engine is responsible for determining how the underlying room and connection data is presented.
+The current conceptual structure is:
 
-The data model should not unnecessarily encode visual layout decisions.
+Connection
+├── from
+├── fromSide
+├── to
+├── toSide
+└── name
+from
 
----
+The ID of the room where the connection originates.
 
-## 14. Data Model
+This is required.
 
-The current conceptual data model is intentionally small.
+fromSide
 
-```text
-Map
-└── rooms[]
-    │
-    ├── Room
-    │   ├── roomID
-    │   ├── name
-    │   ├── floor
-    │   └── connections[]
-    │
-    └── Connection
-        ├── from
-        ├── fromSide
-        ├── to
-        ├── toSide
-        └── name
-```
+The side of the originating room where the connection attaches.
 
-A more concrete example:
+The intended values are:
 
-```text
-{
-    "rooms": [
-        {
-            "roomID": "room_001",
-            "name": "Entrance Hall",
-            "floor": 1,
-            "connections": [
-                {
-                    "from": "room_001",
-                    "fromSide": "E",
-                    "to": "room_002",
-                    "toSide": "W",
-                    "name": "Hallway"
-                },
-                {
-                    "from": "room_001",
-                    "fromSide": "N",
-                    "to": null,
-                    "toSide": null,
-                    "name": "Locked Door"
-                }
-            ]
-        }
-    ]
-}
-```
+N
+NE
+E
+SE
+S
+SW
+W
+NW
+NONE
 
-This is a conceptual representation rather than a finalized serialization format.
+The eight directional values represent the cardinal and diagonal sides of a room.
 
-The exact implementation should remain flexible during early development.
+NONE means that the connection is associated with the room but does not imply a particular side.
 
-In particular, the following are intentionally undecided:
+to
 
-* Room `Size`
-* Exact room status implementation
-* Additional connection metadata
-* Exact serialization/file format
-* How connection sides are visually rendered
-* Whether connection sides eventually need to support anything beyond the eight directions and `NONE`
+The ID of the destination room.
 
-The goal is to avoid solving problems before the application demonstrates that they need to be solved.
+This may be null.
 
----
+A null destination represents an unresolved connection: the user knows a connection exists but does not yet know where it leads.
 
-## 15. Persistence
+toSide
 
-Roombound will eventually need both temporary and independent persistent storage.
+The side of the destination room where the connection attaches.
 
-The current intended direction is:
+It uses the same conceptual values as fromSide.
 
-* Temporary/session state may use browser storage such as cookies or another appropriate browser mechanism.
-* Maps should also be able to be saved to and loaded from an independent file.
+If to is null, toSide must also be null.
 
-The file format does not need to prioritize human readability. Its primary purpose is to allow users to conveniently save, move, and load their maps.
+NONE and null have different meanings:
 
-The exact persistence implementation is not yet finalized.
+null = no known destination
+NONE = known destination, but no particular side is implied
+name
 
----
+An optional human-readable descriptor for the connection.
 
-## 16. Technology
+Examples:
 
-Initial implementation is planned as a web application using:
+North Door
+Main Hallway
+Secret Passage
+Staircase
+Locked Door
 
-* HTML
-* CSS
-* JavaScript
+A connection may have an empty name.
 
-Potential libraries may be used for graph visualization, node manipulation, edge routing, or other functionality where they significantly reduce implementation complexity.
+Unresolved Connections
 
-The project should avoid unnecessary dependencies.
+An unresolved connection can be represented without creating a special connection type.
 
-The initial implementation should favor simple, replaceable components rather than committing prematurely to a large framework or graph system.
+Example:
 
----
+Room A
+  │
+  │ Locked Door
+  │
+  ?
 
-## 17. Initial Development Target
+The connection has a valid from and fromSide, while to and toSide are null.
 
-The first development target is intentionally smaller than the eventual MVP.
+When the destination becomes known, the user should eventually be able to:
 
-The first prototype should establish that the core room-and-connection model works when represented visually.
+Connect it to an existing room.
+Create a new room and connect it to that room.
+Directionality
 
-It should be able to:
+Connections are not currently treated as directional in the public model.
 
-* Create or represent rooms
-* Give rooms names
-* Store floor numbers
-* Store connections
-* Connect rooms together
-* Represent unresolved connections
-* Move rooms visually
-* Keep connections attached when rooms move
-* Represent connection sides
-* Display connection names
+from and to identify the two endpoints of a connection but do not currently imply that the connection is one-way.
 
-The first prototype does not need:
+Directional connections may be added later if needed.
 
-* Saving
-* Loading
-* Cookies
-* Notes
-* Statuses
-* Multiple specialized editing modes
-* A polished interface
-* A finalized graph library
-* Full room editing
-* GM/player modes
+11. Visualization Model
 
-The purpose of the first prototype is to test the fundamental interaction:
+The visualization engine is intentionally separate from the underlying map meaning.
 
-> **Room → Connection → Room**
+The map data describes:
 
-before building additional systems around it.
+What rooms and relationships exist.
 
-A small hard-coded test map is sufficient for this stage.
+The visualization describes:
 
----
+How those rooms and relationships are shown to a human.
 
-## 18. MVP
+Grid
 
-The first usable version should eventually contain:
+Roombound uses an abstract grid for positioning rooms.
 
-* Create room
-* Delete room
-* Move room
-* Rename room
-* Assign room floor
-* Create connection
-* Delete connection
-* Connect an unresolved connection to an existing room
-* Create a new room from an unresolved connection
-* Move connected rooms without breaking connections
-* Zoom
-* Pan
-* Save map
-* Load map
-* Basic room notes
-* Basic connection notes
-* External URL associated with a room
+The visible grid is currently only a visual aid. Its purpose is to let the user see where rooms will snap when moved.
 
-Additional display functionality should include the ability to distinguish rooms with no connections and eventually allow selected room information to remain visible without hovering.
+The grid itself is not meaningful map data and does not represent physical game-world squares.
+
+The visualization currently has a configurable grid size:
+
+const GRID_SIZE = 20;
+
+This means one map grid unit currently corresponds to 20 screen pixels.
+
+Changing the visualization's grid size does not change the underlying room coordinates.
+
+Room Positioning
+
+Room positions are stored in grid coordinates.
+
+The visualization converts those coordinates to screen pixels when rendering.
+
+Rooms currently snap to the grid when moved.
+
+The room's position in the map data is updated when the room is dragged.
+
+Room Size
+
+Rooms currently use their stored grid-based size when rendered.
+
+The initial default size is:
+
+10 × 10 grid units
+
+The size is independent of the current visual pixel scale.
+
+Room Display
+
+The room name is currently displayed directly on the room node.
+
+The eventual UI is expected to have two conceptual information layers:
+
+A small amount of information that is always visible.
+Additional information that appears when the user interacts with or hovers over a room.
+
+The user may eventually be able to promote selected information into the always-visible layer.
+
+The exact interaction for this is not yet finalized.
+
+12. Current Implementation
+
+The project currently uses:
+
+HTML
+CSS
+JavaScript
+
+No graph visualization library is currently required.
+
+The current prototype has:
+
+A basic HTML application shell
+A map visualization area
+A hard-coded test map
+Room objects with names, floors, positions, sizes, and connections
+Grid-based room positioning
+Visible visualization grid
+Room rendering from the map data
+Draggable rooms
+Grid-snapped room movement
+Room position updates when rooms are dragged
+
+The current prototype does not yet render connections visually.
+
+The next major development step is expected to be connection visualization.
+
+13. Current Development Target
+
+The immediate goal is to establish the fundamental visual graph before adding editing, persistence, or other larger systems.
+
+The current development progression is:
+
+Render rooms
+Make rooms draggable
+Snap rooms to the grid
+Render connections
+Handle connection attachment points
+Render unresolved connections
+Add basic hover information
+Begin interactive room/connection creation and editing
+
+Steps 1–3 are currently working.
+
+The next step is connection visualization.
+
+The purpose of this prototype is to discover problems with the interaction and data model while the project is still small.
+
+14. Initial MVP
+
+The eventual first usable version should contain:
+
+Create room
+Delete room
+Move room
+Rename room
+Assign room floor
+Resize room
+Create connection
+Delete connection
+Connect an unresolved connection to an existing room
+Create a new room from an unresolved connection
+Move connected rooms without breaking connections
+Zoom
+Pan
+Save map
+Load map
+Basic room notes
+Basic connection notes
+External URL associated with a room
+
+Additional display functionality should eventually allow rooms with no connections to be visually distinguished and allow selected room information to remain visible without hovering.
 
 Anything beyond this should be considered post-MVP unless it becomes necessary for the core workflow.
 
----
-
-## 19. Future Possibilities
+15. Future Possibilities
 
 Potential future features include:
 
-* Multiple map levels
-* Fog/reveal states
-* Tags
-* Search
-* Connection-specific icons
-* Custom room icons
-* Images
-* Player/GM modes
-* Map sharing
-* Collaboration
-* Export/import
-* Automatic edge routing
-* Custom themes
-* Print/export functionality
-* More detailed connection states
-* Additional room display controls
+Multiple map levels
+Fog/reveal states
+Tags
+Search
+Connection-specific icons
+Custom room icons
+Images
+Player/GM modes
+Map sharing
+Collaboration
+Export/import
+Automatic edge routing
+Custom themes
+Print/export functionality
+More detailed connection states
+Additional room display controls
 
 These are ideas, not commitments.
 
----
-
-## 20. Scope Boundary
+16. Scope Boundary
 
 Roombound should remain a lightweight exploration and relationship-mapping tool.
 
 When considering a new feature, ask:
 
-> Does this help the user understand, record, or organize relationships between locations?
+Does this help the user understand, record, or organize relationships between locations?
 
 If not, the feature probably belongs in another application.
 
@@ -735,27 +797,23 @@ In particular, Roombound should resist becoming a full virtual tabletop.
 
 A room does not need to become a detailed physical map simply because more information can be associated with it.
 
----
-
-## 21. Development Philosophy
+17. Development Philosophy
 
 The project should favor:
 
-* Simple implementations
-* Small features
-* Replaceable components
-* Minimal configuration
-* Fast iteration
-* Useful functionality over visual polish
-* A simple underlying data model
-* Keeping visualization concerns separate from map data
+Simple implementations
+Small features
+Replaceable components
+Minimal configuration
+Fast iteration
+Useful functionality over visual polish
+A simple underlying data model
+Keeping visualization concerns separate from map data
 
 The application should be useful before it is pretty.
 
 When a design question is uncertain, prefer implementing the smallest version that can answer the question rather than attempting to predict the final solution in advance.
 
----
-
-## 22. License
+18. License
 
 Roombound is currently not allowed to be copied or used without permission. This is intended to change in the future, but at the moment the project is not even alpha.
