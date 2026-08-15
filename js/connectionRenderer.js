@@ -18,7 +18,7 @@ import { GRID_SIZE, gridToPixels, gridToWorldPixels, pixelsToGrid, getRoom } fro
 
 const arrowSize = 4;
 
-export function renderConnections(map, connectionLayer) {
+export function renderConnections(map, connectionLayer, zoom =1) {
     connectionLayer.innerHTML = "";
     const defs = document.createElementNS(
         "http://www.w3.org/2000/svg",
@@ -81,7 +81,7 @@ export function renderConnections(map, connectionLayer) {
     connectionLayer.appendChild(defs);
 
     const connectionData = analyzeConnections(map);
-    const connectionPoints = getConnectionPoints(map, connectionData);
+    const connectionPoints = getConnectionPoints(map, connectionData, zoom);
 
     for (const room of map.rooms) {
 
@@ -133,7 +133,8 @@ export function renderConnections(map, connectionLayer) {
                     connection.fromSide,
                     fromIndex,
                     fromConnections.length,
-                    3
+                    3,
+                    zoom
                 );
             }
 
@@ -210,13 +211,14 @@ export function getConnectionPoint(
         side,
         index = 0,
         count = 1,
-        distance = 0
+        distance = 0,
+        zoom = 1
     ) {
-    const left = gridToWorldPixels(room.position.x);
-    const top = gridToWorldPixels(room.position.y);
-    const width = gridToPixels(room.size.width);
-    const height = gridToPixels(room.size.height);
-    const offset = gridToPixels(distance);
+    const left = gridToWorldPixels(room.position.x, zoom);
+    const top = gridToWorldPixels(room.position.y, zoom);
+    const width = gridToPixels(room.size.width, zoom);
+    const height = gridToPixels(room.size.height, zoom);
+    const offset = gridToPixels(distance, zoom);
 
     const position = (index + 1) / (count + 1);
 
@@ -254,7 +256,7 @@ export function getConnectionPoint(
     }
 }
 
-export function getConnectionPoints(map, connectionData) {
+export function getConnectionPoints(map, connectionData, zoom = 1) {
     const points = new Map();
 
     for (const [roomID, sides] of connectionData) {
@@ -267,7 +269,9 @@ export function getConnectionPoints(map, connectionData) {
                     room,
                     "N",
                     index,
-                    sides.N.length
+                    sides.N.length,
+                    0,
+                    zoom
                 )
             ),
 
@@ -276,7 +280,9 @@ export function getConnectionPoints(map, connectionData) {
                     room,
                     "E",
                     index,
-                    sides.E.length
+                    sides.E.length,
+                    0,
+                    zoom
                 )
             ),
 
@@ -285,7 +291,9 @@ export function getConnectionPoints(map, connectionData) {
                     room,
                     "S",
                     index,
-                    sides.S.length
+                    sides.S.length,
+                    0,
+                    zoom
                 )
             ),
 
@@ -294,7 +302,9 @@ export function getConnectionPoints(map, connectionData) {
                     room,
                     "W",
                     index,
-                    sides.W.length
+                    sides.W.length,
+                    0,
+                    zoom
                 )
             )
         });

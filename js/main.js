@@ -15,6 +15,12 @@ const connectionLayer = document.createElementNS(
     "svg"
 );
 
+const MIN_ZOOM = 0.25;
+const MAX_ZOOM = 4;
+const ZOOM_STEP = 0.25;
+
+let zoom = 1;
+
 const map = defaultMap;
 const mapElement = document.getElementById("map");
 const mapWorld = document.createElement("div");
@@ -23,10 +29,74 @@ mapWorld.classList.add("map-world");
 mapWorld.style.width = `${MAP_SIZE}px`;
 mapWorld.style.height = `${MAP_SIZE}px`;
 
-mapWorld.style.setProperty(
-    "--map-origin",
-    `${MAP_ORIGIN}px`
-);
+function changeZoom(newZoom) {
+    const oldZoom = zoom;
+
+    zoom = Math.max(
+        MIN_ZOOM,
+        Math.min(MAX_ZOOM, newZoom)
+    );
+
+    if (zoom === oldZoom) {
+        return;
+    }
+
+    const centerX =
+        mapElement.scrollLeft +
+        mapElement.clientWidth / 2;
+
+    const centerY =
+        mapElement.scrollTop +
+        mapElement.clientHeight / 2;
+
+    const worldX =
+        centerX / oldZoom;
+
+    const worldY =
+        centerY / oldZoom;
+
+    updateZoom();
+
+    mapElement.scrollLeft =
+        worldX * zoom -
+        mapElement.clientWidth / 2;
+
+    mapElement.scrollTop =
+        worldY * zoom -
+        mapElement.clientHeight / 2;
+}
+
+function updateZoom() {
+    mapElement.querySelectorAll(".room").forEach(
+        (roomElement) => roomElement.remove()
+    );
+
+    mapWorld.style.width =
+        `${MAP_SIZE * zoom}px`;
+
+    mapWorld.style.height =
+        `${MAP_SIZE * zoom}px`;
+
+    mapWorld.style.setProperty(
+        "--grid-size",
+        `${GRID_SIZE * zoom}px`
+    );
+
+    renderRooms(
+        map,
+        mapWorld,
+        connectionLayer,
+        zoom
+    );
+
+    renderConnections(
+        map,
+        connectionLayer,
+        zoom
+    );
+
+    console.log("Zoom Level:", zoom)
+}
 
 mapElement.appendChild(mapWorld);
 
@@ -50,6 +120,24 @@ mapElement.addEventListener(
     (event) => {
         event.preventDefault();
     }
+);
+
+mapElement.addEventListener(
+    "wheel",
+    (event) => {
+        if (!event.ctrlKey) {
+            return;
+        }
+
+        event.preventDefault();
+
+        if (event.deltaY < 0) {
+            changeZoom(zoom + ZOOM_STEP);
+        } else {
+            changeZoom(zoom - ZOOM_STEP);
+        }    
+    },
+    { passive: false }
 );
 
 let isPanning = false;
@@ -101,11 +189,10 @@ document.addEventListener(
     }
 );
 
-renderRooms(map, mapWorld, connectionLayer);
-renderConnections(map, connectionLayer);
+updateZoom();
 
 mapElement.scrollLeft =
-    (MAP_SIZE - mapElement.clientWidth) / 2;
+    (MAP_SIZE * zoom - mapElement.clientWidth) / 2;
 
 mapElement.scrollTop =
-    (MAP_SIZE - mapElement.clientHeight) / 2;
+    (MAP_SIZE * zoom - mapElement.clientHeight) / 2;

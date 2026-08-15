@@ -543,7 +543,7 @@ The planned interaction model is:
 * Rooms and connections move and scale together with the map.
 * The room editor remains independent of the map camera.
 
-### Zoom
+### Zoom (This has been implemented and seems to be complete)
 
 Zoom should operate on the map's visual representation rather than changing the underlying room coordinates.
 
@@ -564,6 +564,8 @@ Zooming should scale:
 * The visible grid
 
 This should be implemented as a camera/content transformation rather than individually changing every room's stored data.
+
+Zoom: Ctrl + Scroll Wheel changes zoom between the configured minimum and maximum values. Zooming preserves the center of the current viewport rather than centering on the overall map. Zoom changes are routed through a shared changeZoom() function so future zoom controls can reuse the same behavior.
 
 ### Coordinate Separation
 
@@ -797,11 +799,11 @@ The current development progression is:
 13. Verify that rooms, connections, grid, and room text remain aligned during pan/zoom
 14. Return to the room editor and add editable room properties, as well as the ability to close the editor.
 15. Add free-form room notes
-16. Begin interactive room/connection creation and editing
+16. Begin interactive room/connection creation and editing, this includes a zoom bar, visible ui zoom level, and possibly zoom shortcut keys.
 
 ### Current Position
 
-Steps 1–9 are currently working in prototype form.
+Steps 1–13 are currently working in prototype form.
 
 The project is currently at the transition between **room interaction** and **map navigation**.
 

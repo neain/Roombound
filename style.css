@@ -46,12 +46,12 @@ body {
         linear-gradient(#333333 1px, transparent 1px),
         linear-gradient(90deg, #333333 1px, transparent 1px);
 
-    background-size: var(--grid-size) var(--grid-size);
-    background-position:
-    var(--map-origin)
-    var(--map-origin);
-}
+    background-size:
+        var(--grid-size)
+        var(--grid-size);
 
+    background-position: 0 0;
+}
 .room {
     position: absolute;
 
@@ -64,6 +64,7 @@ body {
 
     color: #ffffff;
     text-align: center;
+    font-size: 16px;
 
     overflow: hidden;
     z-index: 1;

@@ -12,9 +12,15 @@ let selectedRoom = null;
 let roomEditor = null;
 let editorContent = null;
 
-export function renderRooms(map, mapElement, connectionLayer) {
-    roomTooltip.classList.add("room-tooltip");
-    mapElement.appendChild(roomTooltip);
+export function renderRooms(map, mapElement, connectionLayer, zoom = 1) {
+    if (!roomTooltip.parentElement) {
+        roomTooltip.classList.add("room-tooltip");
+        mapElement.appendChild(roomTooltip);
+    }
+
+    mapElement.querySelectorAll(".room").forEach(
+        (roomElement) => roomElement.remove()
+    );
 
     for (const room of map.rooms) {
 
@@ -45,17 +51,19 @@ export function renderRooms(map, mapElement, connectionLayer) {
 
 
         roomElement.style.left =
-            `${gridToWorldPixels(room.position.x)}px`;
+            `${gridToWorldPixels(room.position.x, zoom)}px`;
 
         roomElement.style.top =
-            `${gridToWorldPixels(room.position.y)}px`;
+            `${gridToWorldPixels(room.position.y, zoom)}px`;
             
         roomElement.style.width =
-            `${gridToPixels(room.size.width)}px`;
+            `${gridToPixels(room.size.width, zoom)}px`;
 
         roomElement.style.height =
-            `${gridToPixels(room.size.height)}px`;
+            `${gridToPixels(room.size.height, zoom)}px`;
 
+        roomElement.style.fontSize =
+            `${16 * zoom}px`;
 
         roomElement.addEventListener(
             "mousedown",
@@ -65,7 +73,8 @@ export function renderRooms(map, mapElement, connectionLayer) {
                     room,
                     roomElement,
                     map,
-                    connectionLayer
+                    connectionLayer,
+                    zoom
                 );
             }
         );
@@ -81,7 +90,7 @@ export function renderRooms(map, mapElement, connectionLayer) {
     }
 }
 
-export function startDragging(event, room, roomElement, map, connectionLayer) {
+export function startDragging(event, room, roomElement, map, connectionLayer, zoom = 1) {
 
     event.preventDefault();
 
@@ -108,10 +117,10 @@ export function startDragging(event, room, roomElement, map, connectionLayer) {
 
 
         const deltaGridX =
-            pixelsToGrid(mouseDeltaX);
+            pixelsToGrid(mouseDeltaX, zoom);
 
         const deltaGridY =
-            pixelsToGrid(mouseDeltaY);
+            pixelsToGrid(mouseDeltaY, zoom);
 
 
         room.position.x =
@@ -122,13 +131,13 @@ export function startDragging(event, room, roomElement, map, connectionLayer) {
 
 
         roomElement.style.left =
-            `${gridToWorldPixels(room.position.x)}px`;
+            `${gridToWorldPixels(room.position.x, zoom)}px`;
 
         roomElement.style.top =
-            `${gridToWorldPixels(room.position.y)}px`;
+            `${gridToWorldPixels(room.position.y, zoom)}px`;
 
 
-        renderConnections(map, connectionLayer);
+        renderConnections(map, connectionLayer, zoom);
     }
 
 
