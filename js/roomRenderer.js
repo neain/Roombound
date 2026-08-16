@@ -1,37 +1,100 @@
-// Shared map/grid utilities: GRID_SIZE, gridToPixels(), pixelsToGrid().
-import { GRID_SIZE, MAP_ORIGIN, gridToPixels, gridToWorldPixels, pixelsToGrid } from "./mapUtils.js";
+// ============================================================
+// IMPORTS
+// ============================================================
 
-// Connection rendering and connection geometry: renderConnections() and related helpers.
+// Shared map/grid utilities.
+// CURRENT: GRID_SIZE, MAP_ORIGIN, gridToPixels(), gridToWorldPixels(),
+//          pixelsToGrid()
+// FUTURE: Additional room-position/grid utilities should come from here
+//         rather than being duplicated in this file.
+// If working on room coordinates, dimensions, or grid conversion, inspect:
+//   ./mapUtils.js
+import {
+    GRID_SIZE,
+    MAP_ORIGIN,
+    gridToPixels,
+    gridToWorldPixels,
+    pixelsToGrid
+} from "./mapUtils.js";
+
+// Connection rendering and connection geometry.
+// CURRENT: renderConnections()
+// If changing how room movement/creation/deletion affects connections, inspect:
+//   ./connectionRenderer.js
 import { renderConnections } from "./connectionRenderer.js";
 
-const hoverExceptions = ["roomID", "connections", "position", "size", "editorSize"];
+
+// ============================================================
+// ROOM STATE
+// ============================================================
+
+// Room properties that should not be displayed in the room tooltip or editor.
+// These are structural/internal properties rather than normal room details.
+const hoverExceptions = [
+    "roomID",
+    "connections",
+    "position",
+    "size",
+    "editorSize"
+];
+
+// Shared tooltip used when hovering over rooms.
 const roomTooltip = document.createElement("div");
 
+// The room currently selected by the user.
 let selectedRoom = null;
+
+// The single room editor instance currently displayed, if any.
 let roomEditor = null;
+
+// Container holding the fields inside the room editor.
 let editorContent = null;
+
+// Last saved screen position of the room editor.
 let editorPosition = null;
+
+// Tracks whether the selected room was created specifically for the current
+// editor session. This allows Cancel to remove a newly created room.
 let isNewRoom = false;
+
+// Map/rendering information needed by the editor when it needs to modify the
+// selected room or redraw the map.
 let editorContext = null;
 
-export function renderRooms(map, mapElement, connectionLayer, zoom = 1) {
+
+// ============================================================
+// ROOM RENDERING
+// ============================================================
+
+// Removes the current room elements and redraws every room in the map.
+//
+// The room data itself is not modified here. This function only converts the
+// current map data into visible room elements.
+export function renderRooms(
+    map,
+    mapElement,
+    connectionLayer,
+    zoom = 1
+) {
     if (!roomTooltip.parentElement) {
         roomTooltip.classList.add("room-tooltip");
         mapElement.appendChild(roomTooltip);
     }
 
+    // Rendering is currently done by rebuilding the room elements from the
+    // map data. This keeps the displayed rooms synchronized with the data.
     mapElement.querySelectorAll(".room").forEach(
         (roomElement) => roomElement.remove()
     );
 
     for (const room of map.rooms) {
-
         const roomElement = document.createElement("div");
 
         roomElement.classList.add("room");
         roomElement.dataset.roomId = room.roomID;
 
         roomElement.textContent = room.name;
+
         roomElement.addEventListener(
             "mouseenter",
             (event) => {
@@ -49,15 +112,15 @@ export function renderRooms(map, mapElement, connectionLayer, zoom = 1) {
                 roomTooltip.style.display = "none";
             }
         );
-//        roomElement.title = getRoomHoverInfo(room);
 
-
+        // Position and size are stored in grid coordinates but displayed in
+        // world pixels, with the current zoom applied.
         roomElement.style.left =
             `${gridToWorldPixels(room.position.x, zoom)}px`;
 
         roomElement.style.top =
             `${gridToWorldPixels(room.position.y, zoom)}px`;
-            
+
         roomElement.style.width =
             `${gridToPixels(room.size.width, zoom)}px`;
 
@@ -84,7 +147,13 @@ export function renderRooms(map, mapElement, connectionLayer, zoom = 1) {
         roomElement.addEventListener(
             "click",
             () => {
-                selectRoom(room, map, mapElement, connectionLayer, zoom);
+                selectRoom(
+                    room,
+                    map,
+                    mapElement,
+                    connectionLayer,
+                    zoom
+                );
             }
         );
 
@@ -92,8 +161,21 @@ export function renderRooms(map, mapElement, connectionLayer, zoom = 1) {
     }
 }
 
-export function createRoom(map, mapElement, connectionLayer, zoom = 1) {
 
+// ============================================================
+// ROOM CREATION / DELETION
+// ============================================================
+
+// Creates a new room centered on the currently visible portion of the map.
+//
+// The new room is added to the map immediately, then selected so the room
+// editor can be used to finish configuring it.
+export function createRoom(
+    map,
+    mapElement,
+    connectionLayer,
+    zoom = 1
+) {
     let highestRoomNumber = 0;
 
     for (const room of map.rooms) {
@@ -113,6 +195,7 @@ export function createRoom(map, mapElement, connectionLayer, zoom = 1) {
     const roomNumber =
         String(highestRoomNumber + 1).padStart(3, "0");
 
+    // Determine the center of the currently visible map area.
     const centerX =
         mapElement.scrollLeft +
         mapElement.clientWidth / 2;
@@ -121,6 +204,7 @@ export function createRoom(map, mapElement, connectionLayer, zoom = 1) {
         mapElement.scrollTop +
         mapElement.clientHeight / 2;
 
+    // Convert that screen position back into map grid coordinates.
     const worldX =
         (centerX - MAP_ORIGIN * zoom) /
         (GRID_SIZE * zoom);
@@ -129,6 +213,8 @@ export function createRoom(map, mapElement, connectionLayer, zoom = 1) {
         (centerY - MAP_ORIGIN * zoom) /
         (GRID_SIZE * zoom);
 
+    // Rooms are currently created at a fixed 5x5 grid size and positioned so
+    // their center is approximately at the center of the visible map.
     const room = {
         roomID: `room_${roomNumber}`,
         name: "New Room",
@@ -151,6 +237,7 @@ export function createRoom(map, mapElement, connectionLayer, zoom = 1) {
 
     map.rooms.push(room);
 
+    // Redraw both rooms and connections so the new room appears immediately.
     renderRooms(
         map,
         mapElement,
@@ -164,11 +251,28 @@ export function createRoom(map, mapElement, connectionLayer, zoom = 1) {
         zoom
     );
 
+    // Mark this as a newly created room so Cancel can remove it.
     isNewRoom = true;
-    selectRoom(room, map, mapElement, connectionLayer, zoom);
+
+    selectRoom(
+        room,
+        map,
+        mapElement,
+        connectionLayer,
+        zoom
+    );
 }
 
-export function deleteRoom(map, roomID, mapElement, connectionLayer, zoom = 1) {
+// Deletes a room from the map by ID and redraws the affected map elements.
+//
+// If the requested room does not exist, nothing happens.
+export function deleteRoom(
+    map,
+    roomID,
+    mapElement,
+    connectionLayer,
+    zoom = 1
+) {
     const roomIndex =
         map.rooms.findIndex(
             (room) => room.roomID === roomID
@@ -194,172 +298,33 @@ export function deleteRoom(map, roomID, mapElement, connectionLayer, zoom = 1) {
     );
 }
 
-export function startDragging(event, room, roomElement, map, connectionLayer, zoom = 1) {
 
-    event.preventDefault();
+// ============================================================
+// ROOM SELECTION
+// ============================================================
 
-    if (event.button !== 0) {
-        return;
-    }
-
-    roomTooltip.style.display = "none";
-
-    const startMouseX = event.clientX;
-    const startMouseY = event.clientY;
-
-    const startRoomX = room.position.x;
-    const startRoomY = room.position.y;
-
-
-    function drag(event) {
-
-        const mouseDeltaX =
-            event.clientX - startMouseX;
-
-        const mouseDeltaY =
-            event.clientY - startMouseY;
-
-
-        const deltaGridX =
-            pixelsToGrid(mouseDeltaX, zoom);
-
-        const deltaGridY =
-            pixelsToGrid(mouseDeltaY, zoom);
-
-
-        room.position.x =
-            startRoomX + deltaGridX;
-
-        room.position.y =
-            startRoomY + deltaGridY;
-
-
-        roomElement.style.left =
-            `${gridToWorldPixels(room.position.x, zoom)}px`;
-
-        roomElement.style.top =
-            `${gridToWorldPixels(room.position.y, zoom)}px`;
-
-
-        renderConnections(map, connectionLayer, zoom);
-    }
-
-
-    function stopDragging() {
-
-        document.removeEventListener(
-            "mousemove",
-            drag
-        );
-
-        document.removeEventListener(
-            "mouseup",
-            stopDragging
-        );
-
-
-        console.log(
-            `Moved ${room.name} to`,
-            room.position
-        );
-    }
-
-
-    document.addEventListener(
-        "mousemove",
-        drag
-    );
-
-    document.addEventListener(
-        "mouseup",
-        stopDragging
-    );
-}
-
+// Returns the room currently selected by the user, or null when no room is
+// selected.
 export function getSelectedRoom() {
     return selectedRoom;
 }
 
-function getRoomHoverInfo(room) {
-    return Object.entries(room)
-        .filter(([key]) => !hoverExceptions.includes(key))
-        .map(([key, value]) => `${key}: ${value}`)
-        .join("\n");
-}
-
-function saveRoomEditor() {
-
-    const inputs =
-        editorContent.querySelectorAll("input");
-
-    const textarea =
-        editorContent.querySelector("textarea");
-
-    for (const input of inputs) {
-
-        const key =
-            input.previousElementSibling.textContent
-                .replace(": ", "");
-
-        selectedRoom[key] = input.value;
-    }
-
-    selectedRoom.notes = textarea.value;
-
-    selectedRoom.editorSize = {
-        width: roomEditor.offsetWidth,
-        height: roomEditor.offsetHeight
-    };
-
-    isNewRoom = false;
-
-    editorPosition = {
-        x: roomEditor.offsetLeft,
-        y: roomEditor.offsetTop
-    };
-
-
-    const roomElement =
-        document.querySelector(
-            `.room[data-room-id="${selectedRoom.roomID}"]`
-        );
-
-    if (roomElement) {
-        roomElement.textContent = selectedRoom.name;
-    }
-
-
-    closeRoomEditor();
-}
-
-function cancelRoomEditor() {
-
-    if (isNewRoom) {
-        deleteRoom(
-            editorContext.map,
-            selectedRoom.roomID,
-            editorContext.mapElement,
-            editorContext.connectionLayer,
-            editorContext.zoom
-        );
-    }
-
-    isNewRoom = false;
-
-    closeRoomEditor();
-}
-
-function closeRoomEditor() {
-    roomEditor.remove();
-
-    roomEditor = null;
-    editorContent = null;
-    selectedRoom = null;
-}
-
-function selectRoom(room, map, mapElement, connectionLayer, zoom) {
-    
+// Selects a room and opens or updates the room editor for it.
+//
+// The editor keeps a reference to the selected room rather than creating a
+// separate copy. Save/Cancel behavior is therefore handled by the editor's
+// existing state and lifecycle.
+function selectRoom(
+    room,
+    map,
+    mapElement,
+    connectionLayer,
+    zoom
+) {
     selectedRoom = room;
+
+    // Store the map/rendering context so editor actions such as Cancel can
+    // delete a newly created room and redraw the map.
     editorContext = {
         map,
         mapElement,
@@ -367,7 +332,7 @@ function selectRoom(room, map, mapElement, connectionLayer, zoom) {
         zoom
     };
 
-
+    // Create the editor the first time a room is selected.
     if (!roomEditor) {
         roomEditor = document.createElement("div");
         roomEditor.classList.add("room-editor");
@@ -377,6 +342,10 @@ function selectRoom(room, map, mapElement, connectionLayer, zoom) {
 
         roomEditor.style.height =
             `${room.editorSize.height}px`;
+
+        // --------------------------------------------------------
+        // Editor header
+        // --------------------------------------------------------
 
         const editorHeader = document.createElement("div");
         editorHeader.classList.add("room-editor-header");
@@ -388,16 +357,27 @@ function selectRoom(room, map, mapElement, connectionLayer, zoom) {
         closeButton.textContent = "×";
         closeButton.classList.add("room-editor-close");
 
-        closeButton.addEventListener("click", cancelRoomEditor);
+        closeButton.addEventListener(
+            "click",
+            cancelRoomEditor
+        );
 
         editorHeader.appendChild(editorTitle);
         editorHeader.appendChild(closeButton);
+
+        // --------------------------------------------------------
+        // Editor content
+        // --------------------------------------------------------
 
         editorContent = document.createElement("div");
         editorContent.classList.add("room-editor-content");
 
         roomEditor.appendChild(editorHeader);
         roomEditor.appendChild(editorContent);
+
+        // --------------------------------------------------------
+        // Editor buttons
+        // --------------------------------------------------------
 
         const editorButtons = document.createElement("div");
         editorButtons.classList.add("room-editor-buttons");
@@ -427,6 +407,7 @@ function selectRoom(room, map, mapElement, connectionLayer, zoom) {
 
         document.body.appendChild(roomEditor);
 
+        // Restore the editor's last saved screen position when possible.
         if (editorPosition) {
             roomEditor.style.left =
                 `${editorPosition.x}px`;
@@ -437,8 +418,10 @@ function selectRoom(room, map, mapElement, connectionLayer, zoom) {
             roomEditor.style.right = "auto";
         }
 
-        startEditorDragging(editorHeader);  
-        
+        // Allow the editor to be repositioned by dragging its header.
+        startEditorDragging(editorHeader);
+
+        // Provide keyboard shortcuts for saving/canceling the editor.
         editorContent.addEventListener(
             "keydown",
             (event) => {
@@ -452,6 +435,7 @@ function selectRoom(room, map, mapElement, connectionLayer, zoom) {
                     return;
                 }
 
+                // Enter should still create a newline inside the notes field.
                 if (event.target.tagName === "TEXTAREA") {
                     return;
                 }
@@ -462,25 +446,125 @@ function selectRoom(room, map, mapElement, connectionLayer, zoom) {
         );
     }
 
+    // Every room can remember its preferred editor dimensions.
     roomEditor.style.width =
         `${room.editorSize.width}px`;
 
     roomEditor.style.height =
         `${room.editorSize.height}px`;
 
-
     updateRoomEditor();
 }
 
+
+// ============================================================
+// ROOM TOOLTIP
+// ============================================================
+
+// Builds the information shown when the mouse hovers over a room.
+//
+// Internal/structural room properties listed in hoverExceptions are omitted.
+function getRoomHoverInfo(room) {
+    return Object.entries(room)
+        .filter(([key]) => !hoverExceptions.includes(key))
+        .map(([key, value]) => `${key}: ${value}`)
+        .join("\n");
+}
+
+
+// ============================================================
+// ROOM EDITOR
+// ============================================================
+
+// Saves the current contents of the room editor back into the selected room.
+//
+// The editor's current dimensions and screen position are also remembered so
+// they can be restored the next time an editor is opened.
+function saveRoomEditor() {
+    const inputs =
+        editorContent.querySelectorAll("input");
+
+    const textarea =
+        editorContent.querySelector("textarea");
+
+    for (const input of inputs) {
+        const key =
+            input.previousElementSibling.textContent
+                .replace(": ", "");
+
+        selectedRoom[key] = input.value;
+    }
+
+    selectedRoom.notes = textarea.value;
+
+    selectedRoom.editorSize = {
+        width: roomEditor.offsetWidth,
+        height: roomEditor.offsetHeight
+    };
+
+    isNewRoom = false;
+
+    editorPosition = {
+        x: roomEditor.offsetLeft,
+        y: roomEditor.offsetTop
+    };
+
+    // Update the visible room name without requiring a complete room redraw.
+    const roomElement =
+        document.querySelector(
+            `.room[data-room-id="${selectedRoom.roomID}"]`
+        );
+
+    if (roomElement) {
+        roomElement.textContent = selectedRoom.name;
+    }
+
+    closeRoomEditor();
+}
+
+// Cancels the current room editing session.
+//
+// Newly created rooms are removed entirely when their initial editor session
+// is canceled. Existing rooms are simply left unchanged.
+function cancelRoomEditor() {
+    if (isNewRoom) {
+        deleteRoom(
+            editorContext.map,
+            selectedRoom.roomID,
+            editorContext.mapElement,
+            editorContext.connectionLayer,
+            editorContext.zoom
+        );
+    }
+
+    isNewRoom = false;
+
+    closeRoomEditor();
+}
+
+// Removes the current room editor and clears its associated state.
+function closeRoomEditor() {
+    roomEditor.remove();
+
+    roomEditor = null;
+    editorContent = null;
+    selectedRoom = null;
+}
+
+// Rebuilds the contents of the room editor from the currently selected room.
+//
+// Editable fields such as name, floor, and notes receive form controls.
+// Structural properties remain visible as read-only information when they
+// are not listed in hoverExceptions.
 function updateRoomEditor() {
     editorContent.innerHTML = "";
 
     for (const [key, value] of Object.entries(selectedRoom)) {
-
         if (hoverExceptions.includes(key)) {
             continue;
         }
 
+        // Standard editable single-value fields.
         if (key === "name" || key === "floor") {
             const fieldContainer = document.createElement("div");
             fieldContainer.classList.add("room-editor-field");
@@ -498,8 +582,8 @@ function updateRoomEditor() {
 
             continue;
         }
-        
 
+        // Notes use a textarea so multiple lines can be entered.
         if (key === "notes") {
             const fieldContainer = document.createElement("div");
             fieldContainer.classList.add("room-editor-notes");
@@ -517,6 +601,7 @@ function updateRoomEditor() {
             continue;
         }
 
+        // Remaining non-editable room properties are displayed as plain text.
         const field = document.createElement("div");
 
         field.textContent = `${key}: ${value}`;
@@ -525,15 +610,118 @@ function updateRoomEditor() {
     }
 }
 
-function startEditorDragging(editorHeader) {
 
+// ============================================================
+// ROOM DRAGGING
+// ============================================================
+
+// Moves a room while the left mouse button is held down.
+//
+// The room's position remains stored in grid coordinates. Mouse movement is
+// converted into grid movement so rooms continue to snap to the grid.
+export function startDragging(
+    event,
+    room,
+    roomElement,
+    map,
+    connectionLayer,
+    zoom = 1
+) {
+    event.preventDefault();
+
+    if (event.button !== 0) {
+        return;
+    }
+
+    roomTooltip.style.display = "none";
+
+    const startMouseX = event.clientX;
+    const startMouseY = event.clientY;
+
+    const startRoomX = room.position.x;
+    const startRoomY = room.position.y;
+
+    // Updates the room position while the mouse is moving.
+    function drag(event) {
+        const mouseDeltaX =
+            event.clientX - startMouseX;
+
+        const mouseDeltaY =
+            event.clientY - startMouseY;
+
+        const deltaGridX =
+            pixelsToGrid(mouseDeltaX, zoom);
+
+        const deltaGridY =
+            pixelsToGrid(mouseDeltaY, zoom);
+
+        room.position.x =
+            startRoomX + deltaGridX;
+
+        room.position.y =
+            startRoomY + deltaGridY;
+
+        roomElement.style.left =
+            `${gridToWorldPixels(room.position.x, zoom)}px`;
+
+        roomElement.style.top =
+            `${gridToWorldPixels(room.position.y, zoom)}px`;
+
+        // Connections depend on room positions, so they need to be redrawn
+        // while the room is being moved.
+        renderConnections(
+            map,
+            connectionLayer,
+            zoom
+        );
+    }
+
+    // Removes the temporary mouse listeners when dragging ends.
+    function stopDragging() {
+        document.removeEventListener(
+            "mousemove",
+            drag
+        );
+
+        document.removeEventListener(
+            "mouseup",
+            stopDragging
+        );
+
+        console.log(
+            `Moved ${room.name} to`,
+            room.position
+        );
+    }
+
+    document.addEventListener(
+        "mousemove",
+        drag
+    );
+
+    document.addEventListener(
+        "mouseup",
+        stopDragging
+    );
+}
+
+
+// ============================================================
+// EDITOR DRAGGING
+// ============================================================
+
+// Adds dragging behavior to the room editor's header.
+//
+// This is separate from room dragging because the editor is a screen-space
+// UI element rather than a map-space object.
+function startEditorDragging(editorHeader) {
     let startMouseX;
     let startMouseY;
     let startEditorX;
     let startEditorY;
 
+    // Records the mouse/editor positions when the header is grabbed.
     function startDrag(event) {
-
         event.preventDefault();
 
         startMouseX = event.clientX;
@@ -553,8 +741,8 @@ function startEditorDragging(editorHeader) {
         );
     }
 
+    // Moves the editor to follow the mouse.
     function drag(event) {
-
         const mouseDeltaX =
             event.clientX - startMouseX;
 
@@ -570,8 +758,8 @@ function startEditorDragging(editorHeader) {
         roomEditor.style.right = "auto";
     }
 
+    // Removes the temporary drag listeners when the editor is released.
     function stopDrag() {
-
         document.removeEventListener(
             "mousemove",
             drag
