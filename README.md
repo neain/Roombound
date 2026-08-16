@@ -270,9 +270,13 @@ S
 SW
 W
 NW
+UP
+DOWN
 NONE
 
 The eight directional values represent the cardinal and diagonal sides of a room.
+
+UP and DOWN will show (in some way not yet defined) that the room connects to a room on a different floor, either up a layer, or down a layer.
 
 `NONE` means that the connection exists but is not associated with a particular side.
 
@@ -773,27 +777,27 @@ The current development progression was:
 14. Return to the room editor and add editable room properties, as well as the ability to close the editor
 15. Add free-form room notes
 16. Begin interactive room/connection creation and editing
-17. Polish pass (this will keep growing until I get to this step at the very least)
-18. Modify buttons and other graphics
-19. Include a zoom bar, visible UI zoom level, and possibly zoom shortcut keys
-20. Right-click context menu on the main map (things like create new room, and more if I think about it. Maybe this is where the options menu lives? This is a ToDo)
-21. Check that the tooltip popup for the new buttons (bottom right on the screen) looks fine
-22. Add context menu for new connection creation
-23. Room names need to resize based on the size of the room so that they remain readable and the text doesn't go off the edge of the room
-24. Rooms need to be able to be recolored
-25. Ensure that the edit room default size is large enough that no buttons are cut off by default. I don't mind if the user shrinks the box past that, but the default should be large enough
-26. Need to decide to keep open the room editor (as it is now), or close it when the Edit Connection button is clicked
-27. Inside the connection editor: Align/center direction arrows, establish sensible default connection ordering, clickable A/B headers for sorting, possibly ascending/descending indicators
-28. Maybe combine the colors of the editor windows (connection and room) into a single CSS properties section. At the moment they are individual, just set to the same color
-29. Make the connection paths on the map clickable, at which point it should open the connection editor with only that path
-30. In the edit connections window, change the functionality of clicking a connection making a dropdown with the exact same text but now 3 buttons, visually replace the current button with the 3 new ones. Maybe just set that as the default state of the edit connections window. (Clarification for GPT: only replacing the top level because the text is the same and it is just visually sad to the human that the text just repeats)
-31. Complete the connection endpoint editing workflow using the A/B connection model
-32. Add room-target selection for connection endpoints
-33. Add connection-side selection for each endpoint
-34. Handle disconnecting either endpoint, including deleting a connection when both endpoints are disconnected
-35. Refine unresolved connection behavior and creation workflow
-36. Continue connection editor usability testing
-37. Polish pass
+17. Complete the connection endpoint editing workflow using the A/B connection model
+18. Add room-target selection for connection endpoints
+19. Add connection-side selection for each endpoint
+20. Handle disconnecting either endpoint, including deleting a connection when both endpoints are disconnected
+21. Refine unresolved connection behavior and creation workflow
+22. Continue connection editor usability testing
+23. Polish pass
+24. Modify buttons and other graphics
+25. Include a zoom bar, visible UI zoom level, and possibly zoom shortcut keys
+26. Right-click context menu on the main map (things like create new room, and more if I think about it. Maybe this is where the options menu lives? This is a ToDo)
+27. Check that the tooltip popup for the new buttons (bottom right on the screen) looks fine
+28. Add context menu for new connection creation
+29. Room names need to resize based on the size of the room so that they remain readable and the text doesn't go off the edge of the room
+30. Rooms need to be able to be recolored
+31. Ensure that the edit room default size is large enough that no buttons are cut off by default. I don't mind if the user shrinks the box past that, but the default should be large enough
+32. Need to decide to keep open the room editor (as it is now), or close it when the Edit Connection button is clicked
+33. Inside the connection editor: Align/center direction arrows, establish sensible default connection ordering, clickable A/B headers for sorting, possibly ascending/descending indicators
+34. Maybe combine the colors of the editor windows (connection and room) into a single CSS properties section. At the moment they are individual, just set to the same color
+35. Make the connection paths on the map clickable, at which point it should open the connection editor with only that path
+36. In the edit connections window, change the functionality of clicking a connection making a dropdown with the exact same text but now 3 buttons, visually replace the current button with the 3 new ones. Maybe just set that as the default state of the edit connections window. (Clarification for GPT: only replacing the top level because the text is the same and it is just visually sad to the human that the text just repeats)
+
 
 ### Current Position
 
