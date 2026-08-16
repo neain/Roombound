@@ -9,6 +9,7 @@
 // looking up rooms by ID, inspect:
 //   ./mapUtils.js
 import {
+    CONNECTION_ROOM_RANGE,
     GRID_SIZE,
     gridToPixels,
     gridToWorldPixels,
@@ -23,6 +24,46 @@ import {
 
 // Size of the SVG arrowhead markers used on connection lines.
 const arrowSize = 4;
+
+// Size of the visual marker displayed around a selected connection endpoint.
+const selectedEndpointRadius = 5;
+
+
+// ============================================================
+// CONNECTION RENDERING STATE
+// ============================================================
+
+// The connection endpoint currently selected by the connection editor.
+let selectedEndpoint = null;
+
+
+// ============================================================
+// CONNECTION EDITOR ENDPOINT SELECTION
+// ============================================================
+
+// Sets the connection endpoint currently highlighted by the editor.
+//
+// endpoint must be either "A", "B", or null to clear the selection.
+export function setSelectedConnectionEndpoint(
+    connection,
+    endpoint
+) {
+    if (!connection || !endpoint) {
+        selectedEndpoint = null;
+        return;
+    }
+
+    selectedEndpoint = {
+        connection,
+        endpoint
+    };
+}
+
+
+// Clears the currently highlighted connection endpoint.
+export function clearSelectedConnectionEndpoint() {
+    selectedEndpoint = null;
+}
 
 
 // ============================================================
@@ -234,7 +275,8 @@ export function renderConnections(
                     [roomBIndex];
         }
 
-        // A connection without room B extends outward from room A.
+        // An endpoint with a room but NONE as its side connects to the
+        // center of that room. A null room remains an unresolved endpoint.
         if (!roomBPoint) {
             roomBPoint =
                 getConnectionPoint(
@@ -242,9 +284,18 @@ export function renderConnections(
                     connection.roomAConnectionSide,
                     roomAIndex,
                     roomAConnections.length,
-                    3,
+                    0,
                     zoom
                 );
+
+            if (!roomB) {
+                roomBPoint =
+                    getFreeConnectionPoint(
+                        roomA,
+                        connection.roomAConnectionSide,
+                        zoom
+                    );
+            }
         }
 
         const line =
@@ -298,6 +349,63 @@ export function renderConnections(
         }
 
         connectionLayer.appendChild(line);
+
+
+        // ----------------------------------------------------
+        // Selected endpoint marker
+        // ----------------------------------------------------
+
+        if (
+            selectedEndpoint &&
+            selectedEndpoint.connection === connection
+        ) {
+            const point =
+                selectedEndpoint.endpoint === "A"
+                    ? roomAPoint
+                    : roomBPoint;
+
+            const range =
+                document.createElementNS(
+                    "http://www.w3.org/2000/svg",
+                    "rect"
+                );
+
+            const rangeSize =
+                gridToPixels(
+                    CONNECTION_ROOM_RANGE * 2,
+                    zoom
+                );
+
+            range.setAttribute(
+                "x",
+                point.x - rangeSize / 2
+            );
+
+            range.setAttribute(
+                "y",
+                point.y - rangeSize / 2
+            );
+
+            range.setAttribute(
+                "width",
+                rangeSize
+            );
+
+            range.setAttribute(
+                "height",
+                rangeSize
+            );
+
+            range.classList.add(
+                "connection-endpoint-range"
+            );
+
+            connectionLayer.appendChild(
+                range
+            );
+                    
+
+        }
     }
 }
 
@@ -321,7 +429,8 @@ export function analyzeConnections(map) {
                 N: [],
                 E: [],
                 S: [],
-                W: []
+                W: [],
+                NONE: []
             }
         );
     }
@@ -437,6 +546,11 @@ export function getConnectionPoints(
                             0,
                             zoom
                         )
+                ),
+
+                NONE: sides.NONE.map(
+                    (_, index) =>
+                        getConnectionPoint(room, "NONE",index, sides.NONE.length, 0, zoom)
                 )
             }
         );
@@ -445,6 +559,48 @@ export function getConnectionPoints(
     return points;
 }
 
+// Returns the unresolved endpoint position extending outward from a room.
+function getFreeConnectionPoint(
+    room,
+    side,
+    zoom
+) {
+    const point =
+        getConnectionPoint(
+            room,
+            side,
+            0,
+            1,
+            0,
+            zoom
+        );
+
+    const distance =
+        gridToPixels(
+            3,
+            zoom
+        );
+
+    switch (side) {
+        case "N":
+            point.y -= distance;
+            break;
+
+        case "E":
+            point.x += distance;
+            break;
+
+        case "S":
+            point.y += distance;
+            break;
+
+        case "W":
+            point.x -= distance;
+            break;
+    }
+
+    return point;
+}
 
 // Calculates the exact SVG point for one connection on one side of a room.
 export function getConnectionPoint(
@@ -511,6 +667,12 @@ export function getConnectionPoint(
             return {
                 x: left - offset,
                 y: top + height * position
+            };
+
+        case "NONE":
+            return {
+                x: left + width / 2,
+                y: top + height / 2
             };
 
         default:

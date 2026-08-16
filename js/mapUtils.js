@@ -6,32 +6,68 @@
 // used throughout Roombound.
 //
 // Coordinate systems used here:
-//   Grid coordinates  = logical map positions used by rooms/connections.
-//   World pixels      = pixel positions inside the map world.
-//   Screen pixels     = positions after zoom has been applied.
+//   Grid coordinates = logical map positions used by rooms/connections.
+//   World pixels     = pixel positions inside the map world.
+//   Screen pixels    = positions after zoom has been applied.
 //
 // If working on map dimensions, grid spacing, coordinate conversion, or
 // looking up rooms by ID, this is the file to inspect.
+
 
 
 // ============================================================
 // MAP CONFIGURATION
 // ============================================================
 
+
 // Distance between adjacent grid positions in unzoomed world pixels.
 export const GRID_SIZE = 15;
 
+
 // Total size of the map world in unzoomed pixels.
 export const MAP_SIZE = 10020;
+
 
 // The pixel coordinate at the center of the map world.
 // The map uses its center as the origin for grid coordinates.
 export const MAP_ORIGIN = MAP_SIZE / 2;
 
 
+// Maximum grid-space distance used when finding rooms that can be connected
+// to a connection endpoint.
+export const CONNECTION_ROOM_RANGE = 5;
+
+
+// Valid attachment sides for room connection endpoints.
+export const CONNECTION_SIDES = [
+    {
+        value: "NONE",
+        label: "None"
+    },
+    {
+        value: "N",
+        label: "North"
+    },
+    {
+        value: "E",
+        label: "East"
+    },
+    {
+        value: "S",
+        label: "South"
+    },
+    {
+        value: "W",
+        label: "West"
+    }
+];
+
+
+
 // ============================================================
 // COORDINATE CONVERSION
 // ============================================================
+
 
 // Converts a grid-coordinate value into a pixel distance.
 //
@@ -44,6 +80,7 @@ export const MAP_ORIGIN = MAP_SIZE / 2;
 export function gridToPixels(value, zoom = 1) {
     return value * GRID_SIZE * zoom;
 }
+
 
 // Converts a grid-coordinate value into an absolute position within the
 // map world.
@@ -61,6 +98,7 @@ export function gridToWorldPixels(value, zoom = 1) {
     return MAP_ORIGIN * zoom + gridToPixels(value, zoom);
 }
 
+
 // Converts a pixel distance back into the nearest grid-coordinate value.
 //
 // Input:
@@ -76,9 +114,11 @@ export function pixelsToGrid(value, zoom = 1) {
 }
 
 
+
 // ============================================================
 // MAP DATA LOOKUP
 // ============================================================
+
 
 // Finds a room in the map data by its unique room ID.
 //

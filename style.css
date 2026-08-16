@@ -116,6 +116,12 @@ body {
     stroke-width: 3;
 }
 
+.connection-selected-endpoint {
+    fill: none;
+    stroke: black;
+    stroke-width: 2;
+    pointer-events: none;
+}
 
 /* --- Room Tooltip --- */
 
@@ -278,6 +284,42 @@ body {
     border: 1px solid black;
 }
 
+.connection-editor-endpoint-options {
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
+}
+
+.connection-endpoint-range {
+    fill: none;
+    stroke: #888;
+    stroke-width: 3px;
+    pointer-events: none;
+}
+
+.connection-editor-room-select {
+    width: 100%;
+
+    padding: 4px 8px;
+}
+
+.connection-editor-side-options {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 6px;
+
+    width: 100%;
+
+    padding-top: 4px;
+}
+
+.connection-editor-side-select {
+    width: 100%;
+
+    padding: 4px 8px;
+}
 
 /* --- Header --- */
 

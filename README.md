@@ -775,33 +775,41 @@ The current development progression was:
 12. Add map zooming
 13. Verify that rooms, connections, grid, and room text remain aligned during pan/zoom
 14. Return to the room editor and add editable room properties, as well as the ability to close the editor
-15. Add free-form room notes
-16. Begin interactive room/connection creation and editing
-17. Complete the connection endpoint editing workflow using the A/B connection model
-18. Add room-target selection for connection endpoints
-19. Add connection-side selection for each endpoint
-20. Handle disconnecting either endpoint, including deleting a connection when both endpoints are disconnected
-21. Refine unresolved connection behavior and creation workflow
-22. Continue connection editor usability testing
-23. Polish pass
-24. Modify buttons and other graphics
-25. Include a zoom bar, visible UI zoom level, and possibly zoom shortcut keys
-26. Right-click context menu on the main map (things like create new room, and more if I think about it. Maybe this is where the options menu lives? This is a ToDo)
-27. Check that the tooltip popup for the new buttons (bottom right on the screen) looks fine
-28. Add context menu for new connection creation
-29. Room names need to resize based on the size of the room so that they remain readable and the text doesn't go off the edge of the room
-30. Rooms need to be able to be recolored
-31. Ensure that the edit room default size is large enough that no buttons are cut off by default. I don't mind if the user shrinks the box past that, but the default should be large enough
-32. Need to decide to keep open the room editor (as it is now), or close it when the Edit Connection button is clicked
-33. Inside the connection editor: Align/center direction arrows, establish sensible default connection ordering, clickable A/B headers for sorting, possibly ascending/descending indicators
-34. Maybe combine the colors of the editor windows (connection and room) into a single CSS properties section. At the moment they are individual, just set to the same color
-35. Make the connection paths on the map clickable, at which point it should open the connection editor with only that path
-36. In the edit connections window, change the functionality of clicking a connection making a dropdown with the exact same text but now 3 buttons, visually replace the current button with the 3 new ones. Maybe just set that as the default state of the edit connections window. (Clarification for GPT: only replacing the top level because the text is the same and it is just visually sad to the human that the text just repeats)
-37. add a NONE behavior to the visuals of the connection. im thinking just connect it to the 'center' of a room
-38. make sure that NE, NE, SE, SW connections are connected to the correct corner
-38. change the behavior of a new connection from default E, to default NONE
-39. ensure that the rooms sizes and colors can be changed. size might just be a drag corner on the room itself.
-40. add the same behavior to the connection editor that room editor already has. clicking on a new room will change where connection editor is pointing. and clicking on a connection should also change where the editor is looking.
+15. Add room editor save behavior
+16. Add free-form room notes
+17. Begin interactive room/connection creation and editing
+18. Complete the connection endpoint editing workflow using the A/B connection model
+19. Add room-target selection for connection endpoints
+20. Add connection-side selection for each endpoint
+21. Handle disconnecting either endpoint, including deleting a connection when both endpoints are disconnected
+22. Refine unresolved connection behavior and creation workflow
+23. Continue connection editor usability testing
+24. Polish pass
+25. Modify buttons and other graphics
+26. Include a zoom bar, visible UI zoom level, and possibly zoom shortcut keys
+27. Right-click context menu on the main map (things like create new room, and more if I think about it. Maybe this is where the options menu lives? This is a ToDo)
+28. Check that the tooltip popup for the new buttons (bottom right on the screen) looks fine
+29. Add context menu for new connection creation
+30. Room names need to resize based on the size of the room so that they remain readable and the text doesn't go off the edge of the room
+31. Rooms need to be able to be recolored
+32. Ensure that the edit room default size is large enough that no buttons are cut off by default. I don't mind if the user shrinks the box past that, but the default should be large enough
+33. Need to decide to keep open the room editor (as it is now), or close it when the Edit Connection button is clicked
+34. Inside the connection editor: Align/center direction arrows, establish sensible default connection ordering, clickable A/B headers for sorting, possibly ascending/descending indicators
+35. Maybe combine the colors of the editor windows (connection and room) into a single CSS properties section. At the moment they are individual, just set to the same color
+36. Make the connection paths on the map clickable, at which point it should open the connection editor with only that path
+37. In the edit connections window, change the functionality of clicking a connection making a dropdown with the exact same text but now 3 buttons, visually replace the current button with the 3 new ones. Maybe just set that as the default state of the edit connections window. (Clarification for GPT: only replacing the top level because the text is the same and it is just visually sad to the human that the text just repeats)
+38. add a NONE behavior to the visuals of the connection. im thinking just connect it to the 'center' of a room
+39. make sure that NE, NW, SE, SW connections are connected to the correct corner
+40. change the behavior of a new connection from default E, to default NONE
+41. ensure that the rooms sizes and colors can be changed. size might just be a drag corner on the room itself.
+42. add the same behavior to the connection editor that room editor already has. clicking on a new room will change where connection editor is pointing. and clicking on a connection should also change where the editor is looking.
+43. when editing a connection, add a visual indictator on the main map that that is the connection thats being edited.
+44. change the Room editor window so that saving a room does not close the window. maybe add an indictator to show that something has changed?
+45. Nail down bugs
+
+
+### Known bugs
+inside the connection editor, click on a connection with one side being to a null room. change that to a real room. the connect to side context menu does not appear
 
 
 ### Current Position
