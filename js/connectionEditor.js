@@ -10,6 +10,7 @@
 //   ./connectionRenderer.js
 import { renderConnections } from "./connectionRenderer.js";
 
+
 // ============================================================
 // CONNECTION EDITOR STATE
 // ============================================================
@@ -32,42 +33,55 @@ let selectedEndpoint = null;
 // The container holding the currently displayed endpoint options.
 let connectionOptions = null;
 
+
+// ============================================================
+// CONNECTION EDITOR
+// ============================================================
+
 // Opens the connection editor for the supplied room.
 //
-// Connections involving the selected room are collected from both directions:
-// connections originating from the room and connections originating elsewhere
-// that target the room.
-export function openConnectionEditor(map, room, mapElement, connectionLayer, zoom = 1 ) {
-    connectionEditorContext = {map, connectionLayer, zoom};
+// Every connection involving the selected room is included, regardless of
+// whether the room is endpoint A or endpoint B.
+export function openConnectionEditor(
+    map,
+    room,
+    mapElement,
+    connectionLayer,
+    zoom = 1
+) {
+    connectionEditorContext = {
+        map,
+        connectionLayer,
+        zoom
+    };
+
     const connections = [];
 
-    // Add connections originating from the selected room.
-    for (const connection of room.connections) {
-        connections.push({
-            connection,
-            fromRoom: room,
-            toRoom: getRoomByID(map, connection.to)
-        });
-    }
+    for (const connection of map.connections) {
+        const roomA =
+            getRoomByID(
+                map,
+                connection.roomA
+            );
 
-    // Find connections originating from other rooms that target the selected
-    // room.
-    for (const otherRoom of map.rooms) {
-        if (otherRoom === room) {
+        const roomB =
+            getRoomByID(
+                map,
+                connection.roomB
+            );
+
+        if (
+            connection.roomA !== room.roomID &&
+            connection.roomB !== room.roomID
+        ) {
             continue;
         }
 
-        for (const connection of otherRoom.connections) {
-            if (connection.to !== room.roomID) {
-                continue;
-            }
-
-            connections.push({
-                connection,
-                fromRoom: otherRoom,
-                toRoom: room
-            });
-        }
+        connections.push({
+            connection,
+            roomA,
+            roomB
+        });
     }
 
     editedRoom = room;
@@ -131,32 +145,18 @@ export function openConnectionEditor(map, room, mapElement, connectionLayer, zoo
             "connection-editor-connection"
         );
 
-        const fromName = entry.fromRoom?.name || "Unknown Room";
-
-        const toName = entry.toRoom?.name || "Unconnected";
-
-        const fromSide = 
-            entry.connection.fromSide
-                ? ` (${entry.connection.fromSide})`
-                : "";
-
-        const toSide =
-            entry.connection.toSide
-                ? ` (${entry.connection.toSide}) `
-                : "";
-
-        let direction = "→";
-
-        if (entry.connection.bidirectional) {
-            direction = "↔";
-        }
-
-        connectionElement.textContent = `${fromName}${fromSide} ${direction} ${toSide}${toName}`;
+        updateConnectionElement(
+            entry,
+            connectionElement
+        );
 
         connectionElement.addEventListener(
             "click",
             () => {
-                selectConnection(entry, connectionElement);
+                selectConnection(
+                    entry,
+                    connectionElement
+                );
             }
         );
 
@@ -175,21 +175,10 @@ export function openConnectionEditor(map, room, mapElement, connectionLayer, zoo
     );
 }
 
-// Closes the current connection editor and clears its state.
-function closeConnectionEditor() {
-    if (!connectionEditor) {
-        return;
-    }
 
-    connectionEditor.remove();
-
-    connectionEditor = null;
-    editedRoom = null;
-    selectedConnection = null;
-    selectedEndpoint = null;
-    connectionOptions = null;
-    connectionEditorContext = null;
-}
+// ============================================================
+// CONNECTION SELECTION
+// ============================================================
 
 // Selects a connection in the connection editor.
 //
@@ -215,7 +204,6 @@ function selectConnection(
 
     connectionElement.classList.add("selected");
 
-    // Remove the previous connection options and their containing group.
     if (connectionOptions) {
         connectionOptions.remove();
         connectionOptions = null;
@@ -259,13 +247,19 @@ function selectConnection(
         "connection-editor-options"
     );
 
-    const fromButton =
+    const roomA =
+        entry.roomA?.name || "Unknown Room";
+
+    const roomB =
+        entry.roomB?.name || "Unconnected";
+
+    const roomAButton =
         document.createElement("button");
 
-    fromButton.textContent =
-        entry.fromRoom?.name || "Unknown Room";
+    roomAButton.textContent =
+        roomA;
 
-    fromButton.classList.add(
+    roomAButton.classList.add(
         "connection-editor-endpoint"
     );
 
@@ -273,28 +267,28 @@ function selectConnection(
         document.createElement("button");
 
     directionButton.textContent =
-        entry.connection.bidirectional
-            ? "↔"
-            : "→";
+        getDirectionSymbol(
+            entry.connection.directionTo
+        );
 
     directionButton.classList.add(
         "connection-editor-direction"
     );
 
-    const toButton =
+    const roomBButton =
         document.createElement("button");
 
-    toButton.textContent =
-        entry.toRoom?.name || "Unconnected";
+    roomBButton.textContent =
+        roomB;
 
-    toButton.classList.add(
+    roomBButton.classList.add(
         "connection-editor-endpoint"
     );
 
-    fromButton.addEventListener(
+    roomAButton.addEventListener(
         "click",
         () => {
-            selectConnectionEndpoint("from");
+            selectConnectionEndpoint("A");
         }
     );
 
@@ -305,15 +299,15 @@ function selectConnection(
         }
     );
 
-    toButton.addEventListener(
+    roomBButton.addEventListener(
         "click",
         () => {
-            selectConnectionEndpoint("to");
+            selectConnectionEndpoint("B");
         }
     );
 
     connectionOptions.appendChild(
-        fromButton
+        roomAButton
     );
 
     connectionOptions.appendChild(
@@ -321,7 +315,7 @@ function selectConnection(
     );
 
     connectionOptions.appendChild(
-        toButton
+        roomBButton
     );
 
     connectionGroup.appendChild(
@@ -334,10 +328,16 @@ function selectConnection(
     );
 }
 
+
+// ============================================================
+// CONNECTION DIRECTION
+// ============================================================
+
 // Opens the direction choices for the selected connection.
 //
-// The choices represent the direction as the user sees it rather than
-// exposing the underlying from/to data model.
+// A means the arrow points toward room A.
+// Both means the connection points in both directions.
+// B means the arrow points toward room B.
 function selectConnectionDirection() {
     if (!selectedConnection || !connectionOptions) {
         return;
@@ -393,7 +393,7 @@ function selectConnectionDirection() {
     leftButton.addEventListener(
         "click",
         () => {
-            setConnectionDirection("left");
+            setConnectionDirection("A");
         }
     );
 
@@ -407,7 +407,7 @@ function selectConnectionDirection() {
     rightButton.addEventListener(
         "click",
         () => {
-            setConnectionDirection("right");
+            setConnectionDirection("B");
         }
     );
 
@@ -428,14 +428,84 @@ function selectConnectionDirection() {
     );
 }
 
+
 // Changes the direction of the selected connection.
 //
-// Right preserves the existing from/to relationship and makes the connection
-// one-way. Both makes it bidirectional. Left reverses the endpoints and their
-// sides, then makes the resulting connection one-way.
+// Direction is represented entirely by directionTo. Changing direction does
+// not change either endpoint or move the connection between room objects.
 function setConnectionDirection(
     direction
 ) {
+    if (!selectedConnection) {
+        return;
+    }
+
+    const connection =
+        selectedConnection.entry.connection;
+
+    connection.directionTo =
+        direction;
+
+    refreshSelectedConnection();
+}
+
+
+// ============================================================
+// CONNECTION DISPLAY
+// ============================================================
+
+// Updates the visible connection description from the current connection
+// data.
+function updateConnectionElement(
+    entry,
+    connectionElement
+) {
+    const connection =
+        entry.connection;
+
+    const roomAName =
+        entry.roomA?.name || "Unknown Room";
+
+    const roomBName =
+        entry.roomB?.name || "Unconnected";
+
+    const roomASide =
+        connection.roomAConnectionSide
+            ? ` (${connection.roomAConnectionSide})`
+            : "";
+
+    const roomBSide =
+        connection.roomBConnectionSide
+            ? ` (${connection.roomBConnectionSide})`
+            : "";
+
+    const direction =
+        getDirectionSymbol(
+            connection.directionTo
+        );
+
+    connectionElement.textContent =
+        `${roomAName}${roomASide} ${direction} ${roomBSide}${roomBName}`;
+}
+
+
+// Returns the visual direction symbol for a directionTo value.
+function getDirectionSymbol(directionTo) {
+    if (directionTo === "A") {
+        return "←";
+    }
+
+    if (directionTo === "both") {
+        return "↔";
+    }
+
+    return "→";
+}
+
+
+// Refreshes the selected connection's visible text and redraws the map after
+// a connection property changes.
+function refreshSelectedConnection() {
     if (!selectedConnection) {
         return;
     }
@@ -446,100 +516,10 @@ function setConnectionDirection(
     const connection =
         entry.connection;
 
-    if (direction === "both") {
-        connection.bidirectional = true;
-    }
-
-    if (direction === "right") {
-        connection.bidirectional = false;
-    }
-
-    if (direction === "left") {
-        if (!entry.toRoom) {
-            return;
-        }
-
-        const oldFromRoom =
-            entry.fromRoom;
-
-        const oldToRoom =
-            entry.toRoom;
-
-        const oldFromSide =
-            connection.fromSide;
-
-        const oldToSide =
-            connection.toSide;
-
-        const oldIndex =
-            oldFromRoom.connections.indexOf(
-                connection
-            );
-
-        if (oldIndex !== -1) {
-            oldFromRoom.connections.splice(
-                oldIndex,
-                1
-            );
-        }
-
-        oldToRoom.connections.push(
-            connection
-        );
-
-        connection.fromSide =
-            oldToSide;
-
-        connection.toSide =
-            oldFromSide;
-
-        connection.to =
-            oldFromRoom.roomID;
-
-        connection.bidirectional = false;
-
-        entry.fromRoom =
-            oldToRoom;
-
-        entry.toRoom =
-            oldFromRoom;
-    }
-
-    refreshSelectedConnection();
-}
-
-// Refreshes the selected connection's visible text and redraws the map after
-// a connection property changes.
-function refreshSelectedConnection() {
-    const entry =
-        selectedConnection.entry;
-
-    const connection =
-        entry.connection;
-
-    const fromName =
-        entry.fromRoom?.name || "Unknown Room";
-
-    const toName =
-        entry.toRoom?.name || "Unconnected";
-
-    const fromSide =
-        connection.fromSide
-            ? ` (${connection.fromSide})`
-            : "";
-
-    const toSide =
-        connection.toSide
-            ? ` (${connection.toSide})`
-            : "";
-
-    const direction =
-        connection.bidirectional
-            ? "↔"
-            : "→";
-
-    selectedConnection.element.textContent =
-        `${fromName}${fromSide} ${direction} ${toSide}${toName}`;
+    updateConnectionElement(
+        entry,
+        selectedConnection.element
+    );
 
     const directionButton =
         connectionOptions.querySelector(
@@ -547,9 +527,9 @@ function refreshSelectedConnection() {
         );
 
     directionButton.textContent =
-        connection.bidirectional
-            ? "↔"
-            : "→";
+        getDirectionSymbol(
+            connection.directionTo
+        );
 
     const endpointButtons =
         connectionOptions.querySelectorAll(
@@ -557,10 +537,10 @@ function refreshSelectedConnection() {
         );
 
     endpointButtons[0].textContent =
-        fromName;
+        entry.roomA?.name || "Unknown Room";
 
     endpointButtons[1].textContent =
-        toName;
+        entry.roomB?.name || "Unconnected";
 
     renderConnections(
         connectionEditorContext.map,
@@ -569,7 +549,12 @@ function refreshSelectedConnection() {
     );
 }
 
-// Selects either the From or To endpoint of the active connection.
+
+// ============================================================
+// CONNECTION ENDPOINT SELECTION
+// ============================================================
+
+// Selects either endpoint A or endpoint B of the active connection.
 //
 // Selecting an endpoint replaces any deeper options that were previously
 // displayed for the connection.
@@ -594,7 +579,7 @@ function selectConnectionEndpoint(endpoint) {
         );
 
     const selectedButton =
-        endpoint === "from"
+        endpoint === "A"
             ? buttons[0]
             : buttons[1];
 
@@ -605,6 +590,11 @@ function selectConnectionEndpoint(endpoint) {
         endpoint
     );
 }
+
+
+// ============================================================
+// CONNECTION EDITOR DRAGGING
+// ============================================================
 
 // Adds dragging behavior to the connection editor's header.
 function startConnectionEditorDragging(editorHeader) {
@@ -671,6 +661,28 @@ function startConnectionEditorDragging(editorHeader) {
     );
 }
 
+
+// ============================================================
+// CONNECTION EDITOR HELPERS
+// ============================================================
+
+// Closes the current connection editor and clears its state.
+function closeConnectionEditor() {
+    if (!connectionEditor) {
+        return;
+    }
+
+    connectionEditor.remove();
+
+    connectionEditor = null;
+    editedRoom = null;
+    selectedConnection = null;
+    selectedEndpoint = null;
+    connectionOptions = null;
+    connectionEditorContext = null;
+}
+
+
 // Returns the room with the supplied ID, or null when no matching room exists.
 function getRoomByID(map, roomID) {
     if (!roomID) {
@@ -682,17 +694,14 @@ function getRoomByID(map, roomID) {
     ) || null;
 }
 
+
 // ============================================================
 // CONNECTION CREATION
 // ============================================================
 
-// Creates a new connection originating from the supplied room.
+// Creates a new connection using the new map-level connection model.
 //
-// The connection is added to the room's connection list immediately, then
-// the connection layer is redrawn so the new connection appears on the map.
-//
-// Connection destination/target selection will be added as the connection
-// editing workflow is expanded.
+// The connection is initially attached to room A and has no room B yet.
 export function createConnection(
     map,
     room,
@@ -700,14 +709,17 @@ export function createConnection(
     zoom = 1
 ) {
     const connection = {
-        fromSide: "E",
-        to: null,
-        toSide: null,
-        name: "New Connection",
-        bidirectional: true
+        roomA: room.roomID,
+        roomB: null,
+        roomAConnectionSide: "E",
+        roomBConnectionSide: null,
+        directionTo: "A",
+        name: "New Connection"
     };
 
-    room.connections.push(connection);
+    map.connections.push(
+        connection
+    );
 
     renderConnections(
         map,

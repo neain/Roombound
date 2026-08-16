@@ -108,12 +108,9 @@ A room node is a record of a location, not a battlemap.
 
 The map itself should remain a very simple data structure.
 
-Conceptually:
-
-```
+Conceptually: 
 Map
 └── rooms[]
-```
 
 The map does not need to understand the visual arrangement of rooms or determine how rooms should be displayed.
 
@@ -124,8 +121,6 @@ Visualization and interaction behavior should remain separate from the underlyin
 A room is represented by a movable node.
 
 The core room data currently includes:
-
-```
 Room
 ├── roomID
 ├── name
@@ -133,7 +128,6 @@ Room
 ├── position
 ├── size
 └── connections[]
-```
 
 #### `roomID`
 
@@ -166,25 +160,19 @@ An integer identifying the floor associated with the room.
 The value is relative to the normal ground/first-floor level.
 
 Examples:
-
-```
-1  = first floor
-2  = second floor
-5  = fifth floor
+1 = first floor
+2 = second floor
+5 = fifth floor
 
 -1 = first basement
 -2 = second basement
-```
 
 `0` is currently unused.
 
 The floor number is simply a property of the room. It does not create a separate floor data structure, and rooms on different floors can still be connected directly.
 
 For example, a staircase or elevator could connect:
-
-```
 Floor 1 → Floor 5
-```
 
 without Roombound needing to understand the floors as separate maps.
 
@@ -197,10 +185,7 @@ Positions use grid coordinates rather than screen pixels.
 The position represents the top-left corner of the room.
 
 For example:
-
-```
 position: { x: 10, y: 5 }
-```
 
 The visualization layer converts grid coordinates into screen coordinates.
 
@@ -211,26 +196,23 @@ The current implementation updates the room's stored position when the room is d
 The room's size on the abstract grid.
 
 Size is represented independently from position:
-
-```
 size: { width: 10, height: 10 }
-```
 
 The initial default room size is 10 × 10 grid units.
-
 Room size is not intended to represent physical dimensions in the game world. It primarily controls the visual footprint of the room in Roombound.
-
 #### `connections[]`
 
 A room may have any number of connections, including zero.
 
 An empty connection list is valid.
 
-This is important for:
+The current implementation stores connection objects in room connection lists for practical access and rendering.
 
-* The initial room in a new map
-* A newly created room that has not yet been connected
-* A room that genuinely has no known connections
+This storage arrangement should not be interpreted as meaning that the room owns or originates the connection. The connection data itself identifies its two endpoints independently.
+
+A room may therefore contain a connection whose other endpoint is the room itself or another room, depending on the connection's endpoint data.
+
+Multiple connections between the same two rooms are valid and intentional. For example, two rooms may have multiple doors or passages connecting them, potentially using different room sides or having different names.
 
 ---
 
@@ -252,30 +234,34 @@ Connections are intentionally lightweight.
 
 A substantial hallway or other area that needs its own meaningful information should generally be represented as its own room, with connections leading to it.
 
-The initial connection model is:
+### Connection Model
 
-```
+Connections use two endpoints rather than a `from`/`to` ownership model.
+
+The current conceptual structure is:
+
 Connection
-├── from
-├── fromSide
-├── to
-├── toSide
+├── roomA
+├── roomASide
+├── roomB
+├── roomBSide
+├── directionTo
 └── name
-```
 
-### `from`
+The two rooms are endpoints of the same connection. Neither room is inherently the source or owner of the connection.
 
-The room ID where the connection originates.
+### `roomA`
 
-This value is required.
+The room ID of endpoint A.
 
-### `fromSide`
+This identifies one endpoint of the connection.
 
-The side of the originating room where the connection is attached.
+### `roomASide`
+
+The side of room A where the connection is attached.
 
 The intended values are currently:
 
-```
 N
 NE
 E
@@ -285,7 +271,6 @@ SW
 W
 NW
 NONE
-```
 
 The eight directional values represent the cardinal and diagonal sides of a room.
 
@@ -293,38 +278,33 @@ The eight directional values represent the cardinal and diagonal sides of a room
 
 The exact visual treatment of these positions is a visualization concern.
 
-### `to`
+### `roomB`
 
-The room ID of the destination room.
+The room ID of endpoint B.
 
 This value may be `null`.
 
-A `null` destination represents an unresolved connection: the user knows that a connection exists, but does not yet know where it leads.
+A `null` room B represents an unresolved connection: the user knows that a connection exists from the known endpoint, but does not yet know which room it leads to.
 
 For example:
 
-```
 Room A
-  └── Unknown Door → null
-```
+└── Unknown Door → null
 
-An unresolved connection should eventually allow the user to either:
+Room B being `null` does not create a separate connection type. It simply represents an incomplete connection.
 
-1. Connect it to an already existing room.
-2. Create a new room and connect it to that room.
+### `roomBSide`
 
-### `toSide`
+The side of room B where the connection is attached.
 
-The side of the destination room where the connection is attached.
+It uses the same conceptual values as `roomASide`.
 
-It uses the same conceptual values as `fromSide`.
-
-If `to` is `null`, `toSide` must also be `null`.
+If `roomB` is `null`, `roomBSide` must also be `null`.
 
 `NONE` and `null` have different meanings:
 
-* `null` means there is no known destination.
-* `NONE` means there is a known destination, but the connection is not associated with a particular side of that room.
+* `null` means there is no known room at that endpoint.
+* `NONE` means a room is known, but the connection is not associated with a particular side of that room.
 
 ### `name`
 
@@ -341,38 +321,86 @@ Examples:
 
 The name may be left blank.
 
-### Directionality
+### `directionTo`
 
-Connections are not currently treated as directional in the public model.
+`directionTo` describes the direction in which the connection points.
 
-The `from` and `to` fields identify the two endpoints of the connection, but this does not currently imply that movement is one-way.
+It does **not** identify which room owns or originates the connection.
 
-Future functionality may change or expand this model if directional connections become necessary.
+The current values are:
+
+"A"
+"B"
+"both"
+
+Their meanings are:
+
+"A" = the connection points toward room A
+"B" = the connection points toward room B
+"both" = the connection works in both directions
+
+For example:
+
+roomA: "room_001"
+roomB: "room_002"
+directionTo: "A"
+
+means that the connection points toward room A.
+
+Likewise:
+
+roomA: "room_001"
+roomB: "room_002"
+directionTo: "B"
+
+means that the connection points toward room B.
+
+Directionality is therefore a property of the relationship between the two endpoints rather than a property of either room.
+
+Reversing a connection's direction does not swap room A and room B. It changes `directionTo` and therefore changes how the connection is interpreted and rendered.
+
+### Multiple Connections
+
+Multiple connections between the same two rooms are valid.
+
+For example, two rooms might have:
+
+Room A ── Door 1 ── Room B
+Room A ── Door 2 ── Room B
+
+These are separate connection objects even though they reference the same pair of rooms.
+
+This is intentional. Different doors, passages, sides, names, or other future properties may make otherwise similar connections meaningfully different to the user.
 
 ---
 
 ## 6. Unresolved Connections
 
-A connection may exist without a known destination.
+A connection may exist without a known room at endpoint B.
 
 Example:
 
-```
 [Room 12]
-    │
-    │ Unknown Door
-    │
-    ?
-```
+│
+│ Unknown Door
+│
+?
 
-This is represented by a connection whose `from` and `fromSide` are known while `to` and `toSide` are `null`.
+This is represented by a connection whose A endpoint is known while B is unresolved:
+
+roomA: "room_012"
+roomASide: "E"
+roomB: null
+roomBSide: null
+
+The unresolved state is therefore not intended to be a separate permanent type of connection. It is simply a connection whose second endpoint has not yet been identified.
 
 When the destination is discovered, the user should eventually be able to either:
 
 * Connect it to an already existing room.
 * Create a new room and connect the existing connection to it.
 
-The unresolved state is therefore not intended to be a separate permanent type of connection. It is simply a connection whose destination has not yet been identified.
+The connection remains the same connection while its unresolved endpoint is completed.
 
 ---
 
@@ -386,7 +414,10 @@ Connections may eventually support lightweight states such as:
 * Secret
 * Blocked
 * Unknown
-* One-way
+
+These states are separate from connection direction.
+
+Directionality is currently represented by `directionTo`, while other connection states may be added as additional properties in the future.
 
 The exact state system and visual representation are not finalized.
 
@@ -406,9 +437,7 @@ The room name is currently the primary always-visible field.
 
 For example:
 
-```
 [Grand Ballroom]
-```
 
 This keeps the overall graph readable even when many rooms are present.
 
@@ -494,9 +523,7 @@ Room coordinates represent logical map positions rather than screen pixels.
 
 The coordinate system is intended to be centered around a world origin:
 
-```
 (0, 0)
-```
 
 The origin is not intended to be a hard boundary.
 
@@ -530,32 +557,30 @@ The grid should eventually be rendered based on the currently visible area rathe
 
 ### Camera / Viewport
 
-The map will eventually have a camera-like viewport system.
+The map has a camera-like viewport system.
 
 The viewport determines which part of the world coordinate space is currently visible.
 
 The map content can be moved relative to the viewport without changing the underlying room coordinates.
 
-The planned interaction model is:
+The current interaction model is:
 
 * Right-click drag → pan the map.
-* Mouse wheel → zoom in and out.
+* Ctrl + mouse wheel → zoom in and out.
 * Rooms and connections move and scale together with the map.
 * The room editor remains independent of the map camera.
 
-### Zoom (This has been implemented and seems to be complete)
+### Zoom
 
-Zoom should operate on the map's visual representation rather than changing the underlying room coordinates.
+Zoom operates on the map's visual representation rather than changing the underlying room coordinates.
 
 A room at:
 
-```
 position: { x: 12, y: -7 }
-```
 
 should remain at those coordinates regardless of zoom level.
 
-Zooming should scale:
+Zoom scales:
 
 * Room positions on screen
 * Room sizes
@@ -563,21 +588,19 @@ Zooming should scale:
 * Connections
 * The visible grid
 
-This should be implemented as a camera/content transformation rather than individually changing every room's stored data.
+Zoom is implemented through shared map/camera utilities rather than changing the stored room data.
 
-Zoom: Ctrl + Scroll Wheel changes zoom between the configured minimum and maximum values. Zooming preserves the center of the current viewport rather than centering on the overall map. Zoom changes are routed through a shared changeZoom() function so future zoom controls can reuse the same behavior.
+Zoom: Ctrl + Scroll Wheel changes zoom between the configured minimum and maximum values. Zooming preserves the center of the current viewport rather than centering on the overall map. Zoom changes are routed through a shared `changeZoom()` function so future zoom controls can reuse the same behavior.
 
 ### Coordinate Separation
 
 The visualization system should conceptually maintain three coordinate spaces:
 
-```
 World coordinates
-    ↓
+↓
 Map/camera coordinates
-    ↓
+↓
 Screen coordinates
-```
 
 World coordinates are stored in the map.
 
@@ -585,7 +608,7 @@ Camera state determines how the world is viewed.
 
 Screen coordinates are derived from the world and camera state.
 
-This separation should allow panning and zooming without changing the underlying map data.
+This separation allows panning and zooming without changing the underlying map data.
 
 ---
 
@@ -599,16 +622,13 @@ Visualization and interaction logic should operate on the data rather than becom
 
 The map currently consists of:
 
-```
 Map
 └── rooms[]
-```
 
 ### Room
 
 The current conceptual Room structure is:
 
-```
 Room
 ├── roomID
 ├── name
@@ -616,7 +636,6 @@ Room
 ├── position
 ├── size
 └── connections[]
-```
 
 `roomID`
 
@@ -646,22 +665,27 @@ Connections associated with the room.
 
 A room may have zero or more connections.
 
+Connections are stored in room connection lists for the current implementation, but the connection itself is conceptually independent of the room that happens to store it.
+
 ### Connection
 
-Connections are independent objects representing transitions between rooms.
+Connections are independent relationship objects representing transitions between two endpoints.
 
 The current conceptual structure is:
 
-```
 Connection
-├── from
-├── fromSide
-├── to
-├── toSide
+├── roomA
+├── roomASide
+├── roomB
+├── roomBSide
+├── directionTo
 └── name
-```
 
 See the Connections section for details.
+
+A connection does not have an inherent originating room.
+
+The A/B labels exist only to identify the two endpoints consistently.
 
 ---
 
@@ -683,9 +707,7 @@ Roombound uses an abstract grid for positioning rooms.
 
 The current visualization uses:
 
-```
 const GRID_SIZE = 20;
-```
 
 This means one map grid unit currently corresponds to 20 screen pixels before camera scaling.
 
@@ -707,82 +729,33 @@ Rooms currently use their stored grid-based size when rendered.
 
 The initial default size is:
 
-```
 10 × 10 grid units
-```
 
-The size is independent of the visual pixel scale.
-
-### Connections
-
-Connections are rendered separately from rooms but use the same underlying coordinate system.
-
-Connections remain attached to their rooms when rooms are moved.
-
-Connection geometry uses room positions and connection side information to determine where visual connection lines attach.
-
-Unresolved connections may terminate without a destination room.
-
-### Map Camera
-
-The planned camera system will provide:
-
-* Panning
-* Zooming
-* A viewport centered around the world origin at startup
-
-Rooms and connections should exist within the same transformed map-content layer so that they remain aligned while the map is moved or zoomed.
-
-The room editor should remain outside this transformed layer.
-
----
-
-## 12. Current Implementation
-
-The project currently uses:
-
-* HTML
-* CSS
-* JavaScript
-
-No graph visualization library is currently required.
-
-The current prototype has:
-
-* A basic HTML application shell
-* A map visualization area
-* A hard-coded test map
-* Room objects with names, floors, positions, sizes, and connections
-* Grid-based room positioning
-* A visible visualization grid
-* Room rendering from map data
-* Draggable rooms
-* Grid-snapped room movement
-* Room position updates when rooms are dragged
-* Connection rendering
-* Connection attachment geometry
-* Connections that follow rooms when rooms are moved
-* Unresolved connection rendering
-* Room hover information
-* Automatic key/value display of room properties
-* Hover-property exception handling
-* Room selection
 * A floating room editor
 * A resizable room editor
 * A draggable room editor header
 * A persistent editor position when selecting different rooms
+* Room creation
+* Room deletion
+* Room editing
+* Connection creation
+* Connection editing
+* Connection editor discovery of connections involving the selected room
+* Connection endpoint editing UI
+* Connection direction editing
+* Directionality represented independently from connection endpoint identity
+* A/B connection endpoint model
+* Floating and draggable connection editor
 
-The current room editor is intentionally incomplete.
-
-It currently displays room information but does not yet provide the final editable property controls or room notes system.
+The room and connection editors are still early implementations and are expected to receive additional usability and polish work.
 
 ---
 
 ## 13. Current Development Target
 
-The immediate goal is now to establish the map's camera/viewport system before expanding the room editor.
+The immediate development target is interactive room and connection creation/editing.
 
-The current development progression is:
+The current development progression was:
 
 1. Render rooms
 2. Make rooms draggable
@@ -797,33 +770,50 @@ The current development progression is:
 11. Add map panning
 12. Add map zooming
 13. Verify that rooms, connections, grid, and room text remain aligned during pan/zoom
-14. Return to the room editor and add editable room properties, as well as the ability to close the editor.
+14. Return to the room editor and add editable room properties, as well as the ability to close the editor
 15. Add free-form room notes
 16. Begin interactive room/connection creation and editing
-17. Polish pass (this will keep growing until I get to this step at the very least).
-18. modify buttons and other graphics
-19. include a zoom bar, visible ui zoom level, and possibly zoom shortcut keys.
-20. right click context menu on the main map (things like create new room, and more if I think about it. maybe this is where the options menu lives? this is a ToDo)
-21. check that the tooltip popup for the new buttons (bottom right on the screen) looks fine.
-22. add context menu for new connection creation
-23. room names need to resize based on the size of the room so that they remain readable and the text doesnt go off the edge of the room
+17. Polish pass (this will keep growing until I get to this step at the very least)
+18. Modify buttons and other graphics
+19. Include a zoom bar, visible UI zoom level, and possibly zoom shortcut keys
+20. Right-click context menu on the main map (things like create new room, and more if I think about it. Maybe this is where the options menu lives? This is a ToDo)
+21. Check that the tooltip popup for the new buttons (bottom right on the screen) looks fine
+22. Add context menu for new connection creation
+23. Room names need to resize based on the size of the room so that they remain readable and the text doesn't go off the edge of the room
 24. Rooms need to be able to be recolored
-25. ensure that the edit room default size is large enough that no buttons are cut off 'by default'. I dont mind if the user shrinks the box past that, but the default should be large enough.
-26. need to decide to keep open the room editor (as it is now), or close it when the Edit Connection button is clicked.
-27. inside the connection editor. Align/center direction arrows, Establish sensible default connection ordering, Clickable FROM/TO headers for sorting, Possibly ascending/descending indicators
-28. maybe combine the colors of the editor windows (connection and room) into a single css properties section. at the moment they are individual, just set to the same color.
-29. make the connection paths on the map clickable, at which point it should open the connection editor with only that path.
-30. in the edit connections window, change the functionality of clicking a connection making a dropdown with... the exact same text but now 3 buttons, visualy replace the current button with the 3 new ones... maybe just set that as the default state of the edit connections window. (clarification for GPT. only replacing the top level because the text is the same and its just visualy sad to the human that the text just repeats)
+25. Ensure that the edit room default size is large enough that no buttons are cut off by default. I don't mind if the user shrinks the box past that, but the default should be large enough
+26. Need to decide to keep open the room editor (as it is now), or close it when the Edit Connection button is clicked
+27. Inside the connection editor: Align/center direction arrows, establish sensible default connection ordering, clickable A/B headers for sorting, possibly ascending/descending indicators
+28. Maybe combine the colors of the editor windows (connection and room) into a single CSS properties section. At the moment they are individual, just set to the same color
+29. Make the connection paths on the map clickable, at which point it should open the connection editor with only that path
+30. In the edit connections window, change the functionality of clicking a connection making a dropdown with the exact same text but now 3 buttons, visually replace the current button with the 3 new ones. Maybe just set that as the default state of the edit connections window. (Clarification for GPT: only replacing the top level because the text is the same and it is just visually sad to the human that the text just repeats)
+31. Complete the connection endpoint editing workflow using the A/B connection model
+32. Add room-target selection for connection endpoints
+33. Add connection-side selection for each endpoint
+34. Handle disconnecting either endpoint, including deleting a connection when both endpoints are disconnected
+35. Refine unresolved connection behavior and creation workflow
+36. Continue connection editor usability testing
+37. Polish pass
 
 ### Current Position
 
-Steps 1–15 are currently working in prototype form.
+Steps 1–16 are currently working in prototype form.
 
-The project is currently at "Begin interactive room/connection creation and editing" and we are currently specificly at editing after doing the rest.
+The project is currently in **interactive room/connection creation and editing**.
 
-The next implementation target is:
+The connection data model has recently been refactored from a `from`/`to` model into an endpoint-based A/B model.
 
-> **Begin interactive room/connection creation and editing**
+The current connection structure is:
+
+Connection
+├── roomA
+├── roomASide
+├── roomB
+├── roomBSide
+├── directionTo
+└── name
+
+The next implementation target is to finish adapting the connection editor to this model and continue the interactive connection editing workflow.
 
 ---
 
@@ -929,7 +919,5 @@ The project should avoid building complex infrastructure for features that may n
 ---
 
 ## 18. License
-
 Roombound is currently not allowed to be copied or used without permission.
-
 This is intended to change in the future, but at the moment the project is not even alpha.

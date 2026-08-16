@@ -32,12 +32,8 @@ const arrowSize = 4;
 // Removes the existing connection graphics and redraws every connection
 // currently stored in the map.
 //
-// Connections are represented as SVG lines. Their endpoints are calculated
-// from the rooms and sides they connect to.
-//
-// Unconnected destinations are drawn as a short line extending outward from
-// the originating room. This allows partially-created connections to remain
-// visible while they are being edited.
+// Connections reference two room endpoints rather than belonging to either
+// room. directionTo determines which endpoint receives an arrow.
 export function renderConnections(
     map,
     connectionLayer,
@@ -107,7 +103,6 @@ export function renderConnections(
     markerEnd.appendChild(arrowEnd);
     defs.appendChild(markerEnd);
 
-
     const markerStart = document.createElementNS(
         "http://www.w3.org/2000/svg",
         "marker"
@@ -168,12 +163,9 @@ export function renderConnections(
     // Connection geometry
     // --------------------------------------------------------
 
-    // First determine how many connections occupy each side of each room.
-    // This allows multiple connections to be spaced evenly along a side.
     const connectionData =
         analyzeConnections(map);
 
-    // Convert the analyzed connection data into actual SVG coordinates.
     const connectionPoints =
         getConnectionPoints(
             map,
@@ -186,116 +178,126 @@ export function renderConnections(
     // Draw connections
     // --------------------------------------------------------
 
-    for (const room of map.rooms) {
-        for (const connection of room.connections) {
+    for (const connection of map.connections) {
+        const roomA =
+            getRoom(
+                map,
+                connection.roomA
+            );
 
-            const fromConnections =
+        if (!roomA) {
+            continue;
+        }
+
+        const roomAConnections =
+            connectionData
+                .get(roomA.roomID)
+                [connection.roomAConnectionSide];
+
+        const roomAIndex =
+            roomAConnections.findIndex(
+                (entry) => entry.connection === connection
+            );
+
+        const roomAPoint =
+            connectionPoints
+                .get(roomA.roomID)
+                [connection.roomAConnectionSide]
+                [roomAIndex];
+
+        let roomB = null;
+        let roomBPoint = null;
+
+        if (connection.roomB) {
+            roomB =
+                getRoom(
+                    map,
+                    connection.roomB
+                );
+        }
+
+        if (roomB && connection.roomBConnectionSide) {
+            const roomBConnections =
                 connectionData
-                    .get(room.roomID)
-                    [connection.fromSide];
+                    .get(roomB.roomID)
+                    [connection.roomBConnectionSide];
 
-            const fromIndex =
-                fromConnections.findIndex(
+            const roomBIndex =
+                roomBConnections.findIndex(
                     (entry) => entry.connection === connection
                 );
 
-            const fromPoint =
+            roomBPoint =
                 connectionPoints
-                    .get(room.roomID)
-                    [connection.fromSide]
-                    [fromIndex];
+                    .get(roomB.roomID)
+                    [connection.roomBConnectionSide]
+                    [roomBIndex];
+        }
 
-
-            // Find the destination room, if this connection has one.
-            const toRoom =
-                getRoom(
-                    map,
-                    connection.to
+        // A connection without room B extends outward from room A.
+        if (!roomBPoint) {
+            roomBPoint =
+                getConnectionPoint(
+                    roomA,
+                    connection.roomAConnectionSide,
+                    roomAIndex,
+                    roomAConnections.length,
+                    3,
+                    zoom
                 );
+        }
 
-            let toPoint;
-
-            if (toRoom) {
-                const toConnections =
-                    connectionData
-                        .get(toRoom.roomID)
-                        [connection.toSide];
-
-                const toIndex =
-                    toConnections.findIndex(
-                        (entry) => entry.connection === connection
-                    );
-
-                toPoint =
-                    connectionPoints
-                        .get(toRoom.roomID)
-                        [connection.toSide]
-                        [toIndex];
-
-            } else {
-                // No destination has been selected yet, so extend the
-                // connection outward from its originating room.
-                toPoint =
-                    getConnectionPoint(
-                        room,
-                        connection.fromSide,
-                        fromIndex,
-                        fromConnections.length,
-                        3,
-                        zoom
-                    );
-            }
-
-
-            // Create the SVG line representing the connection.
-            const line = document.createElementNS(
+        const line =
+            document.createElementNS(
                 "http://www.w3.org/2000/svg",
                 "line"
             );
 
+        line.setAttribute(
+            "x1",
+            roomAPoint.x
+        );
+
+        line.setAttribute(
+            "y1",
+            roomAPoint.y
+        );
+
+        line.setAttribute(
+            "x2",
+            roomBPoint.x
+        );
+
+        line.setAttribute(
+            "y2",
+            roomBPoint.y
+        );
+
+        line.classList.add("connection");
+
+
+        // directionTo describes which endpoint receives the arrow.
+        if (
+            connection.directionTo === "A" ||
+            connection.directionTo === "both"
+        ) {
             line.setAttribute(
-                "x1",
-                fromPoint.x
+                "marker-start",
+                "url(#arrowhead-start)"
             );
-
-            line.setAttribute(
-                "y1",
-                fromPoint.y
-            );
-
-            line.setAttribute(
-                "x2",
-                toPoint.x
-            );
-
-            line.setAttribute(
-                "y2",
-                toPoint.y
-            );
-
-            line.classList.add("connection");
-
-
-            // Bidirectional connections receive arrows at both ends.
-            if (connection.bidirectional) {
-                line.setAttribute(
-                    "marker-start",
-                    "url(#arrowhead-start)"
-                );
-
-                line.setAttribute(
-                    "marker-end",
-                    "url(#arrowhead-end)"
-                );
-            } else {
-                line.setAttribute(
-                    "marker-end",
-                    "url(#arrowhead-end)"
-                );
-            }
-
-            connectionLayer.appendChild(line);
         }
+
+        if (
+            connection.directionTo === "B" ||
+            connection.directionTo === "both"
+        ) {
+            line.setAttribute(
+                "marker-end",
+                "url(#arrowhead-end)"
+            );
+        }
+
+        connectionLayer.appendChild(line);
     }
 }
 
@@ -307,15 +309,11 @@ export function renderConnections(
 // Builds a lookup structure describing which connections occupy each side
 // of every room.
 //
-// This information is used to distribute multiple connections evenly along
-// the same room side.
-//
-// Each connection is registered twice when it has a valid destination:
-// once for its originating room/side and once for its destination room/side.
+// Every valid endpoint is registered independently. A connection with a null
+// roomB therefore occupies only roomA's side.
 export function analyzeConnections(map) {
     const connectionData = new Map();
 
-    // Create an empty side list for every room.
     for (const room of map.rooms) {
         connectionData.set(
             room.roomID,
@@ -328,39 +326,42 @@ export function analyzeConnections(map) {
         );
     }
 
-    // Register each connection with its originating and destination sides.
-    for (const room of map.rooms) {
-        for (const connection of room.connections) {
+    for (const connection of map.connections) {
+        const roomA =
+            getRoom(
+                map,
+                connection.roomA
+            );
 
+        if (roomA) {
             connectionData
-                .get(room.roomID)
-                [connection.fromSide]
+                .get(roomA.roomID)
+                [connection.roomAConnectionSide]
                 .push({
                     connection,
-                    room,
-                    side: connection.fromSide
-                });
-
-            const toRoom =
-                getRoom(
-                    map,
-                    connection.to
-                );
-
-            // An incomplete connection has no destination to register.
-            if (!toRoom) {
-                continue;
-            }
-
-            connectionData
-                .get(toRoom.roomID)
-                [connection.toSide]
-                .push({
-                    connection,
-                    room: toRoom,
-                    side: connection.toSide
+                    room: roomA,
+                    side: connection.roomAConnectionSide
                 });
         }
+
+        const roomB =
+            getRoom(
+                map,
+                connection.roomB
+            );
+
+        if (!roomB) {
+            continue;
+        }
+
+        connectionData
+            .get(roomB.roomID)
+            [connection.roomBConnectionSide]
+            .push({
+                connection,
+                room: roomB,
+                side: connection.roomBConnectionSide
+            });
     }
 
     return connectionData;
@@ -373,9 +374,6 @@ export function analyzeConnections(map) {
 
 // Generates the actual SVG coordinates for every connection position on
 // every side of every room.
-//
-// connectionData determines how many connections occupy each side, which
-// allows getConnectionPoint() to space them evenly.
 export function getConnectionPoints(
     map,
     connectionData,
@@ -449,12 +447,6 @@ export function getConnectionPoints(
 
 
 // Calculates the exact SVG point for one connection on one side of a room.
-//
-// index and count determine where multiple connections are distributed along
-// the same side. distance moves the point outward from the room.
-//
-// The default case returns the room center, providing a safe fallback if an
-// invalid side value is supplied.
 export function getConnectionPoint(
     room,
     side,
@@ -493,13 +485,10 @@ export function getConnectionPoint(
             zoom
         );
 
-    // Keep connection points evenly distributed along the side while leaving
-    // space between the endpoints and the room corners.
     const position =
         (index + 1) / (count + 1);
 
     switch (side) {
-
         case "N":
             return {
                 x: left + width * position,
