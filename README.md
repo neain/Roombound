@@ -797,6 +797,11 @@ The current development progression was:
 34. Maybe combine the colors of the editor windows (connection and room) into a single CSS properties section. At the moment they are individual, just set to the same color
 35. Make the connection paths on the map clickable, at which point it should open the connection editor with only that path
 36. In the edit connections window, change the functionality of clicking a connection making a dropdown with the exact same text but now 3 buttons, visually replace the current button with the 3 new ones. Maybe just set that as the default state of the edit connections window. (Clarification for GPT: only replacing the top level because the text is the same and it is just visually sad to the human that the text just repeats)
+37. add a NONE behavior to the visuals of the connection. im thinking just connect it to the 'center' of a room
+38. make sure that NE, NE, SE, SW connections are connected to the correct corner
+38. change the behavior of a new connection from default E, to default NONE
+39. ensure that the rooms sizes and colors can be changed. size might just be a drag corner on the room itself.
+40. add the same behavior to the connection editor that room editor already has. clicking on a new room will change where connection editor is pointing. and clicking on a connection should also change where the editor is looking.
 
 
 ### Current Position
