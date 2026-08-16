@@ -808,6 +808,12 @@ The current development progression is:
 22. add context menu for new connection creation
 23. room names need to resize based on the size of the room so that they remain readable and the text doesnt go off the edge of the room
 24. Rooms need to be able to be recolored
+25. ensure that the edit room default size is large enough that no buttons are cut off 'by default'. I dont mind if the user shrinks the box past that, but the default should be large enough.
+26. need to decide to keep open the room editor (as it is now), or close it when the Edit Connection button is clicked.
+27. inside the connection editor. Align/center direction arrows, Establish sensible default connection ordering, Clickable FROM/TO headers for sorting, Possibly ascending/descending indicators
+28. maybe combine the colors of the editor windows (connection and room) into a single css properties section. at the moment they are individual, just set to the same color.
+29. make the connection paths on the map clickable, at which point it should open the connection editor with only that path.
+30. in the edit connections window, change the functionality of clicking a connection making a dropdown with... the exact same text but now 3 buttons, visualy replace the current button with the 3 new ones... maybe just set that as the default state of the edit connections window. (clarification for GPT. only replacing the top level because the text is the same and its just visualy sad to the human that the text just repeats)
 
 ### Current Position
 

@@ -23,6 +23,13 @@ import {
 //   ./connectionRenderer.js
 import { renderConnections } from "./connectionRenderer.js";
 
+// Connection creation and editing.
+// CURRENT: openConnectionEditor()
+// FUTURE: Connection editing UI and connection property editing.
+// If working on connection editing, inspect:
+//   ./connectionEditor.js
+import { openConnectionEditor } from "./connectionEditor.js";
+
 
 // ============================================================
 // ROOM STATE
@@ -314,13 +321,7 @@ export function getSelectedRoom() {
 // The editor keeps a reference to the selected room rather than creating a
 // separate copy. Save/Cancel behavior is therefore handled by the editor's
 // existing state and lifecycle.
-function selectRoom(
-    room,
-    map,
-    mapElement,
-    connectionLayer,
-    zoom
-) {
+function selectRoom(room, map, mapElement, connectionLayer, zoom) {
     selectedRoom = room;
 
     // Store the map/rendering context so editor actions such as Cancel can
@@ -386,21 +387,29 @@ function selectRoom(
         saveButton.textContent = "Save";
         saveButton.classList.add("room-editor-save");
 
+        const editConnectionsButton = document.createElement("button");
+        editConnectionsButton.textContent = "Edit Connections";
+        editConnectionsButton.classList.add("room-editor-edit-connections");
+
         const cancelButton = document.createElement("button");
         cancelButton.textContent = "Cancel";
         cancelButton.classList.add("room-editor-cancel");
-
-        saveButton.addEventListener(
-            "click",
-            saveRoomEditor
-        );
-
-        cancelButton.addEventListener(
-            "click",
-            cancelRoomEditor
-        );
+        
+        saveButton.addEventListener("click", saveRoomEditor);
+        editConnectionsButton.addEventListener("click", () => {
+            openConnectionEditor(
+                editorContext.map, 
+                selectedRoom, 
+                editorContext.mapElement, 
+                editorContext.connectionLayer, 
+                editorContext.zoom
+            );
+        }
+);
+        cancelButton.addEventListener("click", cancelRoomEditor);
 
         editorButtons.appendChild(saveButton);
+        editorButtons.appendChild(editConnectionsButton);
         editorButtons.appendChild(cancelButton);
 
         roomEditor.appendChild(editorButtons);
