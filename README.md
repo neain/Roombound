@@ -782,10 +782,11 @@ The current development progression was:
 22. Refine unresolved connection behavior and creation workflow
 23. Add save and load features
 24. add additional map layers to show that there are additional floors, not just a floor section in the data structure.
+25. Add way to delete rooms. brainstorm how it should work.
 
-25. use the app on a real dungeon and see if you can accuratly show everything that needs to be shown. if not, add more ToDo. if so... go to the next item on the list.
+40. use the app on a real dungeon and see if you can accuratly show everything that needs to be shown. if not, add more ToDo. if so... go to the next item on the list.
 
-26. You are done. Go to the Polish List, and may you one day find the end.
+50. You are done. Go to the Polish List, and may you one day find the end.
 
 
 ### Known bugs
@@ -816,6 +817,8 @@ inside the connection editor, click on a connection with one side being to a nul
 46. add a room option so that the shape of the room can be changed. square/rectangle, circle, octagon
 47. Add diagonal and vertical connection attachment directions (NE, SE, SW, NW, UP, DOWN)
 48. when the from and to fields are the same, show a looping arrow.  so I can show that in the haunted woods, going east, brings me back to the same place, but on the west side.
+49. multi select rooms so that they can be moved together
+50. change how a new room is made. im thinking a special dialog box.
 
 100. the URL for the github pages that is hosting the webpage based in github is https://neain.github.io/Roombound/ technicly at index.html, but thats implied.
 

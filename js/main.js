@@ -264,13 +264,40 @@ newRoomTooltip.textContent = "New Room";
 newRoomButton.appendChild(newRoomTooltip);
 
 // Tooltip displayed when hovering over the New Connection button.
-const newConnectionTooltip =
-    document.createElement("div");
+const newConnectionTooltip = document.createElement("div");
 
 newConnectionTooltip.classList.add("map-tool-tooltip");
 newConnectionTooltip.textContent = "New Connection";
-
 newConnectionButton.appendChild(newConnectionTooltip);
+
+// Save button
+const saveButton = document.createElement("button");
+saveButton.classList.add("map-tool-button");
+saveButton.textContent = "↓";
+saveButton.setAttribute("aria-label", "Save Map");
+saveButton.addEventListener("click", saveMap);
+
+// Load button
+const loadButton = document.createElement("button");
+loadButton.classList.add("map-tool-button");
+loadButton.textContent = "↑";
+loadButton.setAttribute("aria-label", "Load Map");
+loadButton.addEventListener("click", loadMap);
+
+// Tooltips
+const saveTooltip = document.createElement("div");
+saveTooltip.classList.add("map-tool-tooltip");
+saveTooltip.textContent = "Save Map";
+saveButton.appendChild(saveTooltip);
+
+const loadTooltip = document.createElement("div");
+loadTooltip.classList.add("map-tool-tooltip");
+loadTooltip.textContent = "Load Map";
+loadButton.appendChild(loadTooltip);
+
+// Add them to the toolbar (order is up to you)
+mapTools.appendChild(saveButton);
+mapTools.appendChild(loadButton);
 
 
 // Add the map tool buttons to the toolbar and add the toolbar to the page.
@@ -416,6 +443,121 @@ document.addEventListener(
     }
 );
 
+// ============================================================
+// SAVE / LOAD
+// ============================================================
+
+const CURRENT_MAP_VERSION = 1;
+
+/**
+ * Creates a clean serializable copy of the current map.
+ * Strips any temporary UI-only state.
+ */
+function getSerializableMap() {
+    return {
+        version: CURRENT_MAP_VERSION,
+        app: "Roombound",
+        rooms: map.rooms.map(room => ({
+            roomID: room.roomID,
+            name: room.name,
+            floor: room.floor,
+            notes: room.notes || "",
+            position: { ...room.position },
+            size: { ...room.size },
+            editorSize: room.editorSize ? { ...room.editorSize } : { width: 200, height: 300 }
+        })),
+        connections: map.connections.map(conn => ({
+            roomA: conn.roomA,
+            roomB: conn.roomB,
+            roomAConnectionSide: conn.roomAConnectionSide,
+            roomBConnectionSide: conn.roomBConnectionSide,
+            directionTo: conn.directionTo,
+            name: conn.name || ""
+        }))
+    };
+}
+
+/**
+ * Downloads the current map as a JSON file.
+ */
+function saveMap() {
+    const data = getSerializableMap();
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `roombound-map-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+    console.log("Map saved");
+}
+
+/**
+ * Basic validation of a loaded map object.
+ */
+function isValidMapData(data) {
+    if (!data || typeof data !== "object") return false;
+    if (!Array.isArray(data.rooms) || !Array.isArray(data.connections)) return false;
+
+    // Optional: check version later if we evolve the schema
+    return true;
+}
+
+/**
+ * Replaces the current map with loaded data and re-renders.
+ */
+function loadMapFromData(data) {
+    if (!isValidMapData(data)) {
+        alert("Invalid Roombound map file.");
+        return;
+    }
+
+    // Replace the data in place
+    map.rooms.length = 0;
+    map.connections.length = 0;
+
+    data.rooms.forEach(room => map.rooms.push(room));
+    data.connections.forEach(conn => map.connections.push(conn));
+
+    // Close any open editors (simple approach for now)
+    document.querySelectorAll(".room-editor, .connection-editor").forEach(el => el.remove());
+
+    // Re-render
+    updateZoom();          // this already calls renderRooms + renderConnections
+
+    console.log("Map loaded", map);
+}
+
+/**
+ * Opens a file picker and loads a JSON map.
+ */
+function loadMap() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json,application/json";
+
+    input.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                loadMapFromData(data);
+            } catch (err) {
+                alert("Could not read the map file.\n" + err.message);
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    input.click();
+}
+
 
 // ============================================================
 // INITIAL MAP RENDER
@@ -430,3 +572,4 @@ mapElement.scrollLeft =
 
 mapElement.scrollTop =
     (MAP_SIZE * zoom - mapElement.clientHeight) / 2;
+
