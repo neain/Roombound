@@ -166,7 +166,8 @@ export function renderRooms(
                     map,
                     mapElement,
                     connectionLayer,
-                    zoom
+                    zoom,
+                    currentFloor
                 );
             }
         );
@@ -276,7 +277,8 @@ export function createRoom(
         map,
         mapElement,
         connectionLayer,
-        zoom
+        zoom,
+        currentFloor
     );
 }
 
@@ -421,7 +423,8 @@ function selectRoom(room, map, mapElement, connectionLayer, zoom, currentFloor) 
                 selectedRoom,
                 editorContext.mapElement,
                 editorContext.connectionLayer,
-                editorContext.zoom
+                editorContext.zoom,
+                editorContext.currentFloor
             );
         });
 

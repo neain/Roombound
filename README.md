@@ -826,8 +826,9 @@ inside the connection editor, click on a connection with one side being to a nul
 52. when the deleted room was the one currently being edited in the Connection Editor the connection editor should close so that the deleted connections are not able to be messed with. also re-think if all connections should be deleted, or just that specific room should be removed from them.
 53. is the room delete button in the right place? brainstorm other locations.
 54. add a up and down floor button into the edit room context menu
-55. when a room is on a higher or lower floor, move the arrow to next to the current floors room and ADD a staircase! a tall rectangle sharing a side with a square half its height will work fine.
+55. when a room is on a higher or lower floor, move the arrow to next to the current floors room and ADD a staircase! as well as the floor number? a tall rectangle sharing a side with a square half its height will work fine.
 56. when a room is on a higher or lower floor... make it some % visible? probably need to re-think this. at the very least you should not be able to select it.
+57. mousing over a connection to a different floor should give you the room name and floor number
 
 100. the URL for the github pages that is hosting the webpage based in github is https://neain.github.io/Roombound/ technicly at index.html, but thats implied.
 
