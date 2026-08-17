@@ -1,4 +1,5 @@
 # Roombound
+Live Demo: https://neain.github.io/Roombound/
 
 A lightweight, player-facing exploration mapper for tabletop RPGs.
 
@@ -110,7 +111,8 @@ The map itself should remain a very simple data structure.
 
 Conceptually: 
 Map
-└── rooms[]
+├── rooms[]
+└── connections[]
 
 The map does not need to understand the visual arrangement of rooms or determine how rooms should be displayed.
 
@@ -242,9 +244,9 @@ The current conceptual structure is:
 
 Connection
 ├── roomA
-├── roomASide
+├── roomAConnectionSide
 ├── roomB
-├── roomBSide
+├── roomBConnectionSide
 ├── directionTo
 └── name
 
@@ -256,27 +258,21 @@ The room ID of endpoint A.
 
 This identifies one endpoint of the connection.
 
-### `roomASide`
+### `roomAConnectionSide`
 
 The side of room A where the connection is attached.
 
-The intended values are currently:
+The currently implemented values are:
 
 N
-NE
 E
-SE
 S
-SW
 W
-NW
-UP
-DOWN
 NONE
 
-The eight directional values represent the cardinal and diagonal sides of a room.
+The four directional values represent the cardinal sides of a room.
 
-UP and DOWN will show (in some way not yet defined) that the room connects to a room on a different floor, either up a layer, or down a layer.
+Diagonal directions (NE, SE, SW, NW) and vertical directions (UP, DOWN) are planned for a later development step. Their visual treatment is not yet defined.
 
 `NONE` means that the connection exists but is not associated with a particular side.
 
@@ -297,13 +293,13 @@ Room A
 
 Room B being `null` does not create a separate connection type. It simply represents an incomplete connection.
 
-### `roomBSide`
+### `roomBConnectionSide`
 
 The side of room B where the connection is attached.
 
-It uses the same conceptual values as `roomASide`.
+It uses the same conceptual values as `roomAConnectionSide`.
 
-If `roomB` is `null`, `roomBSide` must also be `null`.
+If `roomB` is `null`, `roomBConnectionSide` must also be `null`.
 
 `NONE` and `null` have different meanings:
 
@@ -393,9 +389,9 @@ Example:
 This is represented by a connection whose A endpoint is known while B is unresolved:
 
 roomA: "room_012"
-roomASide: "E"
+roomAConnectionSide: "E"
 roomB: null
-roomBSide: null
+roomBConnectionSide: null
 
 The unresolved state is therefore not intended to be a separate permanent type of connection. It is simply a connection whose second endpoint has not yet been identified.
 
@@ -627,7 +623,8 @@ Visualization and interaction logic should operate on the data rather than becom
 The map currently consists of:
 
 Map
-└── rooms[]
+├── rooms[]
+└── connections[]
 
 ### Room
 
@@ -679,9 +676,9 @@ The current conceptual structure is:
 
 Connection
 ├── roomA
-├── roomASide
+├── roomAConnectionSide
 ├── roomB
-├── roomBSide
+├── roomBConnectionSide
 ├── directionTo
 └── name
 
@@ -783,9 +780,19 @@ The current development progression was:
 20. Add connection-side selection for each endpoint
 21. Handle disconnecting either endpoint, including deleting a connection when both endpoints are disconnected
 22. Refine unresolved connection behavior and creation workflow
-23. Continue connection editor usability testing
-24. Polish pass
-25. Modify buttons and other graphics
+23. Add save and load features
+24. add additional map layers to show that there are additional floors, not just a floor section in the data structure.
+
+25. use the app on a real dungeon and see if you can accuratly show everything that needs to be shown. if not, add more ToDo. if so... go to the next item on the list.
+
+26. You are done. Go to the Polish List, and may you one day find the end.
+
+
+### Known bugs
+inside the connection editor, click on a connection with one side being to a null room. change that to a real room. the connect to side context menu does not appear
+
+### Polish List
+1. Modify buttons and other graphics
 26. Include a zoom bar, visible UI zoom level, and possibly zoom shortcut keys
 27. Right-click context menu on the main map (things like create new room, and more if I think about it. Maybe this is where the options menu lives? This is a ToDo)
 28. Check that the tooltip popup for the new buttons (bottom right on the screen) looks fine
@@ -806,31 +813,31 @@ The current development progression was:
 43. when editing a connection, add a visual indictator on the main map that that is the connection thats being edited.
 44. change the Room editor window so that saving a room does not close the window. maybe add an indictator to show that something has changed?
 45. Nail down bugs
+46. add a room option so that the shape of the room can be changed. square/rectangle, circle, octagon
+47. Add diagonal and vertical connection attachment directions (NE, SE, SW, NW, UP, DOWN)
+48. when the from and to fields are the same, show a looping arrow.  so I can show that in the haunted woods, going east, brings me back to the same place, but on the west side.
 
-
-### Known bugs
-inside the connection editor, click on a connection with one side being to a null room. change that to a real room. the connect to side context menu does not appear
-
+100. the URL for the github pages that is hosting the webpage based in github is https://neain.github.io/Roombound/ technicly at index.html, but thats implied.
 
 ### Current Position
 
-Steps 1–16 are currently working in prototype form.
+Steps 1–22 are currently working in prototype form, with the exception that step 21 still needs automatic deletion when both endpoints are disconnected.
 
-The project is currently in **interactive room/connection creation and editing**.
+The project is currently ready to begin **save and load features**.
 
-The connection data model has recently been refactored from a `from`/`to` model into an endpoint-based A/B model.
+The connection data model uses an endpoint-based A/B model.
 
 The current connection structure is:
 
 Connection
 ├── roomA
-├── roomASide
+├── roomAConnectionSide
 ├── roomB
-├── roomBSide
+├── roomBConnectionSide
 ├── directionTo
 └── name
 
-The next implementation target is to finish adapting the connection editor to this model and continue the interactive connection editing workflow.
+The next implementation target is step 23: save and load features.
 
 ---
 

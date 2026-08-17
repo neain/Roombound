@@ -1,30 +1,117 @@
 // ============================================================
+// ROOMBOUND CONNECTION EDITOR
+// ============================================================
+//
+// PUBLIC ENTRY POINT
+// This file is the public interface for connection editing.
+// Other modules should import connection editor functionality from
+// this file rather than importing the internal connection modules directly.
+//
+// CURRENT PUBLIC FUNCTIONS:
+//   openConnectionEditor()
+//   createConnection()
+//
+// INTERNAL STATE:
+//   connectionEditor
+//   connectionEditorContext
+//   editedRoom
+//   selectedConnection
+//   selectedEndpoint
+//   connectionOptions
+//
+// INTERNAL RESPONSIBILITIES:
+//   - Manage connection editor state.
+//   - Create and manage the main connection editor UI.
+//   - Select connections and connection directions.
+//   - Refresh connection display after changes.
+//   - Handle editor dragging and closing.
+//   - Provide the state bridge used by specialized connection modules.
+//
+// INTERNAL MODULES:
+//   ./connections/connection.js
+//       Connection-level operations.
+//       CURRENT: createConnection()
+//
+//   ./connections/connectionEndpoints.js
+//       Endpoint room selection and attachment-side editing.
+//       CURRENT: selectConnectionEndpoint()
+//       CURRENT: createEndpointOptions()
+//       CURRENT: setConnectionEndpointRoom()
+//       CURRENT: createEndpointSideOptions()
+//       CURRENT: setConnectionEndpointSide()
+//       CURRENT: removeConnectionContextOptions()
+//
+//   ./connections/connectionGeometry.js
+//       Endpoint position and room-range calculations.
+//       CURRENT: getSelectedEndpointRoom()
+//       CURRENT: getSelectedEndpointPoint()
+//
+// RELATED MODULES:
+//   ./connectionRenderer.js
+//       Connection rendering and map-side connection geometry.
+//       CURRENT: renderConnections()
+//       CURRENT: setSelectedConnectionEndpoint()
+//       CURRENT: clearSelectedConnectionEndpoint()
+//
+//   ./mapUtils.js
+//       Shared map/grid utilities.
+//       CURRENT: getRoom()
+//
+// ARCHITECTURE NOTE:
+//   connectionEditor.js intentionally remains the stable public doorway
+//   for connection editing. Internal modules receive editor state through
+//   getEditorState() rather than importing connectionEditor.js directly.
+//   This avoids circular dependencies while allowing the internal modules
+//   to modify editor state and request editor refreshes.
+//
+// ============================================================
+
+
+
+
+// ============================================================
 // IMPORTS
 // ============================================================
 
 // Shared map/grid utilities.
-// CURRENT: CONNECTION_ROOM_RANGE, CONNECTION_SIDES, gridToPixels(), getRoom()
-// If working on connection search ranges, connection side definitions,
-// coordinate conversion, or map lookups, inspect:
+// CURRENT: getRoom()
+// If working on shared map lookups or grid utilities, inspect:
 //   ./mapUtils.js
 import {
-    CONNECTION_ROOM_RANGE,
-    CONNECTION_SIDES,
-    gridToPixels,
     getRoom
 } from "./mapUtils.js";
 
 // Connection rendering and connection geometry.
 // CURRENT: renderConnections(), setSelectedConnectionEndpoint(),
 //          clearSelectedConnectionEndpoint()
-// If working on how connections are drawn, positioned, spaced along room
-// sides, or represented as SVG, inspect:
+// If working on how connections are drawn or positioned, inspect:
 //   ./connectionRenderer.js
 import {
     renderConnections,
     setSelectedConnectionEndpoint,
     clearSelectedConnectionEndpoint
 } from "./connectionRenderer.js";
+
+// Connection-level operations.
+import {
+    createConnection as createConnectionInternal
+} from "./connections/connection.js";
+
+// Connection endpoint editing.
+import {
+    selectConnectionEndpoint,
+    createEndpointOptions,
+    setConnectionEndpointRoom,
+    createEndpointSideOptions,
+    setConnectionEndpointSide,
+    removeConnectionContextOptions
+} from "./connections/connectionEndpoints.js";
+
+// Connection geometry and endpoint positioning.
+import {
+    getSelectedEndpointRoom,
+    getSelectedEndpointPoint
+} from "./connections/connectionGeometry.js";
 
 
 // ============================================================
@@ -51,6 +138,50 @@ let connectionOptions = null;
 
 
 // ============================================================
+// CONNECTION EDITOR STATE ACCESS
+// ============================================================
+
+// Provides the current editor state to the specialized connection modules.
+function getEditorState() {
+    return {
+        get connectionEditor() {
+            return connectionEditor;
+        },
+
+        get connectionEditorContext() {
+            return connectionEditorContext;
+        },
+
+        get editedRoom() {
+            return editedRoom;
+        },
+
+        get selectedConnection() {
+            return selectedConnection;
+        },
+
+        get selectedEndpoint() {
+            return selectedEndpoint;
+        },
+
+        set selectedEndpoint(value) {
+            selectedEndpoint = value;
+        },
+
+        get connectionOptions() {
+            return connectionOptions;
+        },
+
+        get refreshSelectedConnection() {
+            return refreshSelectedConnection;
+        },
+
+        getRoom
+    };
+}
+
+
+// ============================================================
 // CONNECTION EDITOR
 // ============================================================
 
@@ -58,13 +189,7 @@ let connectionOptions = null;
 //
 // Every connection involving the selected room is included, regardless of
 // whether the room is endpoint A or endpoint B.
-export function openConnectionEditor(
-    map,
-    room,
-    mapElement,
-    connectionLayer,
-    zoom = 1
-) {
+export function openConnectionEditor(map, room, mapElement, connectionLayer, zoom = 1) {
     connectionEditorContext = {
         map,
         connectionLayer,
@@ -74,17 +199,8 @@ export function openConnectionEditor(
     const connections = [];
 
     for (const connection of map.connections) {
-        const roomA =
-            getRoom(
-                map,
-                connection.roomA
-            );
-
-        const roomB =
-            getRoom(
-                map,
-                connection.roomB
-            );
+        const roomA = getRoom(map, connection.roomA);
+        const roomB = getRoom(map, connection.roomB);
 
         if (
             connection.roomA !== room.roomID &&
@@ -123,10 +239,7 @@ export function openConnectionEditor(
     closeButton.textContent = "×";
     closeButton.classList.add("connection-editor-close");
 
-    closeButton.addEventListener(
-        "click",
-        closeConnectionEditor
-    );
+    closeButton.addEventListener("click", closeConnectionEditor);
 
     editorHeader.appendChild(editorTitle);
     editorHeader.appendChild(closeButton);
@@ -147,32 +260,24 @@ export function openConnectionEditor(
 
     if (connections.length === 0) {
         const emptyMessage = document.createElement("div");
-        emptyMessage.textContent =
-            "This room has no connections.";
+        emptyMessage.textContent = "This room has no connections.";
 
         editorContent.appendChild(emptyMessage);
     }
 
     for (const entry of connections) {
-        const connectionElement =
-            document.createElement("div");
+        const connectionElement = document.createElement("div");
 
         connectionElement.classList.add(
             "connection-editor-connection"
         );
 
-        updateConnectionElement(
-            entry,
-            connectionElement
-        );
+        updateConnectionElement(entry, connectionElement);
 
         connectionElement.addEventListener(
             "click",
             () => {
-                selectConnection(
-                    entry,
-                    connectionElement
-                );
+                selectConnection(entry, connectionElement);
             }
         );
 
@@ -201,14 +306,9 @@ export function openConnectionEditor(
 // The selected connection receives a containing group so that the connection
 // and all of its editing options remain visually associated while the user
 // moves through the editing hierarchy.
-function selectConnection(
-    entry,
-    connectionElement
-) {
+function selectConnection(entry, connectionElement) {
     if (selectedConnection) {
-        selectedConnection.element.classList.remove(
-            "selected"
-        );
+        selectedConnection.element.classList.remove("selected");
     }
 
     selectedConnection = {
@@ -222,15 +322,14 @@ function selectConnection(
 
     connectionElement.classList.add("selected");
 
-    removeConnectionContextOptions();
+    removeConnectionContextOptions(connectionOptions);
 
     // --------------------------------------------------------
     // Restore the connection element to the editor before
     // creating its new selection group.
     // --------------------------------------------------------
 
-    const previousGroup =
-        connectionElement.parentElement;
+    const previousGroup = connectionElement.parentElement;
 
     if (
         previousGroup &&
@@ -238,8 +337,7 @@ function selectConnection(
             "connection-editor-connection-group"
         )
     ) {
-        const groupParent =
-            previousGroup.parentElement;
+        const groupParent = previousGroup.parentElement;
 
         if (groupParent) {
             groupParent.insertBefore(
@@ -256,8 +354,7 @@ function selectConnection(
     // all of its future editing options.
     // --------------------------------------------------------
 
-    const connectionGroup =
-        document.createElement("div");
+    const connectionGroup = document.createElement("div");
 
     connectionGroup.classList.add(
         "connection-editor-connection-group"
@@ -268,55 +365,36 @@ function selectConnection(
         connectionElement
     );
 
-    connectionGroup.appendChild(
-        connectionElement
-    );
+    connectionGroup.appendChild(connectionElement);
 
     // --------------------------------------------------------
     // Create the endpoint and direction selection row.
     // --------------------------------------------------------
 
-    connectionOptions =
-        document.createElement("div");
+    connectionOptions = document.createElement("div");
 
     connectionOptions.classList.add(
         "connection-editor-options"
     );
 
-    const roomA =
-        entry.roomA?.name || "Unconnected";
+    const roomA = entry.roomA?.name || "Unconnected";
+    const roomB = entry.roomB?.name || "Unconnected";
 
-    const roomB =
-        entry.roomB?.name || "Unconnected";
-
-    const roomAButton =
-        document.createElement("button");
-
-    roomAButton.textContent =
-        roomA;
-
+    const roomAButton = document.createElement("button");
+    roomAButton.textContent = roomA;
     roomAButton.classList.add(
         "connection-editor-endpoint"
     );
 
-    const directionButton =
-        document.createElement("button");
-
+    const directionButton = document.createElement("button");
     directionButton.textContent =
-        getDirectionSymbol(
-            entry.connection.directionTo
-        );
-
+        getDirectionSymbol(entry.connection.directionTo);
     directionButton.classList.add(
         "connection-editor-direction"
     );
 
-    const roomBButton =
-        document.createElement("button");
-
-    roomBButton.textContent =
-        roomB;
-
+    const roomBButton = document.createElement("button");
+    roomBButton.textContent = roomB;
     roomBButton.classList.add(
         "connection-editor-endpoint"
     );
@@ -326,7 +404,10 @@ function selectConnection(
         (event) => {
             event.stopPropagation();
 
-            selectConnectionEndpoint("A");
+            selectConnectionEndpoint(
+                getEditorState(),
+                "A"
+            );
         }
     );
 
@@ -344,30 +425,20 @@ function selectConnection(
         (event) => {
             event.stopPropagation();
 
-            selectConnectionEndpoint("B");
+            selectConnectionEndpoint(
+                getEditorState(),
+                "B"
+            );
         }
     );
 
-    connectionOptions.appendChild(
-        roomAButton
-    );
+    connectionOptions.appendChild(roomAButton);
+    connectionOptions.appendChild(directionButton);
+    connectionOptions.appendChild(roomBButton);
 
-    connectionOptions.appendChild(
-        directionButton
-    );
+    connectionGroup.appendChild(connectionOptions);
 
-    connectionOptions.appendChild(
-        roomBButton
-    );
-
-    connectionGroup.appendChild(
-        connectionOptions
-    );
-
-    console.log(
-        "Selected connection:",
-        entry
-    );
+    console.log("Selected connection:", entry);
 }
 
 
@@ -390,9 +461,7 @@ function selectConnectionDirection() {
     clearSelectedConnectionEndpoint();
 
     connectionOptions
-        .querySelectorAll(
-            ".connection-editor-endpoint"
-        )
+        .querySelectorAll(".connection-editor-endpoint")
         .forEach(
             (button) => {
                 button.classList.remove("selected");
@@ -412,28 +481,21 @@ function selectConnectionDirection() {
         return;
     }
 
-    removeConnectionContextOptions();
+    removeConnectionContextOptions(connectionOptions);
 
-    const directionOptions =
-        document.createElement("div");
+    const directionOptions = document.createElement("div");
 
     directionOptions.classList.add(
         "connection-editor-direction-options"
     );
 
-    const leftButton =
-        document.createElement("button");
-
+    const leftButton = document.createElement("button");
     leftButton.textContent = "←";
 
-    const bothButton =
-        document.createElement("button");
-
+    const bothButton = document.createElement("button");
     bothButton.textContent = "↔";
 
-    const rightButton =
-        document.createElement("button");
-
+    const rightButton = document.createElement("button");
     rightButton.textContent = "→";
 
     leftButton.addEventListener(
@@ -463,21 +525,11 @@ function selectConnectionDirection() {
         }
     );
 
-    directionOptions.appendChild(
-        leftButton
-    );
+    directionOptions.appendChild(leftButton);
+    directionOptions.appendChild(bothButton);
+    directionOptions.appendChild(rightButton);
 
-    directionOptions.appendChild(
-        bothButton
-    );
-
-    directionOptions.appendChild(
-        rightButton
-    );
-
-    connectionOptions.after(
-        directionOptions
-    );
+    connectionOptions.after(directionOptions);
 }
 
 
@@ -485,18 +537,14 @@ function selectConnectionDirection() {
 //
 // Direction is represented entirely by directionTo. Changing direction does
 // not change either endpoint or move the connection between room objects.
-function setConnectionDirection(
-    direction
-) {
+function setConnectionDirection(direction) {
     if (!selectedConnection) {
         return;
     }
 
-    const connection =
-        selectedConnection.entry.connection;
+    const connection = selectedConnection.entry.connection;
 
-    connection.directionTo =
-        direction;
+    connection.directionTo = direction;
 
     refreshSelectedConnection();
 }
@@ -508,18 +556,10 @@ function setConnectionDirection(
 
 // Updates the visible connection description from the current connection
 // data.
-function updateConnectionElement(
-    entry,
-    connectionElement
-) {
-    const connection =
-        entry.connection;
-
-    const roomAName =
-        entry.roomA?.name || "Unconnected";
-
-    const roomBName =
-        entry.roomB?.name || "Unconnected";
+function updateConnectionElement(entry, connectionElement) {
+    const connection = entry.connection;
+    const roomAName = entry.roomA?.name || "Unconnected";
+    const roomBName = entry.roomB?.name || "Unconnected";
 
     const roomASide =
         connection.roomAConnectionSide &&
@@ -533,10 +573,7 @@ function updateConnectionElement(
             ? ` (${connection.roomBConnectionSide})`
             : "";
 
-    const direction =
-        getDirectionSymbol(
-            connection.directionTo
-        );
+    const direction = getDirectionSymbol(connection.directionTo);
 
     connectionElement.textContent =
         `${roomAName}${roomASide} ${direction} ${roomBSide}${roomBName}`;
@@ -564,23 +601,18 @@ function refreshSelectedConnection() {
         return;
     }
 
-    const entry =
-        selectedConnection.entry;
+    const entry = selectedConnection.entry;
+    const connection = entry.connection;
 
-    const connection =
-        entry.connection;
+    entry.roomA = getRoom(
+        connectionEditorContext.map,
+        connection.roomA
+    );
 
-    entry.roomA =
-        getRoom(
-            connectionEditorContext.map,
-            connection.roomA
-        );
-
-    entry.roomB =
-        getRoom(
-            connectionEditorContext.map,
-            connection.roomB
-        );
+    entry.roomB = getRoom(
+        connectionEditorContext.map,
+        connection.roomB
+    );
 
     updateConnectionElement(
         entry,
@@ -593,9 +625,7 @@ function refreshSelectedConnection() {
         );
 
     directionButton.textContent =
-        getDirectionSymbol(
-            connection.directionTo
-        );
+        getDirectionSymbol(connection.directionTo);
 
     const endpointButtons =
         connectionOptions.querySelectorAll(
@@ -608,7 +638,6 @@ function refreshSelectedConnection() {
     endpointButtons[1].textContent =
         entry.roomB?.name || "Unconnected";
 
-    // BEGIN EDIT
     // Keep the side selector synchronized with the currently selected
     // endpoint after the connection data changes.
     const endpointOptions =
@@ -617,11 +646,15 @@ function refreshSelectedConnection() {
         );
 
     if (endpointOptions) {
-        const currentRoom =
-            getSelectedEndpointRoom();
+        const currentRoom = getSelectedEndpointRoom(
+            connectionEditorContext,
+            selectedConnection,
+            selectedEndpoint
+        );
 
         if (currentRoom) {
             createEndpointSideOptions(
+                getEditorState(),
                 endpointOptions
             );
         } else {
@@ -636,652 +669,12 @@ function refreshSelectedConnection() {
                 );
         }
     }
-    // END EDIT
 
     renderConnections(
         connectionEditorContext.map,
         connectionEditorContext.connectionLayer,
         connectionEditorContext.zoom
     );
-}
-
-
-// ============================================================
-// CONNECTION ENDPOINT SELECTION
-// ============================================================
-
-// Selects either endpoint A or endpoint B of the active connection.
-//
-// Selecting an endpoint displays nearby room choices and highlights the
-// physical endpoint on the map.
-function selectConnectionEndpoint(endpoint) {
-    if (!selectedConnection || !connectionOptions) {
-        return;
-    }
-
-    if (
-        selectedEndpoint === endpoint &&
-        connectionOptions.parentElement?.querySelector(
-            ".connection-editor-endpoint-options"
-        )
-    ) {
-        selectedEndpoint = null;
-
-        clearSelectedConnectionEndpoint();
-
-        connectionOptions
-            .querySelectorAll(
-                ".connection-editor-endpoint"
-            )
-            .forEach(
-                (button) => {
-                    button.classList.remove("selected");
-                }
-            );
-
-        removeConnectionContextOptions();
-
-        return;
-    }
-
-    selectedEndpoint = endpoint;
-
-    connectionOptions
-        .querySelectorAll(
-            ".connection-editor-endpoint"
-        )
-        .forEach(
-            (button) => {
-                button.classList.remove("selected");
-            }
-        );
-
-    const buttons =
-        connectionOptions.querySelectorAll(
-            ".connection-editor-endpoint"
-        );
-
-    const selectedButton =
-        endpoint === "A"
-            ? buttons[0]
-            : buttons[1];
-
-    selectedButton.classList.add("selected");
-
-    // --------------------------------------------------------
-    // Remove every previous context level before creating the
-    // context for the newly selected endpoint.
-    // --------------------------------------------------------
-
-    removeConnectionContextOptions();
-
-    const connection =
-        selectedConnection.entry.connection;
-
-    setSelectedConnectionEndpoint(
-        connection,
-        endpoint
-    );
-
-    createEndpointOptions();
-
-    renderConnections(
-        connectionEditorContext.map,
-        connectionEditorContext.connectionLayer,
-        connectionEditorContext.zoom
-    );
-}
-
-
-// Creates the room-selection dropdown and side controls for the
-// currently selected endpoint.
-function createEndpointOptions() {
-    if (
-        !selectedConnection ||
-        !connectionOptions ||
-        !selectedEndpoint
-    ) {
-        return;
-    }
-
-    const endpointOptions =
-        document.createElement("div");
-
-    endpointOptions.classList.add(
-        "connection-editor-endpoint-options"
-    );
-
-    const roomSelect =
-        document.createElement("select");
-
-    roomSelect.classList.add(
-        "connection-editor-room-select"
-    );
-
-    roomSelect.addEventListener(
-        "mousedown",
-        () => {
-            populateRoomSelect(
-                roomSelect
-            );
-        }
-    );
-
-    roomSelect.addEventListener(
-        "change",
-        () => {
-            setConnectionEndpointRoom(
-                roomSelect.value
-            );
-        }
-    );
-
-    endpointOptions.appendChild(
-        roomSelect
-    );
-
-    connectionOptions.after(
-        endpointOptions
-    );
-
-    const currentRoom =
-        getSelectedEndpointRoom();
-
-    // BEGIN EDIT
-    // A connected endpoint should always expose its side selector,
-    // including when its current side is NONE.
-    if (currentRoom) {
-        createEndpointSideOptions(
-            endpointOptions
-        );
-    }
-    // END EDIT
-}
-
-
-// Populates the room dropdown with the current room, nearby rooms, and None.
-function populateRoomSelect(roomSelect) {
-    roomSelect.innerHTML = "";
-
-    const currentRoom =
-        getSelectedEndpointRoom();
-
-    const candidateRooms =
-        getRoomsInEndpointRange();
-
-    if (currentRoom) {
-        const currentOption =
-            document.createElement("option");
-
-        currentOption.value =
-            currentRoom.roomID;
-
-        currentOption.textContent =
-            `✓ ${currentRoom.name}`;
-
-        roomSelect.appendChild(
-            currentOption
-        );
-    }
-
-    for (const room of candidateRooms) {
-        if (
-            currentRoom &&
-            room.roomID === currentRoom.roomID
-        ) {
-            continue;
-        }
-
-        const option =
-            document.createElement("option");
-
-        option.value =
-            room.roomID;
-
-        option.textContent =
-            room.name;
-
-        roomSelect.appendChild(
-            option
-        );
-    }
-
-    const noneOption =
-        document.createElement("option");
-
-    noneOption.value = "";
-
-    noneOption.textContent =
-        "🗑 None";
-
-    roomSelect.appendChild(
-        noneOption
-    );
-
-    if (currentRoom) {
-        roomSelect.value =
-            currentRoom.roomID;
-    } else {
-        roomSelect.value = "";
-    }
-}
-
-
-// Finds rooms whose grid-space bounds overlap the configured endpoint range.
-function getRoomsInEndpointRange() {
-    const map =
-        connectionEditorContext.map;
-
-    const endpoint =
-        getSelectedEndpointPoint();
-
-    if (!endpoint) {
-        return [];
-    }
-
-    const rooms = [];
-
-    for (const room of map.rooms) {
-        const currentRoom =
-            getSelectedEndpointRoom();
-
-        if (
-            currentRoom &&
-            room.roomID === currentRoom.roomID
-        ) {
-            continue;
-        }
-
-        const roomLeft =
-            room.position.x;
-
-        const roomTop =
-            room.position.y;
-
-        const roomRight =
-            roomLeft + room.size.width;
-
-        const roomBottom =
-            roomTop + room.size.height;
-
-        const rangeLeft =
-            endpoint.x - CONNECTION_ROOM_RANGE;
-
-        const rangeTop =
-            endpoint.y - CONNECTION_ROOM_RANGE;
-
-        const rangeRight =
-            endpoint.x + CONNECTION_ROOM_RANGE;
-
-        const rangeBottom =
-            endpoint.y + CONNECTION_ROOM_RANGE;
-
-        if (
-            roomRight >= rangeLeft &&
-            roomLeft <= rangeRight &&
-            roomBottom >= rangeTop &&
-            roomTop <= rangeBottom
-        ) {
-            rooms.push(room);
-        }
-    }
-
-    rooms.sort(
-        (roomA, roomB) =>
-            roomA.name.localeCompare(
-                roomB.name
-            )
-    );
-
-    return rooms;
-}
-
-
-// Returns the room currently assigned to the selected endpoint.
-function getSelectedEndpointRoom() {
-    if (
-        !selectedConnection ||
-        !selectedEndpoint
-    ) {
-        return null;
-    }
-
-    const connection =
-        selectedConnection.entry.connection;
-
-    const roomID =
-        selectedEndpoint === "A"
-            ? connection.roomA
-            : connection.roomB;
-
-    return getRoom(
-        connectionEditorContext.map,
-        roomID
-    );
-}
-
-
-// Returns the map/grid position of the currently selected physical endpoint.
-function getSelectedEndpointPoint() {
-    if (
-        !selectedConnection ||
-        !selectedEndpoint
-    ) {
-        return null;
-    }
-
-    const connection =
-        selectedConnection.entry.connection;
-
-    const roomID =
-        selectedEndpoint === "A"
-            ? connection.roomA
-            : connection.roomB;
-
-    const side =
-        selectedEndpoint === "A"
-            ? connection.roomAConnectionSide
-            : connection.roomBConnectionSide;
-
-    const room =
-        getRoom(
-            connectionEditorContext.map,
-            roomID
-        );
-
-    if (!room) {
-        return getFreeEndpointPoint(
-            connection
-        );
-    }
-
-    return getRoomEndpointPoint(
-        room,
-        side
-    );
-}
-
-
-// Returns an approximate physical point for a connected room endpoint.
-function getRoomEndpointPoint(
-    room,
-    side
-) {
-    const left =
-        room.position.x;
-
-    const top =
-        room.position.y;
-
-    const width =
-        room.size.width;
-
-    const height =
-        room.size.height;
-
-    switch (side) {
-        case "N":
-            return {
-                x: left + width / 2,
-                y: top
-            };
-
-        case "E":
-            return {
-                x: left + width,
-                y: top + height / 2
-            };
-
-        case "S":
-            return {
-                x: left + width / 2,
-                y: top + height
-            };
-
-        case "W":
-            return {
-                x: left,
-                y: top + height / 2
-            };
-
-        default:
-            return {
-                x: left + width / 2,
-                y: top + height / 2
-            };
-    }
-}
-
-
-// Returns the grid-space point used for an unresolved endpoint.
-//
-// The current renderer represents an unresolved endpoint outward from room A,
-// so use that endpoint when selecting an unconnected B endpoint.
-function getFreeEndpointPoint(
-    connection
-) {
-    const roomA =
-        getRoom(
-            connectionEditorContext.map,
-            connection.roomA
-        );
-
-    if (!roomA) {
-        return null;
-    }
-
-    const side =
-        connection.roomAConnectionSide;
-
-    const endpoint =
-        getRoomEndpointPoint(
-            roomA,
-            side
-        );
-
-    switch (side) {
-        case "N":
-            endpoint.y -= 3;
-            break;
-
-        case "E":
-            endpoint.x += 3;
-            break;
-
-        case "S":
-            endpoint.y += 3;
-            break;
-
-        case "W":
-            endpoint.x -= 3;
-            break;
-    }
-
-    return endpoint;
-}
-
-
-// Assigns a room to the selected endpoint.
-//
-// Selecting a room resets its side to NONE. Selecting None clears both the
-// room and its side because an unconnected endpoint has no room attachment.
-function setConnectionEndpointRoom(roomID) {
-    if (
-        !selectedConnection ||
-        !selectedEndpoint
-    ) {
-        return;
-    }
-
-    const connection =
-        selectedConnection.entry.connection;
-
-    if (!roomID) {
-        if (selectedEndpoint === "A") {
-            connection.roomA = null;
-            connection.roomAConnectionSide = null;
-        } else {
-            connection.roomB = null;
-            connection.roomBConnectionSide = null;
-        }
-
-        refreshSelectedConnection();
-
-        return;
-    }
-
-    const room =
-        getRoom(
-            connectionEditorContext.map,
-            roomID
-        );
-
-    if (!room) {
-        return;
-    }
-
-    if (selectedEndpoint === "A") {
-        connection.roomA =
-            room.roomID;
-
-        connection.roomAConnectionSide =
-            "NONE";
-    } else {
-        connection.roomB =
-            room.roomID;
-
-        connection.roomBConnectionSide =
-            "NONE";
-    }
-
-    refreshSelectedConnection();
-}
-
-
-// Creates the side-selection row for the currently selected endpoint.
-function createEndpointSideOptions(
-    endpointOptions
-) {
-    endpointOptions
-        .querySelectorAll(
-            ".connection-editor-side-options"
-        )
-        .forEach(
-            (element) => {
-                element.remove();
-            }
-        );
-
-    const sideOptions =
-        document.createElement("div");
-
-    sideOptions.classList.add(
-        "connection-editor-side-options"
-    );
-
-    const sideLabel =
-        document.createElement("span");
-
-    sideLabel.textContent =
-        "Side:";
-
-    const sideSelect =
-        document.createElement("select");
-
-    sideSelect.classList.add(
-        "connection-editor-side-select"
-    );
-
-    const connection =
-        selectedConnection.entry.connection;
-
-    const currentSide =
-        selectedEndpoint === "A"
-            ? connection.roomAConnectionSide
-            : connection.roomBConnectionSide;
-
-    for (const side of CONNECTION_SIDES) {
-        const option =
-            document.createElement("option");
-
-        option.value =
-            side.value;
-
-        option.textContent =
-            side.label;
-
-        sideSelect.appendChild(
-            option
-        );
-    }
-
-    sideSelect.value =
-        currentSide || "NONE";
-
-    sideSelect.addEventListener(
-        "change",
-        () => {
-            setConnectionEndpointSide(
-                sideSelect.value
-            );
-        }
-    );
-
-    sideOptions.appendChild(
-        sideLabel
-    );
-
-    sideOptions.appendChild(
-        sideSelect
-    );
-
-    endpointOptions.appendChild(
-        sideOptions
-    );
-}
-
-
-// Changes the attachment side of the selected endpoint.
-function setConnectionEndpointSide(side) {
-    if (
-        !selectedConnection ||
-        !selectedEndpoint
-    ) {
-        return;
-    }
-
-    const connection =
-        selectedConnection.entry.connection;
-
-    if (selectedEndpoint === "A") {
-        connection.roomAConnectionSide =
-            side;
-    } else {
-        connection.roomBConnectionSide =
-            side;
-    }
-
-    refreshSelectedConnection();
-}
-
-
-// Removes every temporary context menu currently displayed for the selected
-// connection.
-function removeConnectionContextOptions() {
-    if (!connectionOptions) {
-        return;
-    }
-
-    connectionOptions.parentElement
-        ?.querySelectorAll(
-            ".connection-editor-direction-options, " +
-            ".connection-editor-endpoint-options"
-        )
-        .forEach(
-            (element) => {
-                element.remove();
-            }
-        );
 }
 
 
@@ -1306,24 +699,14 @@ function startConnectionEditorDragging(editorHeader) {
         startEditorX = connectionEditor.offsetLeft;
         startEditorY = connectionEditor.offsetTop;
 
-        document.addEventListener(
-            "mousemove",
-            drag
-        );
-
-        document.addEventListener(
-            "mouseup",
-            stopDrag
-        );
+        document.addEventListener("mousemove", drag);
+        document.addEventListener("mouseup", stopDrag);
     }
 
     // Moves the editor to follow the mouse.
     function drag(event) {
-        const mouseDeltaX =
-            event.clientX - startMouseX;
-
-        const mouseDeltaY =
-            event.clientY - startMouseY;
+        const mouseDeltaX = event.clientX - startMouseX;
+        const mouseDeltaY = event.clientY - startMouseY;
 
         connectionEditor.style.left =
             `${startEditorX + mouseDeltaX}px`;
@@ -1337,21 +720,11 @@ function startConnectionEditorDragging(editorHeader) {
 
     // Removes the temporary drag listeners when the editor is released.
     function stopDrag() {
-        document.removeEventListener(
-            "mousemove",
-            drag
-        );
-
-        document.removeEventListener(
-            "mouseup",
-            stopDrag
-        );
+        document.removeEventListener("mousemove", drag);
+        document.removeEventListener("mouseup", stopDrag);
     }
 
-    editorHeader.addEventListener(
-        "mousedown",
-        startDrag
-    );
+    editorHeader.addEventListener("mousedown", startDrag);
 }
 
 
@@ -1379,39 +752,20 @@ function closeConnectionEditor() {
 
 
 // ============================================================
-// CONNECTION CREATION
+// PUBLIC CONNECTION OPERATIONS
 // ============================================================
 
-// Creates a new connection using the new map-level connection model.
-//
-// The connection is initially attached to room A and has no room B yet.
+// Keeps connection creation available through the existing public module.
 export function createConnection(
     map,
     room,
     connectionLayer,
     zoom = 1
 ) {
-    const connection = {
-        roomA: room.roomID,
-        roomB: null,
-        roomAConnectionSide: "NONE",
-        roomBConnectionSide: null,
-        directionTo: "A",
-        name: "New Connection"
-    };
-
-    map.connections.push(
-        connection
-    );
-
-    renderConnections(
+    return createConnectionInternal(
         map,
+        room,
         connectionLayer,
         zoom
-    );
-
-    console.log(
-        `Created connection from ${room.name}`,
-        connection
     );
 }
