@@ -170,6 +170,11 @@ body {
     border: 1px solid black;
 }
 
+.room-editor-delete {
+    padding: 4px 10px;
+    cursor: pointer;
+    color: #b00000;
+}
 
 /* --- Header --- */
 

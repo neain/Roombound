@@ -270,26 +270,27 @@ export function createRoom(
     );
 }
 
-// Deletes a room from the map by ID and redraws the affected map elements.
+// Deletes a room from the map by ID and removes any connections that
+// reference it. Then redraws the affected map elements.
 //
 // If the requested room does not exist, nothing happens.
-export function deleteRoom(
-    map,
-    roomID,
-    mapElement,
-    connectionLayer,
-    zoom = 1
-) {
-    const roomIndex =
-        map.rooms.findIndex(
-            (room) => room.roomID === roomID
-        );
+export function deleteRoom(map, roomID, mapElement, connectionLayer, zoom = 1) {
+    const roomIndex = map.rooms.findIndex(
+        (room) => room.roomID === roomID
+    );
 
     if (roomIndex === -1) {
         return;
     }
 
+    // Remove the room
     map.rooms.splice(roomIndex, 1);
+
+    // Remove every connection that points to this room
+    // (either as roomA or roomB)
+    map.connections = map.connections.filter(
+        (conn) => conn.roomA !== roomID && conn.roomB !== roomID
+    );
 
     renderRooms(
         map,
@@ -391,25 +392,52 @@ function selectRoom(room, map, mapElement, connectionLayer, zoom) {
         editConnectionsButton.textContent = "Edit Connections";
         editConnectionsButton.classList.add("room-editor-edit-connections");
 
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        deleteButton.classList.add("room-editor-delete");
+
         const cancelButton = document.createElement("button");
         cancelButton.textContent = "Cancel";
         cancelButton.classList.add("room-editor-cancel");
-        
+
         saveButton.addEventListener("click", saveRoomEditor);
+
         editConnectionsButton.addEventListener("click", () => {
             openConnectionEditor(
-                editorContext.map, 
-                selectedRoom, 
-                editorContext.mapElement, 
-                editorContext.connectionLayer, 
+                editorContext.map,
+                selectedRoom,
+                editorContext.mapElement,
+                editorContext.connectionLayer,
                 editorContext.zoom
             );
-        }
-);
+        });
+
+        deleteButton.addEventListener("click", () => {
+            if (!selectedRoom) return;
+
+            const confirmed = confirm(
+                `Delete room "${selectedRoom.name}"?\n\nThis will also remove any connections attached to it.`
+            );
+
+            if (!confirmed) return;
+
+            deleteRoom(
+                editorContext.map,
+                selectedRoom.roomID,
+                editorContext.mapElement,
+                editorContext.connectionLayer,
+                editorContext.zoom
+            );
+
+            isNewRoom = false;
+            closeRoomEditor();
+        });
+
         cancelButton.addEventListener("click", cancelRoomEditor);
 
         editorButtons.appendChild(saveButton);
         editorButtons.appendChild(editConnectionsButton);
+        editorButtons.appendChild(deleteButton);
         editorButtons.appendChild(cancelButton);
 
         roomEditor.appendChild(editorButtons);

@@ -782,12 +782,15 @@ The current development progression was:
 22. Refine unresolved connection behavior and creation workflow
 23. Add save and load features
 24. add additional map layers to show that there are additional floors, not just a floor section in the data structure.
-25. Add way to delete rooms. brainstorm how it should work.
+25. Add way to delete rooms. 
 
 40. use the app on a real dungeon and see if you can accuratly show everything that needs to be shown. if not, add more ToDo. if so... go to the next item on the list.
 
 50. You are done. Go to the Polish List, and may you one day find the end.
 
+### Current Position
+
+Steps 1–23, and 25 are currently working in prototype form
 
 ### Known bugs
 inside the connection editor, click on a connection with one side being to a null room. change that to a real room. the connect to side context menu does not appear
@@ -819,28 +822,12 @@ inside the connection editor, click on a connection with one side being to a nul
 48. when the from and to fields are the same, show a looping arrow.  so I can show that in the haunted woods, going east, brings me back to the same place, but on the west side.
 49. multi select rooms so that they can be moved together
 50. change how a new room is made. im thinking a special dialog box.
+51. add hamburger menu at the top left. add new map option to it, move the save and load maps to it and an options menu
+52. when the deleted room was the one currently being edited in the Connection Editor the connection editor should close so that the deleted connections are not able to be messed with. also re-think if all connections should be deleted, or just that specific room should be removed from them.
+53. is the room delete button in the right place? brainstorm other locations.
 
 100. the URL for the github pages that is hosting the webpage based in github is https://neain.github.io/Roombound/ technicly at index.html, but thats implied.
 
-### Current Position
-
-Steps 1–22 are currently working in prototype form, with the exception that step 21 still needs automatic deletion when both endpoints are disconnected.
-
-The project is currently ready to begin **save and load features**.
-
-The connection data model uses an endpoint-based A/B model.
-
-The current connection structure is:
-
-Connection
-├── roomA
-├── roomAConnectionSide
-├── roomB
-├── roomBConnectionSide
-├── directionTo
-└── name
-
-The next implementation target is step 23: save and load features.
 
 ---
 
