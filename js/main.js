@@ -76,6 +76,35 @@ let panStartX;
 let panStartY;
 let scrollStartX;
 let scrollStartY;
+let currentFloor = 1;
+
+/**
+ * Returns an array of floor numbers that should appear in the dropdown.
+ * Includes every floor that currently has rooms, plus one floor below
+ * the lowest and one floor above the highest.
+ */
+function getFloorOptions(map) {
+    if (map.rooms.length === 0) {
+        return [0, 1, 2]; // sensible defaults when the map is empty
+    }
+
+    const floors = map.rooms.map(r => r.floor);
+    const min = Math.min(...floors);
+    const max = Math.max(...floors);
+
+    const options = [];
+    for (let f = min - 1; f <= max + 1; f++) {
+        options.push(f);
+    }
+    return options;
+}
+
+/**
+ * Returns how many rooms are on a given floor.
+ */
+function getRoomCountOnFloor(map, floor) {
+    return map.rooms.filter(r => r.floor === floor).length;
+}
 
 
 // ============================================================
@@ -165,19 +194,20 @@ function updateZoom() {
     );
 
     // Redraw both rooms and connections using the new zoom level.
-    renderRooms(
-        map,
-        mapWorld,
-        connectionLayer,
-        zoom
-    );
+renderRooms(
+    map,
+    mapWorld,
+    connectionLayer,
+    zoom,
+    currentFloor
+);
 
-    renderConnections(
-        map,
-        connectionLayer,
-        zoom
-    );
-
+renderConnections(
+    map,
+    connectionLayer,
+    zoom,
+    currentFloor
+);
     console.log("Zoom Level:", zoom);
 }
 
@@ -306,6 +336,118 @@ mapTools.appendChild(newRoomButton);
 
 document.body.appendChild(mapTools);
 
+// ============================================================
+// FLOOR CONTROL (top-right)
+// ============================================================
+
+const floorControl = document.createElement("div");
+floorControl.classList.add("floor-control");
+
+// Up button
+const floorUpButton = document.createElement("button");
+floorUpButton.classList.add("floor-button");
+floorUpButton.textContent = "↑";
+floorUpButton.setAttribute("aria-label", "Go up one floor");
+
+// Current floor display (clickable)
+const floorDisplay = document.createElement("button");
+floorDisplay.classList.add("floor-display");
+floorDisplay.textContent = `Floor ${currentFloor}`;
+floorDisplay.setAttribute("aria-label", "Select floor");
+
+// Down button
+const floorDownButton = document.createElement("button");
+floorDownButton.classList.add("floor-button");
+floorDownButton.textContent = "↓";
+floorDownButton.setAttribute("aria-label", "Go down one floor");
+
+// Dropdown (hidden by default)
+const floorDropdown = document.createElement("div");
+floorDropdown.classList.add("floor-dropdown");
+floorDropdown.style.display = "none";
+
+floorControl.appendChild(floorUpButton);
+floorControl.appendChild(floorDisplay);
+floorControl.appendChild(floorDownButton);
+floorControl.appendChild(floorDropdown);
+
+document.body.appendChild(floorControl);
+
+
+// ----------------------------------------------------------
+// Floor change helper
+// ----------------------------------------------------------
+function setCurrentFloor(newFloor) {
+    if (newFloor === currentFloor) return;
+
+    currentFloor = newFloor;
+    floorDisplay.textContent = `Floor ${currentFloor}`;
+
+    // Close dropdown if open
+    floorDropdown.style.display = "none";
+
+    // Re-render with the new floor
+    updateZoom();          // this already calls renderRooms + renderConnections
+}
+
+
+// ----------------------------------------------------------
+// Button events
+// ----------------------------------------------------------
+floorUpButton.addEventListener("click", () => {
+    setCurrentFloor(currentFloor + 1);
+});
+
+floorDownButton.addEventListener("click", () => {
+    setCurrentFloor(currentFloor - 1);
+});
+
+
+// ----------------------------------------------------------
+// Dropdown
+// ----------------------------------------------------------
+floorDisplay.addEventListener("click", (event) => {
+    event.stopPropagation();
+
+    // Toggle
+    if (floorDropdown.style.display === "block") {
+        floorDropdown.style.display = "none";
+        return;
+    }
+
+    // Rebuild the list every time it opens
+    floorDropdown.innerHTML = "";
+
+    const options = getFloorOptions(map);
+
+    for (const floor of options) {
+        const count = getRoomCountOnFloor(map, floor);
+
+        const item = document.createElement("button");
+        item.classList.add("floor-dropdown-item");
+
+        if (floor === currentFloor) {
+            item.classList.add("selected");
+        }
+
+        item.textContent = `Floor ${floor}  (${count} room${count === 1 ? "" : "s"})`;
+
+        item.addEventListener("click", (e) => {
+            e.stopPropagation();
+            setCurrentFloor(floor);
+        });
+
+        floorDropdown.appendChild(item);
+    }
+
+    floorDropdown.style.display = "block";
+});
+
+
+// Close dropdown when clicking elsewhere
+document.addEventListener("click", () => {
+    floorDropdown.style.display = "none";
+});
 
 // ============================================================
 // CONNECTION LAYER / MAP GRID

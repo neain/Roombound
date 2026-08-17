@@ -81,7 +81,8 @@ export function renderRooms(
     map,
     mapElement,
     connectionLayer,
-    zoom = 1
+    zoom,
+    currentFloor
 ) {
     if (!roomTooltip.parentElement) {
         roomTooltip.classList.add("room-tooltip");
@@ -96,6 +97,11 @@ export function renderRooms(
 
     for (const room of map.rooms) {
         const roomElement = document.createElement("div");
+
+        if (room.floor !== currentFloor) {
+            continue;
+        }
+
 
         roomElement.classList.add("room");
         roomElement.dataset.roomId = room.roomID;
@@ -146,7 +152,8 @@ export function renderRooms(
                     roomElement,
                     map,
                     connectionLayer,
-                    zoom
+                    zoom,
+                    currentFloor
                 );
             }
         );
@@ -181,7 +188,8 @@ export function createRoom(
     map,
     mapElement,
     connectionLayer,
-    zoom = 1
+    zoom,
+    currentFloor
 ) {
     let highestRoomNumber = 0;
 
@@ -225,7 +233,7 @@ export function createRoom(
     const room = {
         roomID: `room_${roomNumber}`,
         name: "New Room",
-        floor: 1,
+        floor: currentFloor,
         notes: "",
         connections: [],
         position: {
@@ -249,7 +257,8 @@ export function createRoom(
         map,
         mapElement,
         connectionLayer,
-        zoom
+        zoom,
+        currentFloor
     );
 
     renderConnections(
@@ -296,7 +305,8 @@ export function deleteRoom(map, roomID, mapElement, connectionLayer, zoom = 1) {
         map,
         mapElement,
         connectionLayer,
-        zoom
+        zoom,
+        currentFloor
     );
 
     renderConnections(
@@ -525,13 +535,15 @@ function saveRoomEditor() {
         editorContent.querySelector("textarea");
 
     for (const input of inputs) {
-        const key =
-            input.previousElementSibling.textContent
-                .replace(": ", "");
+        const key = input.previousElementSibling.textContent.replace(": ", "");
 
-        selectedRoom[key] = input.value;
+        if (key === "floor") {
+            // Force floor to be a real number
+            selectedRoom.floor = Number(input.value) || 1;
+        } else {
+            selectedRoom[key] = input.value;
+        }
     }
-
     selectedRoom.notes = textarea.value;
 
     selectedRoom.editorSize = {
@@ -662,7 +674,8 @@ export function startDragging(
     roomElement,
     map,
     connectionLayer,
-    zoom = 1
+    zoom,
+    currentFloor
 ) {
     event.preventDefault();
 
@@ -709,7 +722,8 @@ export function startDragging(
         renderConnections(
             map,
             connectionLayer,
-            zoom
+            zoom,
+            currentFloor
         );
     }
 
