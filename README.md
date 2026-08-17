@@ -825,6 +825,7 @@ inside the connection editor, click on a connection with one side being to a nul
 51. add hamburger menu at the top left. add new map option to it, move the save and load maps to it and an options menu
 52. when the deleted room was the one currently being edited in the Connection Editor the connection editor should close so that the deleted connections are not able to be messed with. also re-think if all connections should be deleted, or just that specific room should be removed from them.
 53. is the room delete button in the right place? brainstorm other locations.
+54. add a up and down floor button into the edit room context menu
 
 100. the URL for the github pages that is hosting the webpage based in github is https://neain.github.io/Roombound/ technicly at index.html, but thats implied.
 
