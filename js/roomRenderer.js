@@ -264,7 +264,8 @@ export function createRoom(
     renderConnections(
         map,
         connectionLayer,
-        zoom
+        zoom,
+        currentFloor
     );
 
     // Mark this as a newly created room so Cancel can remove it.
@@ -283,7 +284,7 @@ export function createRoom(
 // reference it. Then redraws the affected map elements.
 //
 // If the requested room does not exist, nothing happens.
-export function deleteRoom(map, roomID, mapElement, connectionLayer, zoom = 1) {
+export function deleteRoom(map, roomID, mapElement, connectionLayer, zoom, currentFloor) {
     const roomIndex = map.rooms.findIndex(
         (room) => room.roomID === roomID
     );
@@ -312,7 +313,8 @@ export function deleteRoom(map, roomID, mapElement, connectionLayer, zoom = 1) {
     renderConnections(
         map,
         connectionLayer,
-        zoom
+        zoom,
+        currentFloor
     );
 }
 
@@ -332,7 +334,7 @@ export function getSelectedRoom() {
 // The editor keeps a reference to the selected room rather than creating a
 // separate copy. Save/Cancel behavior is therefore handled by the editor's
 // existing state and lifecycle.
-function selectRoom(room, map, mapElement, connectionLayer, zoom) {
+function selectRoom(room, map, mapElement, connectionLayer, zoom, currentFloor) {
     selectedRoom = room;
 
     // Store the map/rendering context so editor actions such as Cancel can
@@ -341,7 +343,8 @@ function selectRoom(room, map, mapElement, connectionLayer, zoom) {
         map,
         mapElement,
         connectionLayer,
-        zoom
+        zoom,
+        currentFloor
     };
 
     // Create the editor the first time a room is selected.
@@ -436,7 +439,8 @@ function selectRoom(room, map, mapElement, connectionLayer, zoom) {
                 selectedRoom.roomID,
                 editorContext.mapElement,
                 editorContext.connectionLayer,
-                editorContext.zoom
+                editorContext.zoom,
+                editorContext.currentFloor
             );
 
             isNewRoom = false;
@@ -582,7 +586,8 @@ function cancelRoomEditor() {
             selectedRoom.roomID,
             editorContext.mapElement,
             editorContext.connectionLayer,
-            editorContext.zoom
+            editorContext.zoom,
+            editorContext.currentFloor
         );
     }
 

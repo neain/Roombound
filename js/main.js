@@ -253,7 +253,8 @@ newRoomButton.addEventListener(
             map,
             mapElement,
             connectionLayer,
-            zoom
+            zoom,
+            currentFloor
         );
     }
 );
@@ -274,7 +275,8 @@ newConnectionButton.addEventListener(
             map,
             room,
             connectionLayer,
-            zoom
+            zoom,
+            currentFloor
         );
     }
 );

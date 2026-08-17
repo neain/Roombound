@@ -18,7 +18,8 @@ export function createConnection(
     map,
     room,
     connectionLayer,
-    zoom = 1
+    zoom,
+    currentFloor
 ) {
     const connection = {
         roomA: room.roomID,
@@ -36,7 +37,8 @@ export function createConnection(
     renderConnections(
         map,
         connectionLayer,
-        zoom
+        zoom,
+        currentFloor
     );
 
     console.log(

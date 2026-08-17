@@ -113,7 +113,8 @@ export function selectConnectionEndpoint(
     renderConnections(
         connectionEditorContext.map,
         connectionEditorContext.connectionLayer,
-        connectionEditorContext.zoom
+        connectionEditorContext.zoom,
+        connectionEditorContext.currentFloor
     );
 }
 
@@ -137,6 +138,11 @@ export function createEndpointOptions(
     ) {
         return;
     }
+
+    // Ensure any existing options panel is cleaned up first
+    removeConnectionContextOptions(
+        connectionOptions
+    );
 
     const endpointOptions =
         document.createElement("div");
@@ -170,6 +176,12 @@ export function createEndpointOptions(
                 roomSelect.value
             );
         }
+    );
+
+    // Populate the dropdown options immediately upon creation
+    populateRoomSelect(
+        state,
+        roomSelect
     );
 
     endpointOptions.appendChild(
@@ -289,8 +301,7 @@ export function populateRoomSelect(
 // room and its side because an unconnected endpoint has no room attachment.
 export function setConnectionEndpointRoom(
     state,
-    roomID,
-    refreshSelectedConnection
+    roomID
 ) {
     const {
         selectedConnection,
@@ -317,8 +328,11 @@ export function setConnectionEndpointRoom(
             connection.roomBConnectionSide = null;
         }
 
-        state.refreshSelectedConnection();
+        if (state.refreshSelectedConnection) {
+            state.refreshSelectedConnection();
+        }
 
+        createEndpointOptions(state);
         return;
     }
 
@@ -346,7 +360,12 @@ export function setConnectionEndpointRoom(
             "NONE";
     }
 
-    state.refreshSelectedConnection();
+    if (state.refreshSelectedConnection) {
+        state.refreshSelectedConnection();
+    }
+
+    // Re-render endpoint options so the side-selection dropdown appears immediately
+    createEndpointOptions(state);
 }
 
 
@@ -421,8 +440,7 @@ export function createEndpointSideOptions(
         () => {
             setConnectionEndpointSide(
                 state,
-                sideSelect.value,
-                refreshSelectedConnection
+                sideSelect.value
             );
         }
     );
@@ -444,8 +462,7 @@ export function createEndpointSideOptions(
 // Changes the attachment side of the selected endpoint.
 export function setConnectionEndpointSide(
     state,
-    side,
-    refreshSelectedConnection
+    side
 ) {
     const {
         selectedConnection,
@@ -470,7 +487,9 @@ export function setConnectionEndpointSide(
             side;
     }
 
-    refreshSelectedConnection();
+    if (state.refreshSelectedConnection) {
+        state.refreshSelectedConnection();
+    }
 }
 
 

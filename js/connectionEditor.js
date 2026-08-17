@@ -189,11 +189,12 @@ function getEditorState() {
 //
 // Every connection involving the selected room is included, regardless of
 // whether the room is endpoint A or endpoint B.
-export function openConnectionEditor(map, room, mapElement, connectionLayer, zoom = 1) {
+export function openConnectionEditor(map, room, mapElement, connectionLayer, zoom, currentFloor) {
     connectionEditorContext = {
         map,
         connectionLayer,
-        zoom
+        zoom,
+        currentFloor
     };
 
     const connections = [];
@@ -673,7 +674,8 @@ function refreshSelectedConnection() {
     renderConnections(
         connectionEditorContext.map,
         connectionEditorContext.connectionLayer,
-        connectionEditorContext.zoom
+        connectionEditorContext.zoom,
+        connectionEditorContext.currentFloor
     );
 }
 
