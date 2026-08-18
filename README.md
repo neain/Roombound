@@ -783,52 +783,53 @@ The current development progression was:
 23. Add save and load features
 24. add additional map layers to show that there are additional floors, not just a floor section in the data structure.
 25. Add way to delete rooms. 
-
-40. use the app on a real dungeon and see if you can accuratly show everything that needs to be shown. if not, add more ToDo. if so... go to the next item on the list.
+26. use the app on a real dungeon and see if you can accuratly show everything that needs to be shown. if not, add more ToDo. if so... go to the next item on the list.
 
 50. You are done. Go to the Polish List, and may you one day find the end.
 
 ### Current Position
 
-Steps 1–23, and 25 are currently working in prototype form
+Steps 1–26 are currently working in prototype form.
+Starting the polish list.
 
-### Known bugs
-inside the connection editor, click on a connection with one side being to a null room. change that to a real room. the connect to side context menu does not appear
 
 ### Polish List
-1. Modify buttons and other graphics
-26. Include a zoom bar, visible UI zoom level, and possibly zoom shortcut keys
-27. Right-click context menu on the main map (things like create new room, and more if I think about it. Maybe this is where the options menu lives? This is a ToDo)
-28. Check that the tooltip popup for the new buttons (bottom right on the screen) looks fine
-29. Add context menu for new connection creation
-30. Room names need to resize based on the size of the room so that they remain readable and the text doesn't go off the edge of the room
-31. Rooms need to be able to be recolored
-32. Ensure that the edit room default size is large enough that no buttons are cut off by default. I don't mind if the user shrinks the box past that, but the default should be large enough
-33. Need to decide to keep open the room editor (as it is now), or close it when the Edit Connection button is clicked
-34. Inside the connection editor: Align/center direction arrows, establish sensible default connection ordering, clickable A/B headers for sorting, possibly ascending/descending indicators
-35. Maybe combine the colors of the editor windows (connection and room) into a single CSS properties section. At the moment they are individual, just set to the same color
-36. Make the connection paths on the map clickable, at which point it should open the connection editor with only that path
-37. In the edit connections window, change the functionality of clicking a connection making a dropdown with the exact same text but now 3 buttons, visually replace the current button with the 3 new ones. Maybe just set that as the default state of the edit connections window. (Clarification for GPT: only replacing the top level because the text is the same and it is just visually sad to the human that the text just repeats)
-38. add a NONE behavior to the visuals of the connection. im thinking just connect it to the 'center' of a room
-39. make sure that NE, NW, SE, SW connections are connected to the correct corner
-40. change the behavior of a new connection from default E, to default NONE
-41. ensure that the rooms sizes and colors can be changed. size might just be a drag corner on the room itself.
-42. add the same behavior to the connection editor that room editor already has. clicking on a new room will change where connection editor is pointing. and clicking on a connection should also change where the editor is looking.
-43. when editing a connection, add a visual indictator on the main map that that is the connection thats being edited.
-44. change the Room editor window so that saving a room does not close the window. maybe add an indictator to show that something has changed?
-45. Nail down bugs
-46. add a room option so that the shape of the room can be changed. square/rectangle, circle, octagon
-47. Add diagonal and vertical connection attachment directions (NE, SE, SW, NW, UP, DOWN)
-48. when the from and to fields are the same, show a looping arrow.  so I can show that in the haunted woods, going east, brings me back to the same place, but on the west side.
-49. multi select rooms so that they can be moved together
-50. change how a new room is made. im thinking a special dialog box.
-51. add hamburger menu at the top left. add new map option to it, move the save and load maps to it and an options menu
-52. when the deleted room was the one currently being edited in the Connection Editor the connection editor should close so that the deleted connections are not able to be messed with. also re-think if all connections should be deleted, or just that specific room should be removed from them.
-53. is the room delete button in the right place? brainstorm other locations.
-54. add a up and down floor button into the edit room context menu
-55. when a room is on a higher or lower floor, move the arrow to next to the current floors room and ADD a staircase! as well as the floor number? a tall rectangle sharing a side with a square half its height will work fine.
-56. when a room is on a higher or lower floor... make it some % visible? probably need to re-think this. at the very least you should not be able to select it.
-57. mousing over a connection to a different floor should give you the room name and floor number
+1. Zoom bar + visible zoom level + possibly keyboard shortcuts.
+2. Hamburger menu with New Map, Save/Load, Options, etc.
+3. Swap the floor-selection arrows.
+4. Make the connection endpoint selection square larger and make it disappear when the connection editor closes.
+5. Resize room names with the room so they remain readable.
+6. Make the default room editor size large enough that nothing is clipped.
+7. Don't close the room editor when saving; add a changed indicator.
+8. Decide what happens to the room editor when editing a connection. Decided: close the room editor if the edit connections button was clicked. Any other way of getting to the connection editor will ignore the room editor as it has been doing.
+9. Make connection paths clickable to open their editor.
+10. Visually indicate on the map which connection is currently being edited.
+11. Make the connection editor follow clicks on rooms/connections.
+12. Improve the connection-list interaction instead of repeating the same text/button hierarchy.
+13. Clean up connection-editor sorting/arrows/default ordering.
+14. Don't open the room editor just because a room was moved.
+15. Add NONE connection visuals.
+16. Fix NE/NW/SE/SW attachment points.
+17. Add a context menu for new connection creation.
+18. Add the main-map right-click context menu.
+19. Improve how new rooms are created. Add context menu asking for its name and how many connections to add to it.
+20. Reconsider Edit Room button placement. See how two rows look.
+21. Double-click blank map space to create a room there.
+22. Allow rooms to be recolored.
+23. Allow room size/color changes, including resizing via a corner drag.
+24. Allow different room shapes.
+25. Consolidate editor-window color CSS properties.
+26. Save As + smarter Save behavior.
+27. Up/down floor controls in the room context menu.
+28. Remove floor 0, with an option for people who want it.
+29. Better visualization of rooms on other floors, including stairs.
+30. Make rooms on other floors partially visible / non-selectable.
+31. Hover information for cross-floor connections.
+32. Multi-select rooms and move them together.
+33. Show looping connections with a looping arrow.
+34. Add in the library that would let the connections avoid rooms.
+
+90. Nail down bugs
 
 100. the URL for the github pages that is hosting the webpage based in github is https://neain.github.io/Roombound/ technicly at index.html, but thats implied.
 

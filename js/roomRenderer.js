@@ -542,15 +542,17 @@ function saveRoomEditor() {
         editorContent.querySelector("textarea");
 
     for (const input of inputs) {
-        const key = input.previousElementSibling.textContent.replace(": ", "");
+        const key =
+            input.previousElementSibling.textContent
+                .replace(": ", "");
 
         if (key === "floor") {
-            // Force floor to be a real number
             selectedRoom.floor = Number(input.value) || 1;
         } else {
             selectedRoom[key] = input.value;
         }
     }
+
     selectedRoom.notes = textarea.value;
 
     selectedRoom.editorSize = {
@@ -565,15 +567,21 @@ function saveRoomEditor() {
         y: roomEditor.offsetTop
     };
 
-    // Update the visible room name without requiring a complete room redraw.
-    const roomElement =
-        document.querySelector(
-            `.room[data-room-id="${selectedRoom.roomID}"]`
-        );
+    // Re-apply floor filter so a room moved to another floor disappears
+    renderRooms(
+        editorContext.map,
+        editorContext.mapElement,
+        editorContext.connectionLayer,
+        editorContext.zoom,
+        editorContext.currentFloor
+    );
 
-    if (roomElement) {
-        roomElement.textContent = selectedRoom.name;
-    }
+    renderConnections(
+        editorContext.map,
+        editorContext.connectionLayer,
+        editorContext.zoom,
+        editorContext.currentFloor
+    );
 
     closeRoomEditor();
 }

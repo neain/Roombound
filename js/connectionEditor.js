@@ -762,12 +762,14 @@ export function createConnection(
     map,
     room,
     connectionLayer,
-    zoom = 1
+    zoom,
+    currentFloor
 ) {
     return createConnectionInternal(
         map,
         room,
         connectionLayer,
-        zoom
+        zoom,
+        currentFloor
     );
 }
