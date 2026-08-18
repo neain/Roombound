@@ -511,6 +511,96 @@ body {
 }
 
 /* ============================================================
+ZOOM CONTROL
+============================================================ */
+
+.zoom-control {
+    position: fixed;
+    top: 10%;
+    right: 20px;
+    width: 40px;
+    height: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1000;
+}
+
+.zoom-button {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: white;
+    background: #333333;
+    border: 2px solid white;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.zoom-button:hover {
+    background: #555555;
+}
+
+.zoom-track {
+    position: relative;
+    width: 12px;
+    flex: 1;
+    margin: 8px 0;
+    background: #333333;
+    border: 2px solid white;
+    cursor: pointer;
+}
+
+.zoom-marks {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.zoom-mark {
+    position: absolute;
+    left: 50%;
+    width: 20px;
+    height: 2px;
+    padding: 0;
+    transform: translate(-50%, 50%);
+    background: rgba(255, 255, 255, 0.35);
+    border: none;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.zoom-mark:hover {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.zoom-handle {
+    position: absolute;
+    left: 50%;
+    width: 28px;
+    height: 18px;
+    padding: 0;
+    transform: translate(-50%, 50%);
+    background: #ffffff;
+    border: 2px solid #333333;
+    cursor: grab;
+    z-index: 2;
+}
+
+.zoom-handle:hover {
+    background: #dddddd;
+}
+
+.zoom-handle:active {
+    cursor: grabbing;
+}
+
+/* ============================================================
    FLOOR CONTROL
    ============================================================ */
 

@@ -78,6 +78,11 @@ let scrollStartX;
 let scrollStartY;
 let currentFloor = 1;
 
+
+// ============================================================
+// FLOOR HELPERS
+// ============================================================
+
 /**
  * Returns an array of floor numbers that should appear in the dropdown.
  * Includes every floor that currently has rooms, plus one floor below
@@ -96,6 +101,7 @@ function getFloorOptions(map) {
     for (let f = min - 1; f <= max + 1; f++) {
         options.push(f);
     }
+
     return options;
 }
 
@@ -140,6 +146,7 @@ function changeZoom(newZoom) {
     );
 
     if (zoom === oldZoom) {
+        updateZoomControl();
         return;
     }
 
@@ -194,22 +201,212 @@ function updateZoom() {
     );
 
     // Redraw both rooms and connections using the new zoom level.
-renderRooms(
-    map,
-    mapWorld,
-    connectionLayer,
-    zoom,
-    currentFloor
-);
+    renderRooms(
+        map,
+        mapWorld,
+        connectionLayer,
+        zoom,
+        currentFloor
+    );
 
-renderConnections(
-    map,
-    connectionLayer,
-    zoom,
-    currentFloor
-);
+    renderConnections(
+        map,
+        connectionLayer,
+        zoom,
+        currentFloor
+    );
+
+    updateZoomControl();
+
     console.log("Zoom Level:", zoom);
 }
+
+
+// ============================================================
+// ZOOM CONTROL
+// ============================================================
+
+// The zoom control is a vertical rail fixed to the right side of the screen.
+const zoomControl = document.createElement("div");
+zoomControl.classList.add("zoom-control");
+zoomControl.setAttribute("aria-label", "Map zoom controls");
+
+// Button used to increase the map zoom.
+const zoomInButton = document.createElement("button");
+zoomInButton.classList.add("zoom-button");
+zoomInButton.textContent = "+";
+zoomInButton.setAttribute("aria-label", "Zoom in");
+
+// Track representing the available zoom range.
+const zoomTrack = document.createElement("div");
+zoomTrack.classList.add("zoom-track");
+
+// Container for the clickable zoom level marks.
+const zoomMarks = document.createElement("div");
+zoomMarks.classList.add("zoom-marks");
+
+// Movable handle representing the current zoom level.
+const zoomHandle = document.createElement("button");
+zoomHandle.classList.add("zoom-handle");
+zoomHandle.setAttribute("aria-label", "Current zoom level");
+
+// Button used to decrease the map zoom.
+const zoomOutButton = document.createElement("button");
+zoomOutButton.classList.add("zoom-button");
+zoomOutButton.textContent = "−";
+zoomOutButton.setAttribute("aria-label", "Zoom out");
+
+zoomTrack.appendChild(zoomMarks);
+zoomTrack.appendChild(zoomHandle);
+
+zoomControl.appendChild(zoomInButton);
+zoomControl.appendChild(zoomTrack);
+zoomControl.appendChild(zoomOutButton);
+
+document.body.appendChild(zoomControl);
+
+/**
+ * Returns the zoom percentage represented by a zoom value.
+ */
+function getZoomPercent(zoomValue) {
+    return Math.round(zoomValue * 100);
+}
+
+/**
+ * Creates the clickable marks for every available zoom step.
+ */
+function createZoomMarks() {
+    zoomMarks.innerHTML = "";
+
+    const zoomRange = MAX_ZOOM - MIN_ZOOM;
+
+    for (
+        let markZoom = MIN_ZOOM;
+        markZoom <= MAX_ZOOM;
+        markZoom += ZOOM_STEP
+    ) {
+        const mark = document.createElement("button");
+        mark.classList.add("zoom-mark");
+
+        const progress =
+            (markZoom - MIN_ZOOM) / zoomRange;
+
+        mark.style.bottom = `${progress * 100}%`;
+
+        const percentage = getZoomPercent(markZoom);
+
+        mark.title = `${percentage}%`;
+        mark.setAttribute(
+            "aria-label",
+            `Set zoom to ${percentage}%`
+        );
+
+        mark.addEventListener("click", (event) => {
+            event.stopPropagation();
+            changeZoom(markZoom);
+        });
+
+        zoomMarks.appendChild(mark);
+    }
+}
+
+/**
+ * Updates the zoom handle position and tooltip to match the current zoom.
+ */
+function updateZoomControl() {
+    const zoomRange = MAX_ZOOM - MIN_ZOOM;
+    const zoomProgress = (zoom - MIN_ZOOM) / zoomRange;
+    const percentage = getZoomPercent(zoom);
+
+    // 0% progress is the minimum zoom at the bottom of the rail.
+    // 100% progress is the maximum zoom at the top.
+    zoomHandle.style.bottom = `${zoomProgress * 100}%`;
+    zoomHandle.title = `${percentage}%`;
+    zoomHandle.setAttribute(
+        "aria-label",
+        `Current zoom level: ${percentage}%`
+    );
+}
+
+// Build the zoom marks once from the current zoom configuration.
+createZoomMarks();
+
+// Zoom button events.
+zoomInButton.addEventListener("click", () => {
+    changeZoom(zoom + ZOOM_STEP);
+});
+
+zoomOutButton.addEventListener("click", () => {
+    changeZoom(zoom - ZOOM_STEP);
+});
+
+// Clicking the rail changes zoom to the nearest available zoom level.
+zoomTrack.addEventListener("click", (event) => {
+    if (
+        event.target === zoomHandle ||
+        event.target.classList.contains("zoom-mark")
+    ) {
+        return;
+    }
+
+    const trackRect = zoomTrack.getBoundingClientRect();
+    const clickPosition =
+        trackRect.bottom - event.clientY;
+
+    const usableHeight = trackRect.height;
+    const progress =
+        Math.max(0, Math.min(1, clickPosition / usableHeight));
+
+    const rawZoom =
+        MIN_ZOOM +
+        progress * (MAX_ZOOM - MIN_ZOOM);
+
+    const steppedZoom =
+        Math.round(rawZoom / ZOOM_STEP) * ZOOM_STEP;
+
+    changeZoom(steppedZoom);
+});
+
+// Dragging the zoom handle changes the zoom level.
+let isDraggingZoom = false;
+
+zoomHandle.addEventListener("mousedown", (event) => {
+    if (event.button !== 0) {
+        return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    isDraggingZoom = true;
+});
+
+document.addEventListener("mousemove", (event) => {
+    if (!isDraggingZoom) {
+        return;
+    }
+
+    const trackRect = zoomTrack.getBoundingClientRect();
+    const positionFromBottom =
+        trackRect.bottom - event.clientY;
+
+    const usableHeight = trackRect.height;
+    const progress =
+        Math.max(0, Math.min(1, positionFromBottom / usableHeight));
+
+    const rawZoom =
+        MIN_ZOOM +
+        progress * (MAX_ZOOM - MIN_ZOOM);
+
+    const steppedZoom =
+        Math.round(rawZoom / ZOOM_STEP) * ZOOM_STEP;
+
+    changeZoom(steppedZoom);
+});
+
+document.addEventListener("mouseup", () => {
+    isDraggingZoom = false;
+});
 
 
 // ============================================================
@@ -338,6 +535,7 @@ mapTools.appendChild(newRoomButton);
 
 document.body.appendChild(mapTools);
 
+
 // ============================================================
 // FLOOR CONTROL (top-right)
 // ============================================================
@@ -379,23 +577,27 @@ document.body.appendChild(floorControl);
 // ----------------------------------------------------------
 // Floor change helper
 // ----------------------------------------------------------
+
 function setCurrentFloor(newFloor) {
-    if (newFloor === currentFloor) return;
+    if (newFloor === currentFloor) {
+        return;
+    }
 
     currentFloor = newFloor;
     floorDisplay.textContent = `Floor ${currentFloor}`;
 
-    // Close dropdown if open
+    // Close dropdown if open.
     floorDropdown.style.display = "none";
 
-    // Re-render with the new floor
-    updateZoom();          // this already calls renderRooms + renderConnections
+    // Re-render with the new floor.
+    updateZoom();
 }
 
 
 // ----------------------------------------------------------
 // Button events
 // ----------------------------------------------------------
+
 floorUpButton.addEventListener("click", () => {
     setCurrentFloor(currentFloor + 1);
 });
@@ -408,16 +610,17 @@ floorDownButton.addEventListener("click", () => {
 // ----------------------------------------------------------
 // Dropdown
 // ----------------------------------------------------------
+
 floorDisplay.addEventListener("click", (event) => {
     event.stopPropagation();
 
-    // Toggle
+    // Toggle.
     if (floorDropdown.style.display === "block") {
         floorDropdown.style.display = "none";
         return;
     }
 
-    // Rebuild the list every time it opens
+    // Rebuild the list every time it opens.
     floorDropdown.innerHTML = "";
 
     const options = getFloorOptions(map);
@@ -432,7 +635,8 @@ floorDisplay.addEventListener("click", (event) => {
             item.classList.add("selected");
         }
 
-        item.textContent = `Floor ${floor}  (${count} room${count === 1 ? "" : "s"})`;
+        item.textContent =
+            `Floor ${floor}  (${count} room${count === 1 ? "" : "s"})`;
 
         item.addEventListener("click", (e) => {
             e.stopPropagation();
@@ -446,10 +650,11 @@ floorDisplay.addEventListener("click", (event) => {
 });
 
 
-// Close dropdown when clicking elsewhere
+// Close dropdown when clicking elsewhere.
 document.addEventListener("click", () => {
     floorDropdown.style.display = "none";
 });
+
 
 // ============================================================
 // CONNECTION LAYER / MAP GRID
@@ -587,6 +792,7 @@ document.addEventListener(
     }
 );
 
+
 // ============================================================
 // SAVE / LOAD
 // ============================================================
@@ -608,7 +814,9 @@ function getSerializableMap() {
             notes: room.notes || "",
             position: { ...room.position },
             size: { ...room.size },
-            editorSize: room.editorSize ? { ...room.editorSize } : { width: 200, height: 300 }
+            editorSize: room.editorSize
+                ? { ...room.editorSize }
+                : { width: 200, height: 300 }
         })),
         connections: map.connections.map(conn => ({
             roomA: conn.roomA,
@@ -632,7 +840,9 @@ function saveMap() {
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = `roombound-map-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download =
+        `roombound-map-${new Date().toISOString().slice(0, 10)}.json`;
+
     a.click();
 
     URL.revokeObjectURL(url);
@@ -643,10 +853,15 @@ function saveMap() {
  * Basic validation of a loaded map object.
  */
 function isValidMapData(data) {
-    if (!data || typeof data !== "object") return false;
-    if (!Array.isArray(data.rooms) || !Array.isArray(data.connections)) return false;
+    if (!data || typeof data !== "object") {
+        return false;
+    }
 
-    // Optional: check version later if we evolve the schema
+    if (!Array.isArray(data.rooms) || !Array.isArray(data.connections)) {
+        return false;
+    }
+
+    // Optional: check version later if we evolve the schema.
     return true;
 }
 
@@ -659,18 +874,20 @@ function loadMapFromData(data) {
         return;
     }
 
-    // Replace the data in place
+    // Replace the data in place.
     map.rooms.length = 0;
     map.connections.length = 0;
 
     data.rooms.forEach(room => map.rooms.push(room));
     data.connections.forEach(conn => map.connections.push(conn));
 
-    // Close any open editors (simple approach for now)
-    document.querySelectorAll(".room-editor, .connection-editor").forEach(el => el.remove());
+    // Close any open editors (simple approach for now).
+    document.querySelectorAll(
+        ".room-editor, .connection-editor"
+    ).forEach(el => el.remove());
 
-    // Re-render
-    updateZoom();          // this already calls renderRooms + renderConnections
+    // Re-render.
+    updateZoom();
 
     console.log("Map loaded", map);
 }
@@ -685,17 +902,25 @@ function loadMap() {
 
     input.addEventListener("change", (event) => {
         const file = event.target.files[0];
-        if (!file) return;
+
+        if (!file) {
+            return;
+        }
 
         const reader = new FileReader();
+
         reader.onload = (e) => {
             try {
                 const data = JSON.parse(e.target.result);
                 loadMapFromData(data);
             } catch (err) {
-                alert("Could not read the map file.\n" + err.message);
+                alert(
+                    "Could not read the map file.\n" +
+                    err.message
+                );
             }
         };
+
         reader.readAsText(file);
     });
 
@@ -716,4 +941,3 @@ mapElement.scrollLeft =
 
 mapElement.scrollTop =
     (MAP_SIZE * zoom - mapElement.clientHeight) / 2;
-

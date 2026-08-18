@@ -787,7 +787,8 @@ The development progression was:
 ### Current Position
 
 Steps 1–26 are currently working in prototype form.
-Starting the polish list.
+Started the polish list.
+Steps 1 are currently marked as complete.
 
 
 ### Polish List
