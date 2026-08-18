@@ -752,11 +752,8 @@ The room and connection editors are still early implementations and are expected
 
 ---
 
-## 13. Current Development Target
-
-The immediate development target is interactive room and connection creation/editing.
-
-The current development progression was:
+## 13. Development Target List
+The development progression was:
 
 1. Render rooms
 2. Make rooms draggable
