@@ -35,7 +35,7 @@ export const MAP_ORIGIN = MAP_SIZE / 2;
 
 // Maximum grid-space distance used when finding rooms that can be connected
 // to a connection endpoint.
-export const CONNECTION_ROOM_RANGE = 5;
+export const CONNECTION_ROOM_RANGE = 10;
 
 
 // Valid attachment sides for room connection endpoints.

@@ -25,10 +25,6 @@ import {
 // Size of the SVG arrowhead markers used on connection lines.
 const arrowSize = 4;
 
-// Size of the visual marker displayed around a selected connection endpoint.
-const selectedEndpointRadius = 5;
-
-
 // ============================================================
 // CONNECTION RENDERING STATE
 // ============================================================
@@ -75,12 +71,14 @@ export function clearSelectedConnectionEndpoint() {
 //
 // Connections reference two room endpoints rather than belonging to either
 // room. directionTo determines which endpoint receives an arrow.
-export function renderConnections(
-    map,
-    connectionLayer,
-    zoom,
-    currentFloor
-) {
+export function renderConnections(mapView) {
+    const {
+        map,
+        connectionLayer,
+        zoom,
+        currentFloor
+    } = mapView;
+    
     connectionLayer.innerHTML = "";
 
     // --------------------------------------------------------

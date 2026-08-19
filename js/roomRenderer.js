@@ -102,7 +102,6 @@ export function renderRooms(
             continue;
         }
 
-
         roomElement.classList.add("room");
         roomElement.dataset.roomId = room.roomID;
 
@@ -193,6 +192,12 @@ export function createRoom(
     currentFloor
 ) {
     let highestRoomNumber = 0;
+    let roomNumber;
+    let centerX;
+    let centerY;
+    let worldX;
+    let worldY;
+    let room;
 
     for (const room of map.rooms) {
         const match = room.roomID.match(/^room_(\d+)$/);
@@ -208,30 +213,30 @@ export function createRoom(
             );
     }
 
-    const roomNumber =
+    roomNumber =
         String(highestRoomNumber + 1).padStart(3, "0");
 
     // Determine the center of the currently visible map area.
-    const centerX =
+    centerX =
         mapElement.scrollLeft +
         mapElement.clientWidth / 2;
 
-    const centerY =
+    centerY =
         mapElement.scrollTop +
         mapElement.clientHeight / 2;
 
     // Convert that screen position back into map grid coordinates.
-    const worldX =
+    worldX =
         (centerX - MAP_ORIGIN * zoom) /
         (GRID_SIZE * zoom);
 
-    const worldY =
+    worldY =
         (centerY - MAP_ORIGIN * zoom) /
         (GRID_SIZE * zoom);
 
     // Rooms are currently created at a fixed 5x5 grid size and positioned so
     // their center is approximately at the center of the visible map.
-    const room = {
+    room = {
         roomID: `room_${roomNumber}`,
         name: "New Room",
         floor: currentFloor,
@@ -262,12 +267,12 @@ export function createRoom(
         currentFloor
     );
 
-    renderConnections(
+    renderConnections({
         map,
         connectionLayer,
         zoom,
         currentFloor
-    );
+    });
 
     // Mark this as a newly created room so Cancel can remove it.
     isNewRoom = true;
@@ -286,7 +291,14 @@ export function createRoom(
 // reference it. Then redraws the affected map elements.
 //
 // If the requested room does not exist, nothing happens.
-export function deleteRoom(map, roomID, mapElement, connectionLayer, zoom, currentFloor) {
+export function deleteRoom(
+    map,
+    roomID,
+    mapElement,
+    connectionLayer,
+    zoom,
+    currentFloor
+) {
     const roomIndex = map.rooms.findIndex(
         (room) => room.roomID === roomID
     );
@@ -312,12 +324,12 @@ export function deleteRoom(map, roomID, mapElement, connectionLayer, zoom, curre
         currentFloor
     );
 
-    renderConnections(
+    renderConnections({
         map,
         connectionLayer,
         zoom,
         currentFloor
-    );
+    });
 }
 
 
@@ -336,7 +348,14 @@ export function getSelectedRoom() {
 // The editor keeps a reference to the selected room rather than creating a
 // separate copy. Save/Cancel behavior is therefore handled by the editor's
 // existing state and lifecycle.
-function selectRoom(room, map, mapElement, connectionLayer, zoom, currentFloor) {
+function selectRoom(
+    room,
+    map,
+    mapElement,
+    connectionLayer,
+    zoom,
+    currentFloor
+) {
     selectedRoom = room;
 
     // Store the map/rendering context so editor actions such as Cancel can
@@ -351,6 +370,15 @@ function selectRoom(room, map, mapElement, connectionLayer, zoom, currentFloor) 
 
     // Create the editor the first time a room is selected.
     if (!roomEditor) {
+        const editorHeader = document.createElement("div");
+        const editorTitle = document.createElement("span");
+        const closeButton = document.createElement("button");
+        const editorButtons = document.createElement("div");
+        const saveButton = document.createElement("button");
+        const editConnectionsButton = document.createElement("button");
+        const deleteButton = document.createElement("button");
+        const cancelButton = document.createElement("button");
+
         roomEditor = document.createElement("div");
         roomEditor.classList.add("room-editor");
 
@@ -364,13 +392,10 @@ function selectRoom(room, map, mapElement, connectionLayer, zoom, currentFloor) 
         // Editor header
         // --------------------------------------------------------
 
-        const editorHeader = document.createElement("div");
         editorHeader.classList.add("room-editor-header");
 
-        const editorTitle = document.createElement("span");
-        editorHeader.textContent = "Room Editor";
+        editorTitle.textContent = "Room Editor";
 
-        const closeButton = document.createElement("button");
         closeButton.textContent = "×";
         closeButton.classList.add("room-editor-close");
 
@@ -396,22 +421,19 @@ function selectRoom(room, map, mapElement, connectionLayer, zoom, currentFloor) 
         // Editor buttons
         // --------------------------------------------------------
 
-        const editorButtons = document.createElement("div");
         editorButtons.classList.add("room-editor-buttons");
 
-        const saveButton = document.createElement("button");
         saveButton.textContent = "Save";
         saveButton.classList.add("room-editor-save");
 
-        const editConnectionsButton = document.createElement("button");
         editConnectionsButton.textContent = "Edit Connections";
-        editConnectionsButton.classList.add("room-editor-edit-connections");
+        editConnectionsButton.classList.add(
+            "room-editor-edit-connections"
+        );
 
-        const deleteButton = document.createElement("button");
         deleteButton.textContent = "Delete";
         deleteButton.classList.add("room-editor-delete");
 
-        const cancelButton = document.createElement("button");
         cancelButton.textContent = "Cancel";
         cancelButton.classList.add("room-editor-cancel");
 
@@ -429,13 +451,17 @@ function selectRoom(room, map, mapElement, connectionLayer, zoom, currentFloor) 
         });
 
         deleteButton.addEventListener("click", () => {
-            if (!selectedRoom) return;
-
             const confirmed = confirm(
                 `Delete room "${selectedRoom.name}"?\n\nThis will also remove any connections attached to it.`
             );
 
-            if (!confirmed) return;
+            if (!selectedRoom) {
+                return;
+            }
+
+            if (!confirmed) {
+                return;
+            }
 
             deleteRoom(
                 editorContext.map,
@@ -535,11 +561,8 @@ function getRoomHoverInfo(room) {
 // The editor's current dimensions and screen position are also remembered so
 // they can be restored the next time an editor is opened.
 function saveRoomEditor() {
-    const inputs =
-        editorContent.querySelectorAll("input");
-
-    const textarea =
-        editorContent.querySelector("textarea");
+    const inputs = editorContent.querySelectorAll("input");
+    const textarea = editorContent.querySelector("textarea");
 
     for (const input of inputs) {
         const key =
@@ -576,12 +599,12 @@ function saveRoomEditor() {
         editorContext.currentFloor
     );
 
-    renderConnections(
-        editorContext.map,
-        editorContext.connectionLayer,
-        editorContext.zoom,
-        editorContext.currentFloor
-    );
+    renderConnections({
+        map: editorContext.map,
+        connectionLayer: editorContext.connectionLayer,
+        zoom: editorContext.zoom,
+        currentFloor: editorContext.currentFloor
+    });
 
     closeRoomEditor();
 }
@@ -632,12 +655,13 @@ function updateRoomEditor() {
         // Standard editable single-value fields.
         if (key === "name" || key === "floor") {
             const fieldContainer = document.createElement("div");
+            const label = document.createElement("label");
+            const input = document.createElement("input");
+
             fieldContainer.classList.add("room-editor-field");
 
-            const label = document.createElement("label");
             label.textContent = `${key}: `;
 
-            const input = document.createElement("input");
             input.type = "text";
             input.value = value;
 
@@ -651,12 +675,13 @@ function updateRoomEditor() {
         // Notes use a textarea so multiple lines can be entered.
         if (key === "notes") {
             const fieldContainer = document.createElement("div");
+            const label = document.createElement("label");
+            const textarea = document.createElement("textarea");
+
             fieldContainer.classList.add("room-editor-notes");
 
-            const label = document.createElement("label");
             label.textContent = "notes: ";
 
-            const textarea = document.createElement("textarea");
             textarea.value = value;
 
             fieldContainer.appendChild(label);
@@ -693,6 +718,11 @@ export function startDragging(
     zoom,
     currentFloor
 ) {
+    const startMouseX = event.clientX;
+    const startMouseY = event.clientY;
+    const startRoomX = room.position.x;
+    const startRoomY = room.position.y;
+
     event.preventDefault();
 
     if (event.button !== 0) {
@@ -700,12 +730,6 @@ export function startDragging(
     }
 
     roomTooltip.style.display = "none";
-
-    const startMouseX = event.clientX;
-    const startMouseY = event.clientY;
-
-    const startRoomX = room.position.x;
-    const startRoomY = room.position.y;
 
     // Updates the room position while the mouse is moving.
     function drag(event) {
@@ -735,12 +759,12 @@ export function startDragging(
 
         // Connections depend on room positions, so they need to be redrawn
         // while the room is being moved.
-        renderConnections(
+        renderConnections({
             map,
             connectionLayer,
             zoom,
             currentFloor
-        );
+        });
     }
 
     // Removes the temporary mouse listeners when dragging ends.

@@ -788,7 +788,8 @@ The development progression was:
 
 Steps 1–26 are currently working in prototype form.
 Started the polish list.
-Steps 1 are currently marked as complete.
+Steps 1-4 are currently marked as complete.
+Current Step: between 4 and 5
 
 
 ### Polish List
@@ -796,6 +797,10 @@ Steps 1 are currently marked as complete.
 2. Hamburger menu with New Map, Save/Load, Options, etc.
 3. Swap the floor-selection arrows.
 4. Make the connection endpoint selection square larger and make it disappear when the connection editor closes.
+
+Refactor repeated room/map rendering arguments into context objects.
+Review room objects vs. rendering context and simplify function signatures.
+
 5. Resize room names with the room so they remain readable.
 6. Make the default room editor size large enough that nothing is clipped.
 7. Don't close the room editor when saving; add a changed indicator.
@@ -827,11 +832,14 @@ Steps 1 are currently marked as complete.
 33. Show looping connections with a looping arrow.
 34. Add in the library that would let the connections avoid rooms.
 
-90. Nail down bugs
-
-100. the URL for the github pages that is hosting the webpage based in github is https://neain.github.io/Roombound/ technicly at index.html, but thats implied.
+* options menu items: Change the default color of rooms and room text. change the default size of rooms. change the size of the connection endpoint selector square.
 
 
+* Nail down bugs
+* The URL for the github pages that is hosting the webpage based in github is https://neain.github.io/Roombound/ technicly at index.html, but thats implied.
+
+### Possible Bugs
+* when opening a connection to be edited, its not closing the other connections in the same list (this may end up not being a bug as other polish steps are modifying this list)
 ---
 
 ## 14. Initial MVP

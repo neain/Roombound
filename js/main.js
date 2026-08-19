@@ -53,8 +53,17 @@ import { createConnection } from "./connectionEditor.js";
 
 
 // ============================================================
-// MAP / VIEW CONFIGURATION
+// APPLICATION STATE / DOM ELEMENTS
 // ============================================================
+
+// The map data currently being displayed and edited.
+const map = defaultMap;
+
+// The scrollable map viewport.
+const mapElement = document.getElementById("map");
+
+// The world container holds the map grid, rooms, and connection layer.
+const mapWorld = document.createElement("div");
 
 // SVG layer used to draw connections above the map world.
 const connectionLayer = document.createElementNS(
@@ -62,13 +71,101 @@ const connectionLayer = document.createElementNS(
     "svg"
 );
 
+// Current map/view state shared with renderers and editors.
+const mapView = {
+    map,
+    connectionLayer,
+    zoom: 1,
+    currentFloor: 1
+};
+
 // Zoom limits and the amount each Ctrl+mouse-wheel action changes the zoom.
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 4;
 const ZOOM_STEP = 0.25;
 
-// Current map zoom level.
-let zoom = 1;
+// Zoom control is a vertical rail fixed to the right side of the screen.
+const zoomControl = document.createElement("div");
+const zoomInButton = document.createElement("button");
+const zoomTrack = document.createElement("div");
+const zoomMarks = document.createElement("div");
+const zoomHandle = document.createElement("button");
+const zoomOutButton = document.createElement("button");
+
+// The toolbar displayed in the bottom-right corner of the map.
+const mapTools = document.createElement("div");
+
+// Button used to begin creating a new connection.
+const newConnectionButton = document.createElement("button");
+
+// Button used to begin creating a new room.
+const newRoomButton = document.createElement("button");
+
+// Tooltip displayed when hovering over the New Room button.
+const newRoomTooltip = document.createElement("div");
+
+// Tooltip displayed when hovering over the New Connection button.
+const newConnectionTooltip = document.createElement("div");
+
+// Main container for the application menu.
+const menuControl = document.createElement("div");
+
+// Button used to open and close the menu.
+const menuButton = document.createElement("button");
+
+// Menu contents.
+const menuPanel = document.createElement("div");
+
+// New Map button.
+const newMapMenuButton = document.createElement("button");
+
+// Save Map button.
+const saveMapMenuButton = document.createElement("button");
+
+// Load Map button.
+const loadMapMenuButton = document.createElement("button");
+
+// Options placeholder.
+const optionsMenuButton = document.createElement("button");
+
+// Confirmation overlay used before discarding the current map.
+const newMapOverlay = document.createElement("div");
+
+// Confirmation dialog.
+const newMapDialog = document.createElement("div");
+
+// Dialog title.
+const newMapTitle = document.createElement("h2");
+
+// Dialog message.
+const newMapMessage = document.createElement("p");
+
+// Dialog buttons.
+const newMapButtons = document.createElement("div");
+
+// Save button.
+const saveAndNewButton = document.createElement("button");
+
+// New Without Saving button.
+const newWithoutSavingButton = document.createElement("button");
+
+// Cancel button.
+const cancelNewMapButton = document.createElement("button");
+
+// Floor control.
+const floorControl = document.createElement("div");
+
+// Up button.
+const floorUpButton = document.createElement("button");
+
+// Current floor display.
+const floorDisplay = document.createElement("button");
+
+// Down button.
+const floorDownButton = document.createElement("button");
+
+// Dropdown containing the available floors.
+const floorDropdown = document.createElement("div");
 
 // Temporary state used while right-click panning the map.
 let isPanning = false;
@@ -76,7 +173,22 @@ let panStartX;
 let panStartY;
 let scrollStartX;
 let scrollStartY;
-let currentFloor = 1;
+
+// Tracks whether the zoom handle is currently being dragged.
+let isDraggingZoom = false;
+
+// Current map file schema version.
+const CURRENT_MAP_VERSION = 1;
+
+
+// ============================================================
+// INITIAL DOM CONFIGURATION
+// ============================================================
+
+mapWorld.classList.add("map-world");
+
+mapWorld.style.width = `${MAP_SIZE}px`;
+mapWorld.style.height = `${MAP_SIZE}px`;
 
 
 // ============================================================
@@ -89,17 +201,18 @@ let currentFloor = 1;
  * the lowest and one floor above the highest.
  */
 function getFloorOptions(map) {
+    const floors = map.rooms.map(r => r.floor);
+    const min = floors.length > 0 ? Math.min(...floors) : 0;
+    const max = floors.length > 0 ? Math.max(...floors) : 2;
+    const options = [];
+    let floor;
+
     if (map.rooms.length === 0) {
-        return [0, 1, 2]; // sensible defaults when the map is empty
+        return [0, 1, 2];
     }
 
-    const floors = map.rooms.map(r => r.floor);
-    const min = Math.min(...floors);
-    const max = Math.max(...floors);
-
-    const options = [];
-    for (let f = min - 1; f <= max + 1; f++) {
-        options.push(f);
+    for (floor = min - 1; floor <= max + 1; floor++) {
+        options.push(floor);
     }
 
     return options;
@@ -114,68 +227,44 @@ function getRoomCountOnFloor(map, floor) {
 
 
 // ============================================================
-// MAP STATE / DOM ELEMENTS
-// ============================================================
-
-// The map data currently being displayed and edited.
-const map = defaultMap;
-
-// The scrollable map viewport.
-const mapElement = document.getElementById("map");
-
-// The world container holds the map grid, rooms, and connection layer.
-const mapWorld = document.createElement("div");
-mapWorld.classList.add("map-world");
-
-mapWorld.style.width = `${MAP_SIZE}px`;
-mapWorld.style.height = `${MAP_SIZE}px`;
-
-
-// ============================================================
 // ZOOM
 // ============================================================
 
 // Changes the current zoom level while keeping the point at the center of
 // the viewport in the same place on the map.
 function changeZoom(newZoom) {
-    const oldZoom = zoom;
+    const oldZoom = mapView.zoom;
+    const centerX =
+        mapElement.scrollLeft +
+        mapElement.clientWidth / 2;
+    const centerY =
+        mapElement.scrollTop +
+        mapElement.clientHeight / 2;
+    const worldX = centerX / oldZoom;
+    const worldY = centerY / oldZoom;
 
-    zoom = Math.max(
+    mapView.zoom = Math.max(
         MIN_ZOOM,
         Math.min(MAX_ZOOM, newZoom)
     );
 
-    if (zoom === oldZoom) {
+    if (mapView.zoom === oldZoom) {
         updateZoomControl();
         return;
     }
 
     // Find the point currently at the center of the visible map.
-    const centerX =
-        mapElement.scrollLeft +
-        mapElement.clientWidth / 2;
-
-    const centerY =
-        mapElement.scrollTop +
-        mapElement.clientHeight / 2;
-
-    // Convert the viewport center from the old zoomed coordinate space back
-    // into world coordinates so it can be preserved after the zoom changes.
-    const worldX =
-        centerX / oldZoom;
-
-    const worldY =
-        centerY / oldZoom;
+    // The coordinates were captured above before changing the zoom.
 
     updateZoom();
 
     // Restore the same world position to the center of the viewport.
     mapElement.scrollLeft =
-        worldX * zoom -
+        worldX * mapView.zoom -
         mapElement.clientWidth / 2;
 
     mapElement.scrollTop =
-        worldY * zoom -
+        worldY * mapView.zoom -
         mapElement.clientHeight / 2;
 }
 
@@ -189,36 +278,31 @@ function updateZoom() {
     );
 
     mapWorld.style.width =
-        `${MAP_SIZE * zoom}px`;
+        `${MAP_SIZE * mapView.zoom}px`;
 
     mapWorld.style.height =
-        `${MAP_SIZE * zoom}px`;
+        `${MAP_SIZE * mapView.zoom}px`;
 
     // Scale the CSS grid along with the map.
     mapWorld.style.setProperty(
         "--grid-size",
-        `${GRID_SIZE * zoom}px`
+        `${GRID_SIZE * mapView.zoom}px`
     );
 
-    // Redraw both rooms and connections using the new zoom level.
+    // Redraw both rooms and connections using the new view state.
     renderRooms(
         map,
         mapWorld,
         connectionLayer,
-        zoom,
-        currentFloor
+        mapView.zoom,
+        mapView.currentFloor
     );
 
-    renderConnections(
-        map,
-        connectionLayer,
-        zoom,
-        currentFloor
-    );
+    renderConnections(mapView);
 
     updateZoomControl();
 
-    console.log("Zoom Level:", zoom);
+    console.log("Zoom Level:", mapView.zoom);
 }
 
 
@@ -226,32 +310,20 @@ function updateZoom() {
 // ZOOM CONTROL
 // ============================================================
 
-// The zoom control is a vertical rail fixed to the right side of the screen.
-const zoomControl = document.createElement("div");
 zoomControl.classList.add("zoom-control");
 zoomControl.setAttribute("aria-label", "Map zoom controls");
 
-// Button used to increase the map zoom.
-const zoomInButton = document.createElement("button");
 zoomInButton.classList.add("zoom-button");
 zoomInButton.textContent = "+";
 zoomInButton.setAttribute("aria-label", "Zoom in");
 
-// Track representing the available zoom range.
-const zoomTrack = document.createElement("div");
 zoomTrack.classList.add("zoom-track");
 
-// Container for the clickable zoom level marks.
-const zoomMarks = document.createElement("div");
 zoomMarks.classList.add("zoom-marks");
 
-// Movable handle representing the current zoom level.
-const zoomHandle = document.createElement("button");
 zoomHandle.classList.add("zoom-handle");
 zoomHandle.setAttribute("aria-label", "Current zoom level");
 
-// Button used to decrease the map zoom.
-const zoomOutButton = document.createElement("button");
 zoomOutButton.classList.add("zoom-button");
 zoomOutButton.textContent = "−";
 zoomOutButton.setAttribute("aria-label", "Zoom out");
@@ -276,26 +348,31 @@ function getZoomPercent(zoomValue) {
  * Creates the clickable marks for every available zoom step.
  */
 function createZoomMarks() {
+    const zoomRange = MAX_ZOOM - MIN_ZOOM;
+    let markZoom;
+    let mark;
+    let progress;
+    let percentage;
+
     zoomMarks.innerHTML = "";
 
-    const zoomRange = MAX_ZOOM - MIN_ZOOM;
-
     for (
-        let markZoom = MIN_ZOOM;
+        markZoom = MIN_ZOOM;
         markZoom <= MAX_ZOOM;
         markZoom += ZOOM_STEP
     ) {
-        const mark = document.createElement("button");
+        mark = document.createElement("button");
+        progress =
+            (markZoom - MIN_ZOOM) / zoomRange;
+        percentage = getZoomPercent(markZoom);
+
         mark.classList.add("zoom-mark");
 
-        const progress =
-            (markZoom - MIN_ZOOM) / zoomRange;
-
-        mark.style.bottom = `${progress * 100}%`;
-
-        const percentage = getZoomPercent(markZoom);
+        mark.style.bottom =
+            `${progress * 100}%`;
 
         mark.title = `${percentage}%`;
+
         mark.setAttribute(
             "aria-label",
             `Set zoom to ${percentage}%`
@@ -310,18 +387,22 @@ function createZoomMarks() {
     }
 }
 
-/**
- * Updates the zoom handle position and tooltip to match the current zoom.
- */
+// Updates the zoom handle position and tooltip to match the current zoom.
 function updateZoomControl() {
     const zoomRange = MAX_ZOOM - MIN_ZOOM;
-    const zoomProgress = (zoom - MIN_ZOOM) / zoomRange;
-    const percentage = getZoomPercent(zoom);
+    const zoomProgress =
+        (mapView.zoom - MIN_ZOOM) / zoomRange;
+    const percentage =
+        getZoomPercent(mapView.zoom);
 
     // 0% progress is the minimum zoom at the bottom of the rail.
     // 100% progress is the maximum zoom at the top.
-    zoomHandle.style.bottom = `${zoomProgress * 100}%`;
-    zoomHandle.title = `${percentage}%`;
+    zoomHandle.style.bottom =
+        `${zoomProgress * 100}%`;
+
+    zoomHandle.title =
+        `${percentage}%`;
+
     zoomHandle.setAttribute(
         "aria-label",
         `Current zoom level: ${percentage}%`
@@ -333,15 +414,27 @@ createZoomMarks();
 
 // Zoom button events.
 zoomInButton.addEventListener("click", () => {
-    changeZoom(zoom + ZOOM_STEP);
+    changeZoom(mapView.zoom + ZOOM_STEP);
 });
 
 zoomOutButton.addEventListener("click", () => {
-    changeZoom(zoom - ZOOM_STEP);
+    changeZoom(mapView.zoom - ZOOM_STEP);
 });
 
 // Clicking the rail changes zoom to the nearest available zoom level.
 zoomTrack.addEventListener("click", (event) => {
+    const trackRect = zoomTrack.getBoundingClientRect();
+    const clickPosition =
+        trackRect.bottom - event.clientY;
+    const usableHeight = trackRect.height;
+    const progress =
+        Math.max(0, Math.min(1, clickPosition / usableHeight));
+    const rawZoom =
+        MIN_ZOOM +
+        progress * (MAX_ZOOM - MIN_ZOOM);
+    const steppedZoom =
+        Math.round(rawZoom / ZOOM_STEP) * ZOOM_STEP;
+
     if (
         event.target === zoomHandle ||
         event.target.classList.contains("zoom-mark")
@@ -349,27 +442,10 @@ zoomTrack.addEventListener("click", (event) => {
         return;
     }
 
-    const trackRect = zoomTrack.getBoundingClientRect();
-    const clickPosition =
-        trackRect.bottom - event.clientY;
-
-    const usableHeight = trackRect.height;
-    const progress =
-        Math.max(0, Math.min(1, clickPosition / usableHeight));
-
-    const rawZoom =
-        MIN_ZOOM +
-        progress * (MAX_ZOOM - MIN_ZOOM);
-
-    const steppedZoom =
-        Math.round(rawZoom / ZOOM_STEP) * ZOOM_STEP;
-
     changeZoom(steppedZoom);
 });
 
 // Dragging the zoom handle changes the zoom level.
-let isDraggingZoom = false;
-
 zoomHandle.addEventListener("mousedown", (event) => {
     if (event.button !== 0) {
         return;
@@ -382,24 +458,21 @@ zoomHandle.addEventListener("mousedown", (event) => {
 });
 
 document.addEventListener("mousemove", (event) => {
-    if (!isDraggingZoom) {
-        return;
-    }
-
     const trackRect = zoomTrack.getBoundingClientRect();
     const positionFromBottom =
         trackRect.bottom - event.clientY;
-
     const usableHeight = trackRect.height;
     const progress =
         Math.max(0, Math.min(1, positionFromBottom / usableHeight));
-
     const rawZoom =
         MIN_ZOOM +
         progress * (MAX_ZOOM - MIN_ZOOM);
-
     const steppedZoom =
         Math.round(rawZoom / ZOOM_STEP) * ZOOM_STEP;
+
+    if (!isDraggingZoom) {
+        return;
+    }
 
     changeZoom(steppedZoom);
 });
@@ -421,18 +494,12 @@ mapElement.appendChild(mapWorld);
 // MAP TOOLS
 // ============================================================
 
-// The toolbar displayed in the bottom-right corner of the map.
-const mapTools = document.createElement("div");
 mapTools.classList.add("map-tools");
 
-// Button used to begin creating a new connection.
-const newConnectionButton = document.createElement("button");
 newConnectionButton.classList.add("map-tool-button");
 newConnectionButton.textContent = "→+";
 newConnectionButton.setAttribute("aria-label", "New Connection");
 
-// Button used to begin creating a new room.
-const newRoomButton = document.createElement("button");
 newRoomButton.classList.add("map-tool-button");
 newRoomButton.textContent = "+";
 newRoomButton.setAttribute("aria-label", "New Room");
@@ -450,8 +517,8 @@ newRoomButton.addEventListener(
             map,
             mapElement,
             connectionLayer,
-            zoom,
-            currentFloor
+            mapView.zoom,
+            mapView.currentFloor
         );
     }
 );
@@ -469,11 +536,8 @@ newConnectionButton.addEventListener(
         }
 
         createConnection(
-            map,
-            room,
-            connectionLayer,
-            zoom,
-            currentFloor
+            mapView,
+            room
         );
     }
 );
@@ -483,50 +547,15 @@ newConnectionButton.addEventListener(
 // MAP TOOL TOOLTIPS
 // ============================================================
 
-// Tooltip displayed when hovering over the New Room button.
-const newRoomTooltip =
-    document.createElement("div");
-
 newRoomTooltip.classList.add("map-tool-tooltip");
 newRoomTooltip.textContent = "New Room";
 
 newRoomButton.appendChild(newRoomTooltip);
 
-// Tooltip displayed when hovering over the New Connection button.
-const newConnectionTooltip = document.createElement("div");
-
 newConnectionTooltip.classList.add("map-tool-tooltip");
 newConnectionTooltip.textContent = "New Connection";
+
 newConnectionButton.appendChild(newConnectionTooltip);
-
-// Save button
-const saveButton = document.createElement("button");
-saveButton.classList.add("map-tool-button");
-saveButton.textContent = "↓";
-saveButton.setAttribute("aria-label", "Save Map");
-saveButton.addEventListener("click", saveMap);
-
-// Load button
-const loadButton = document.createElement("button");
-loadButton.classList.add("map-tool-button");
-loadButton.textContent = "↑";
-loadButton.setAttribute("aria-label", "Load Map");
-loadButton.addEventListener("click", loadMap);
-
-// Tooltips
-const saveTooltip = document.createElement("div");
-saveTooltip.classList.add("map-tool-tooltip");
-saveTooltip.textContent = "Save Map";
-saveButton.appendChild(saveTooltip);
-
-const loadTooltip = document.createElement("div");
-loadTooltip.classList.add("map-tool-tooltip");
-loadTooltip.textContent = "Load Map";
-loadButton.appendChild(loadTooltip);
-
-// Add them to the toolbar (order is up to you)
-mapTools.appendChild(saveButton);
-mapTools.appendChild(loadButton);
 
 
 // Add the map tool buttons to the toolbar and add the toolbar to the page.
@@ -537,54 +566,238 @@ document.body.appendChild(mapTools);
 
 
 // ============================================================
+// HAMBURGER MENU
+// ============================================================
+
+menuControl.classList.add("menu-control");
+
+menuButton.classList.add("menu-button");
+menuButton.textContent = "☰";
+menuButton.setAttribute("aria-label", "Open menu");
+menuButton.setAttribute("aria-expanded", "false");
+
+menuPanel.classList.add("menu-panel");
+menuPanel.style.display = "none";
+
+newMapMenuButton.classList.add("menu-item");
+newMapMenuButton.textContent = "New Map";
+
+saveMapMenuButton.classList.add("menu-item");
+saveMapMenuButton.textContent = "Save Map";
+
+loadMapMenuButton.classList.add("menu-item");
+loadMapMenuButton.textContent = "Load Map";
+
+optionsMenuButton.classList.add("menu-item");
+optionsMenuButton.classList.add("menu-item-disabled");
+optionsMenuButton.textContent = "Options";
+optionsMenuButton.disabled = true;
+
+menuPanel.appendChild(newMapMenuButton);
+menuPanel.appendChild(saveMapMenuButton);
+menuPanel.appendChild(loadMapMenuButton);
+menuPanel.appendChild(optionsMenuButton);
+
+menuControl.appendChild(menuButton);
+menuControl.appendChild(menuPanel);
+
+document.body.appendChild(menuControl);
+
+
+// ----------------------------------------------------------
+// Menu visibility
+// ----------------------------------------------------------
+
+function closeMenu() {
+    menuPanel.style.display = "none";
+    menuButton.setAttribute("aria-expanded", "false");
+}
+
+function toggleMenu() {
+    const isOpen = menuPanel.style.display === "block";
+
+    if (isOpen) {
+        closeMenu();
+        return;
+    }
+
+    menuPanel.style.display = "block";
+    menuButton.setAttribute("aria-expanded", "true");
+}
+
+menuButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleMenu();
+});
+
+menuPanel.addEventListener("click", (event) => {
+    event.stopPropagation();
+});
+
+
+// ----------------------------------------------------------
+// Save / Load menu events
+// ----------------------------------------------------------
+
+saveMapMenuButton.addEventListener("click", () => {
+    closeMenu();
+    saveMap();
+});
+
+loadMapMenuButton.addEventListener("click", () => {
+    closeMenu();
+    loadMap();
+});
+
+
+// ============================================================
+// NEW MAP CONFIRMATION
+// ============================================================
+
+newMapOverlay.classList.add("new-map-overlay");
+newMapOverlay.style.display = "none";
+
+newMapDialog.classList.add("new-map-dialog");
+
+newMapTitle.textContent = "Create New Map?";
+
+newMapMessage.textContent =
+    "Your current map will be discarded.";
+
+newMapButtons.classList.add("new-map-buttons");
+
+saveAndNewButton.classList.add("new-map-save");
+saveAndNewButton.textContent = "Save";
+
+newWithoutSavingButton.classList.add("new-map-discard");
+newWithoutSavingButton.textContent = "Don't Save";
+
+cancelNewMapButton.classList.add("new-map-cancel");
+cancelNewMapButton.textContent = "Cancel";
+
+newMapButtons.appendChild(saveAndNewButton);
+newMapButtons.appendChild(newWithoutSavingButton);
+newMapButtons.appendChild(cancelNewMapButton);
+
+newMapDialog.appendChild(newMapTitle);
+newMapDialog.appendChild(newMapMessage);
+newMapDialog.appendChild(newMapButtons);
+
+newMapOverlay.appendChild(newMapDialog);
+
+document.body.appendChild(newMapOverlay);
+
+
+// ----------------------------------------------------------
+// New Map helpers
+// ----------------------------------------------------------
+
+function closeNewMapDialog() {
+    newMapOverlay.style.display = "none";
+}
+
+function refreshForNewMap() {
+    window.location.reload();
+}
+
+function openNewMapDialog() {
+    closeMenu();
+
+    if (
+        map.rooms.length === 0 &&
+        map.connections.length === 0
+    ) {
+        refreshForNewMap();
+        return;
+    }
+
+    newMapOverlay.style.display = "flex";
+}
+
+
+// ----------------------------------------------------------
+// New Map events
+// ----------------------------------------------------------
+
+newMapMenuButton.addEventListener(
+    "click",
+    openNewMapDialog
+);
+
+saveAndNewButton.addEventListener(
+    "click",
+    () => {
+        saveMap();
+
+        // Give the browser a moment to begin the file download before
+        // refreshing the page.
+        setTimeout(() => {
+            refreshForNewMap();
+        }, 100);
+    }
+);
+
+newWithoutSavingButton.addEventListener(
+    "click",
+    refreshForNewMap
+);
+
+cancelNewMapButton.addEventListener(
+    "click",
+    closeNewMapDialog
+);
+
+// Clicking the dark overlay outside the dialog cancels the operation.
+newMapOverlay.addEventListener(
+    "click",
+    (event) => {
+        if (event.target !== newMapOverlay) {
+            return;
+        }
+
+        closeNewMapDialog();
+    }
+);
+
+
+// ============================================================
 // FLOOR CONTROL (top-right)
 // ============================================================
 
-const floorControl = document.createElement("div");
 floorControl.classList.add("floor-control");
 
-// Up button
-const floorUpButton = document.createElement("button");
 floorUpButton.classList.add("floor-button");
 floorUpButton.textContent = "↑";
 floorUpButton.setAttribute("aria-label", "Go up one floor");
 
-// Current floor display (clickable)
-const floorDisplay = document.createElement("button");
 floorDisplay.classList.add("floor-display");
-floorDisplay.textContent = `Floor ${currentFloor}`;
+floorDisplay.textContent = `Floor ${mapView.currentFloor}`;
 floorDisplay.setAttribute("aria-label", "Select floor");
 
-// Down button
-const floorDownButton = document.createElement("button");
 floorDownButton.classList.add("floor-button");
 floorDownButton.textContent = "↓";
 floorDownButton.setAttribute("aria-label", "Go down one floor");
 
-// Dropdown (hidden by default)
-const floorDropdown = document.createElement("div");
 floorDropdown.classList.add("floor-dropdown");
 floorDropdown.style.display = "none";
 
-floorControl.appendChild(floorUpButton);
-floorControl.appendChild(floorDisplay);
 floorControl.appendChild(floorDownButton);
+floorControl.appendChild(floorDisplay);
+floorControl.appendChild(floorUpButton);
 floorControl.appendChild(floorDropdown);
 
 document.body.appendChild(floorControl);
 
 
-// ----------------------------------------------------------
-// Floor change helper
-// ----------------------------------------------------------
-
+// Changes the currently displayed floor.
 function setCurrentFloor(newFloor) {
-    if (newFloor === currentFloor) {
+    if (newFloor === mapView.currentFloor) {
         return;
     }
 
-    currentFloor = newFloor;
-    floorDisplay.textContent = `Floor ${currentFloor}`;
+    mapView.currentFloor = newFloor;
+    floorDisplay.textContent =
+        `Floor ${mapView.currentFloor}`;
 
     // Close dropdown if open.
     floorDropdown.style.display = "none";
@@ -599,11 +812,11 @@ function setCurrentFloor(newFloor) {
 // ----------------------------------------------------------
 
 floorUpButton.addEventListener("click", () => {
-    setCurrentFloor(currentFloor + 1);
+    setCurrentFloor(mapView.currentFloor + 1);
 });
 
 floorDownButton.addEventListener("click", () => {
-    setCurrentFloor(currentFloor - 1);
+    setCurrentFloor(mapView.currentFloor - 1);
 });
 
 
@@ -612,6 +825,10 @@ floorDownButton.addEventListener("click", () => {
 // ----------------------------------------------------------
 
 floorDisplay.addEventListener("click", (event) => {
+    const options = getFloorOptions(map);
+    let count;
+    let item;
+
     event.stopPropagation();
 
     // Toggle.
@@ -623,15 +840,13 @@ floorDisplay.addEventListener("click", (event) => {
     // Rebuild the list every time it opens.
     floorDropdown.innerHTML = "";
 
-    const options = getFloorOptions(map);
-
     for (const floor of options) {
-        const count = getRoomCountOnFloor(map, floor);
+        count = getRoomCountOnFloor(map, floor);
+        item = document.createElement("button");
 
-        const item = document.createElement("button");
         item.classList.add("floor-dropdown-item");
 
-        if (floor === currentFloor) {
+        if (floor === mapView.currentFloor) {
             item.classList.add("selected");
         }
 
@@ -706,12 +921,12 @@ mapElement.addEventListener(
 mapElement.addEventListener(
     "click",
     (event) => {
+        const editor =
+            document.querySelector(".room-editor");
+
         if (event.target !== mapElement && event.target !== mapWorld) {
             return;
         }
-
-        const editor =
-            document.querySelector(".room-editor");
 
         if (!editor) {
             return;
@@ -733,9 +948,9 @@ mapElement.addEventListener(
         event.preventDefault();
 
         if (event.deltaY < 0) {
-            changeZoom(zoom + ZOOM_STEP);
+            changeZoom(mapView.zoom + ZOOM_STEP);
         } else {
-            changeZoom(zoom - ZOOM_STEP);
+            changeZoom(mapView.zoom - ZOOM_STEP);
         }
     },
     { passive: false }
@@ -797,8 +1012,6 @@ document.addEventListener(
 // SAVE / LOAD
 // ============================================================
 
-const CURRENT_MAP_VERSION = 1;
-
 /**
  * Creates a clean serializable copy of the current map.
  * Strips any temporary UI-only state.
@@ -835,10 +1048,13 @@ function getSerializableMap() {
 function saveMap() {
     const data = getSerializableMap();
     const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
+    const blob = new Blob(
+        [json],
+        { type: "application/json" }
+    );
     const url = URL.createObjectURL(blob);
-
     const a = document.createElement("a");
+
     a.href = url;
     a.download =
         `roombound-map-${new Date().toISOString().slice(0, 10)}.json`;
@@ -869,6 +1085,11 @@ function isValidMapData(data) {
  * Replaces the current map with loaded data and re-renders.
  */
 function loadMapFromData(data) {
+    const editors =
+        document.querySelectorAll(
+            ".room-editor, .connection-editor"
+        );
+
     if (!isValidMapData(data)) {
         alert("Invalid Roombound map file.");
         return;
@@ -882,9 +1103,7 @@ function loadMapFromData(data) {
     data.connections.forEach(conn => map.connections.push(conn));
 
     // Close any open editors (simple approach for now).
-    document.querySelectorAll(
-        ".room-editor, .connection-editor"
-    ).forEach(el => el.remove());
+    editors.forEach(el => el.remove());
 
     // Re-render.
     updateZoom();
@@ -897,21 +1116,22 @@ function loadMapFromData(data) {
  */
 function loadMap() {
     const input = document.createElement("input");
+
     input.type = "file";
     input.accept = ".json,application/json";
 
     input.addEventListener("change", (event) => {
         const file = event.target.files[0];
+        const reader = new FileReader();
 
         if (!file) {
             return;
         }
 
-        const reader = new FileReader();
-
         reader.onload = (e) => {
             try {
                 const data = JSON.parse(e.target.result);
+
                 loadMapFromData(data);
             } catch (err) {
                 alert(
@@ -937,7 +1157,7 @@ updateZoom();
 
 // Start with the map centered in the viewport.
 mapElement.scrollLeft =
-    (MAP_SIZE * zoom - mapElement.clientWidth) / 2;
+    (MAP_SIZE * mapView.zoom - mapElement.clientWidth) / 2;
 
 mapElement.scrollTop =
-    (MAP_SIZE * zoom - mapElement.clientHeight) / 2;
+    (MAP_SIZE * mapView.zoom - mapElement.clientHeight) / 2;

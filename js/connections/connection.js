@@ -34,12 +34,12 @@ export function createConnection(
         connection
     );
 
-    renderConnections(
+    renderConnections({
         map,
         connectionLayer,
         zoom,
         currentFloor
-    );
+    });
 
     console.log(
         `Created connection from ${room.name}`,

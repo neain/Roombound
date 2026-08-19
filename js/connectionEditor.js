@@ -67,8 +67,6 @@
 // ============================================================
 
 
-
-
 // ============================================================
 // IMPORTS
 // ============================================================
@@ -671,12 +669,16 @@ function refreshSelectedConnection() {
         }
     }
 
-    renderConnections(
-        connectionEditorContext.map,
-        connectionEditorContext.connectionLayer,
-        connectionEditorContext.zoom,
-        connectionEditorContext.currentFloor
-    );
+    // BEGIN EDIT
+    // renderConnections() now expects a mapView object rather than
+    // positional arguments.
+    renderConnections({
+        map: connectionEditorContext.map,
+        connectionLayer: connectionEditorContext.connectionLayer,
+        zoom: connectionEditorContext.zoom,
+        currentFloor: connectionEditorContext.currentFloor
+    });
+    // END EDIT
 }
 
 
@@ -744,6 +746,19 @@ function closeConnectionEditor() {
 
     clearSelectedConnectionEndpoint();
 
+    // Redraw after clearing the endpoint selection so the visual marker
+    // disappears from the map immediately.
+    // BEGIN EDIT
+    // renderConnections() now expects a mapView object rather than
+    // positional arguments.
+    renderConnections({
+        map: connectionEditorContext.map,
+        connectionLayer: connectionEditorContext.connectionLayer,
+        zoom: connectionEditorContext.zoom,
+        currentFloor: connectionEditorContext.currentFloor
+    });
+    // END EDIT
+
     connectionEditor = null;
     editedRoom = null;
     selectedConnection = null;
@@ -759,17 +774,14 @@ function closeConnectionEditor() {
 
 // Keeps connection creation available through the existing public module.
 export function createConnection(
-    map,
-    room,
-    connectionLayer,
-    zoom,
-    currentFloor
+    mapView,
+    room
 ) {
     return createConnectionInternal(
-        map,
+        mapView.map,
         room,
-        connectionLayer,
-        zoom,
-        currentFloor
+        mapView.connectionLayer,
+        mapView.zoom,
+        mapView.currentFloor
     );
 }

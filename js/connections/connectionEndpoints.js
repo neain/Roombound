@@ -110,12 +110,16 @@ export function selectConnectionEndpoint(
         state
     );
 
-    renderConnections(
-        connectionEditorContext.map,
-        connectionEditorContext.connectionLayer,
-        connectionEditorContext.zoom,
-        connectionEditorContext.currentFloor
-    );
+    // BEGIN EDIT
+    // renderConnections() now expects a mapView object rather than
+    // positional arguments.
+    renderConnections({
+        map: connectionEditorContext.map,
+        connectionLayer: connectionEditorContext.connectionLayer,
+        zoom: connectionEditorContext.zoom,
+        currentFloor: connectionEditorContext.currentFloor
+    });
+    // END EDIT
 }
 
 
@@ -336,7 +340,7 @@ export function setConnectionEndpointRoom(
         return;
     }
 
-    const room =   
+    const room =
         getRoom(
             connectionEditorContext.map,
             roomID

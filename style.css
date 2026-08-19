@@ -511,6 +511,147 @@ body {
 }
 
 /* ============================================================
+   HAMBURGER MENU
+   ============================================================ */
+
+.menu-control {
+    position: fixed;
+
+    top: 20px;
+    left: 20px;
+
+    z-index: 1002;
+}
+
+.menu-button {
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    color: white;
+    background: #333333;
+    border: 2px solid white;
+
+    font-size: 24px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.menu-button:hover {
+    background: #555555;
+}
+
+.menu-panel {
+    position: absolute;
+
+    top: 48px;
+    left: 0;
+
+    min-width: 160px;
+
+    background: white;
+    border: 1px solid black;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-item {
+    width: 100%;
+
+    padding: 8px 12px;
+
+    color: black;
+    background: white;
+    border: none;
+    border-bottom: 1px solid #ddd;
+
+    text-align: left;
+    font-size: 14px;
+
+    cursor: pointer;
+}
+
+.menu-item:last-child {
+    border-bottom: none;
+}
+
+.menu-item:hover:not(:disabled) {
+    background: #eee;
+}
+
+.menu-item-disabled {
+    color: #999;
+    background: #f5f5f5;
+    cursor: default;
+}
+
+
+/* ============================================================
+   NEW MAP CONFIRMATION
+   ============================================================ */
+
+.new-map-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0, 0, 0, 0.5);
+
+    z-index: 2000;
+}
+
+.new-map-dialog {
+    width: 360px;
+    max-width: calc(100vw - 40px);
+
+    padding: 20px;
+
+    color: black;
+    background: white;
+    border: 2px solid black;
+}
+
+.new-map-dialog h2 {
+    margin: 0 0 12px;
+    font-size: 1.2rem;
+}
+
+.new-map-dialog p {
+    margin: 0 0 20px;
+}
+
+.new-map-buttons {
+    display: flex;
+    justify-content: flex-start;
+    gap: 6px;
+}
+
+.new-map-buttons button {
+    padding: 6px 10px;
+
+    cursor: pointer;
+}
+
+.new-map-save {
+    font-weight: bold;
+}
+
+.new-map-discard {
+    color: #b00000;
+}
+
+/* ============================================================
 ZOOM CONTROL
 ============================================================ */
 
