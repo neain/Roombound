@@ -145,6 +145,17 @@ body {
    ROOM EDITOR
    ============================================================ */
 
+.room-editor-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.room-editor-changed {
+    font-size: 12px;
+    font-weight: bold;
+}
+
 .room-editor {
     position: fixed;
 

@@ -61,16 +61,22 @@ let roomEditor = null;
 // Container holding the fields inside the room editor.
 let editorContent = null;
 
+// Map/rendering information needed by the editor when it needs to modify the
+// selected room or redraw the map.
+let editorContext = null;
+
 // Last saved screen position of the room editor.
 let editorPosition = null;
+
+// Visual indicator showing whether the current editor has unsaved changes.
+let editorChangedIndicator = null;
+
+// Tracks whether the room editor has unsaved changes.
+let editorHasChanges = false;
 
 // Tracks whether the selected room was created specifically for the current
 // editor session. This allows Cancel to remove a newly created room.
 let isNewRoom = false;
-
-// Map/rendering information needed by the editor when it needs to modify the
-// selected room or redraw the map.
-let editorContext = null;
 
 
 
@@ -437,7 +443,9 @@ function selectRoom(
     // Create the editor the first time a room is selected.
     if (!roomEditor) {
         const editorHeader = document.createElement("div");
+        const editorTitleGroup = document.createElement("div");
         const editorTitle = document.createElement("span");
+        const editorChanged = document.createElement("span");
         const closeButton = document.createElement("button");
         const editorButtons = document.createElement("div");
         const saveButton = document.createElement("button");
@@ -460,7 +468,21 @@ function selectRoom(
 
         editorHeader.classList.add("room-editor-header");
 
+        editorTitleGroup.classList.add("room-editor-title-group");
+
         editorTitle.textContent = "Room Editor";
+
+        editorChanged.textContent = "Changed";
+        editorChanged.classList.add("room-editor-changed");
+        editorChanged.style.display = "none";
+
+        editorChangedIndicator = editorChanged;
+
+        editorTitleGroup.appendChild(editorTitle);
+        editorTitleGroup.appendChild(editorChanged);
+
+        editorHeader.appendChild(editorTitleGroup);
+        editorHeader.appendChild(closeButton);
 
         closeButton.textContent = "×";
         closeButton.classList.add("room-editor-close");
@@ -469,9 +491,6 @@ function selectRoom(
             "click",
             cancelRoomEditor
         );
-
-        editorHeader.appendChild(editorTitle);
-        editorHeader.appendChild(closeButton);
 
         // --------------------------------------------------------
         // Editor content
@@ -567,6 +586,20 @@ function selectRoom(
         // Allow the editor to be repositioned by dragging its header.
         startEditorDragging(editorHeader);
 
+        editorContent.addEventListener(
+            "input",
+            () => {
+                setEditorChanged(true);
+            }
+        );
+
+        editorContent.addEventListener(
+            "change",
+            () => {
+                setEditorChanged(true);
+            }
+        );
+
         // Provide keyboard shortcuts for saving/canceling the editor.
         editorContent.addEventListener(
             "keydown",
@@ -590,6 +623,18 @@ function selectRoom(
                 saveRoomEditor();
             }
         );
+
+        roomEditor.addEventListener(
+            "mouseup",
+            () => {
+                if (
+                    roomEditor.offsetWidth !== map.editorSize.width ||
+                    roomEditor.offsetHeight !== map.editorSize.height
+                ) {
+                    setEditorChanged(true);
+                }
+            }
+        );
     }
 
     // Every room can remember its preferred editor dimensions.
@@ -599,6 +644,7 @@ function selectRoom(
     roomEditor.style.height =
         `${map.editorSize.height}px`;
 
+    setEditorChanged(false);
     updateRoomEditor();
 }
 
@@ -621,6 +667,18 @@ function getRoomHoverInfo(room) {
 // ============================================================
 // ROOM EDITOR
 // ============================================================
+
+// Updates the editor's visual changed indicator.
+function setEditorChanged(changed) {
+    editorHasChanges = changed;
+
+    if (!editorChangedIndicator) {
+        return;
+    }
+
+    editorChangedIndicator.style.display =
+        changed ? "inline" : "none";
+}
 
 // Saves the current contents of the room editor back into the selected room.
 //
@@ -676,7 +734,7 @@ function saveRoomEditor() {
         currentFloor: editorContext.currentFloor
     });
 
-    closeRoomEditor();
+    setEditorChanged(false);
 }
 
 // Cancels the current room editing session.
