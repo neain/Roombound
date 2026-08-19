@@ -801,7 +801,7 @@ Current Step: 8
 6. Make the default room editor size large enough that nothing is clipped.
 7. Don't close the room editor when saving; add a changed indicator.
 * Consolidate editor-window color CSS properties.
-* see how hard it would be to direct the load option at a github/web address
+* Load map from URL + 
 8. Decide what happens to the room editor when editing a connection. Decided: close the room editor if the edit connections button was clicked. Any other way of getting to the connection editor will ignore the room editor as it has been doing.
 9. Make connection paths clickable to open their editor.
 10. Visually indicate on the map which connection is currently being edited.
@@ -830,6 +830,8 @@ Current Step: 8
 34. Add in the library that would let the connections avoid rooms.
 
 * options menu items: Change the default color of rooms and room text. change the default size of rooms. change the size of the connection endpoint selector square.
+
+* add tutorial to web page: GitHub sharing walkthrough
 
 
 * Nail down bugs
