@@ -125,6 +125,22 @@ const saveMapMenuButton = document.createElement("button");
 // Load Map button.
 const loadMapMenuButton = document.createElement("button");
 
+// Load-from-URL submenu.
+const loadSubmenu = document.createElement("div");
+const loadFromFileMenuButton = document.createElement("button");
+const loadFromUrlMenuButton = document.createElement("button");
+
+// Load-from-URL dialog.
+const loadUrlOverlay = document.createElement("div");
+const loadUrlDialog = document.createElement("div");
+const loadUrlTitle = document.createElement("h2");
+const loadUrlMessage = document.createElement("p");
+const loadUrlInput = document.createElement("input");
+const loadUrlButtons = document.createElement("div");
+const loadUrlButton = document.createElement("button");
+const cancelLoadUrlButton = document.createElement("button");
+const loadUrlHelpButton = document.createElement("button");
+
 // Options placeholder.
 const optionsMenuButton = document.createElement("button");
 
@@ -595,7 +611,24 @@ optionsMenuButton.disabled = true;
 
 menuPanel.appendChild(newMapMenuButton);
 menuPanel.appendChild(saveMapMenuButton);
+
+loadMapMenuButton.classList.add("menu-item-with-submenu");
+loadMapMenuButton.textContent = "Load Map";
+
+loadSubmenu.classList.add("load-submenu");
+
+loadFromFileMenuButton.classList.add("menu-item");
+loadFromFileMenuButton.textContent = "Load from File";
+
+loadFromUrlMenuButton.classList.add("menu-item");
+loadFromUrlMenuButton.textContent = "Load from URL";
+
+loadSubmenu.appendChild(loadFromFileMenuButton);
+loadSubmenu.appendChild(loadFromUrlMenuButton);
+
+loadMapMenuButton.appendChild(loadSubmenu);
 menuPanel.appendChild(loadMapMenuButton);
+
 menuPanel.appendChild(optionsMenuButton);
 
 menuControl.appendChild(menuButton);
@@ -644,11 +677,15 @@ saveMapMenuButton.addEventListener("click", () => {
     saveMap();
 });
 
-loadMapMenuButton.addEventListener("click", () => {
+loadFromFileMenuButton.addEventListener("click", () => {
     closeMenu();
     loadMap();
 });
 
+loadFromUrlMenuButton.addEventListener("click", () => {
+    closeMenu();
+    openLoadUrlDialog();
+});
 
 // ============================================================
 // NEW MAP CONFIRMATION
@@ -759,6 +796,144 @@ newMapOverlay.addEventListener(
     }
 );
 
+// ============================================================
+// LOAD FROM URL DIALOG
+// ============================================================
+
+loadUrlOverlay.classList.add("load-url-overlay");
+loadUrlOverlay.style.display = "none";
+
+loadUrlDialog.classList.add("load-url-dialog");
+
+loadUrlTitle.textContent = "Load Map from URL";
+
+loadUrlMessage.textContent =
+    "Enter the web address of a Roombound map JSON file.";
+
+loadUrlInput.type = "url";
+loadUrlInput.placeholder =
+    "https://example.com/roombound-map.json";
+loadUrlInput.setAttribute(
+    "aria-label",
+    "Map URL"
+);
+
+loadUrlButtons.classList.add("load-url-buttons");
+
+loadUrlButton.classList.add("load-url-load");
+loadUrlButton.textContent = "Load";
+
+cancelLoadUrlButton.classList.add("load-url-cancel");
+cancelLoadUrlButton.textContent = "Cancel";
+
+loadUrlHelpButton.classList.add("load-url-help");
+loadUrlHelpButton.textContent = "Help";
+
+loadUrlButtons.appendChild(loadUrlButton);
+loadUrlButtons.appendChild(cancelLoadUrlButton);
+loadUrlButtons.appendChild(loadUrlHelpButton);
+
+loadUrlDialog.appendChild(loadUrlTitle);
+loadUrlDialog.appendChild(loadUrlMessage);
+loadUrlDialog.appendChild(loadUrlInput);
+loadUrlDialog.appendChild(loadUrlButtons);
+
+loadUrlOverlay.appendChild(loadUrlDialog);
+
+document.body.appendChild(loadUrlOverlay);
+
+
+// ----------------------------------------------------------
+// Load from URL helpers
+// ----------------------------------------------------------
+
+function closeLoadUrlDialog() {
+    loadUrlOverlay.style.display = "none";
+}
+
+function openLoadUrlDialog() {
+    loadUrlInput.value = "";
+    loadUrlOverlay.style.display = "flex";
+    loadUrlInput.focus();
+}
+
+async function loadMapFromUrl() {
+    const url = loadUrlInput.value.trim();
+
+    if (!url) {
+        alert("Please enter a map URL.");
+        return;
+    }
+
+    try {
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(
+                `The server returned ${response.status} ${response.statusText}.`
+            );
+        }
+
+        const data = await response.json();
+
+        loadMapFromData(data);
+        closeLoadUrlDialog();
+    } catch (error) {
+        alert(
+            "Could not load the map from that URL.\n\n" +
+            error.message
+        );
+    }
+}
+
+
+// ----------------------------------------------------------
+// Load from URL events
+// ----------------------------------------------------------
+
+loadUrlButton.addEventListener(
+    "click",
+    loadMapFromUrl
+);
+
+cancelLoadUrlButton.addEventListener(
+    "click",
+    closeLoadUrlDialog
+);
+
+loadUrlHelpButton.addEventListener(
+    "click",
+    () => {
+        window.open(
+            "load-url-tutorial.html",
+            "_blank",
+            "noopener"
+        );
+    }
+);
+
+loadUrlInput.addEventListener(
+    "keydown",
+    (event) => {
+        if (event.key !== "Enter") {
+            return;
+        }
+
+        event.preventDefault();
+        loadMapFromUrl();
+    }
+);
+
+loadUrlOverlay.addEventListener(
+    "click",
+    (event) => {
+        if (event.target !== loadUrlOverlay) {
+            return;
+        }
+
+        closeLoadUrlDialog();
+    }
+);
 
 // ============================================================
 // FLOOR CONTROL (top-right)
@@ -1020,16 +1195,16 @@ function getSerializableMap() {
     return {
         version: CURRENT_MAP_VERSION,
         app: "Roombound",
+        editorSize: map.editorSize
+            ? { ...map.editorSize }
+            : { width: 400, height: 500 },
         rooms: map.rooms.map(room => ({
             roomID: room.roomID,
             name: room.name,
             floor: room.floor,
             notes: room.notes || "",
             position: { ...room.position },
-            size: { ...room.size },
-            editorSize: room.editorSize
-                ? { ...room.editorSize }
-                : { width: 200, height: 300 }
+            size: { ...room.size }
         })),
         connections: map.connections.map(conn => ({
             roomA: conn.roomA,

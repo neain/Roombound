@@ -141,11 +141,68 @@ body {
 }
 
 /* ============================================================
+   LOAD FROM URL
+   ============================================================ */
+
+.load-url-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0, 0, 0, 0.5);
+
+    z-index: 2000;
+}
+
+.load-url-dialog {
+    width: 420px;
+    max-width: calc(100vw - 40px);
+
+    padding: 20px;
+}
+
+.load-url-dialog h2 {
+    margin: 0 0 12px;
+
+    font-size: 1.2rem;
+}
+
+.load-url-dialog p {
+    margin: 0 0 12px;
+}
+
+.load-url-dialog input {
+    width: 100%;
+
+    padding: 6px 8px;
+}
+
+.load-url-buttons {
+    display: flex;
+    justify-content: flex-start;
+
+    gap: 6px;
+
+    margin-top: 16px;
+}
+
+.load-url-buttons button {
+    padding: 6px 10px;
+
+    cursor: pointer;
+}
+
+/* ============================================================
    EDITOR WINDOWS
    ============================================================ */
 
 .room-editor,
-.connection-editor {
+.connection-editor,
+.load-url-dialog {
     color: black;
     background: white;
     border: 1px solid black;
@@ -606,6 +663,28 @@ body {
     cursor: default;
 }
 
+.load-submenu {
+    position: absolute;
+
+    top: 0;
+    left: 100%;
+
+    min-width: 160px;
+
+    background: white;
+    border: 1px solid black;
+
+    display: none;
+    flex-direction: column;
+}
+
+.menu-item-with-submenu {
+    position: relative;
+}
+
+.menu-item-with-submenu:hover .load-submenu {
+    display: flex;
+}
 
 /* ============================================================
    NEW MAP CONFIRMATION

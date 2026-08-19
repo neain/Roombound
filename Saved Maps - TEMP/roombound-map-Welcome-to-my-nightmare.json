@@ -1,0 +1,330 @@
+{
+  "version": 1,
+  "app": "Roombound",
+  "editorSize": {
+    "width": 400,
+    "height": 500
+  },
+  "rooms": [
+    {
+      "roomID": "room_001",
+      "name": "Entrance Hall",
+      "floor": 1,
+      "notes": "additional exit below the main staircase? I dont remember where that goes if we investigated that.",
+      "position": {
+        "x": 10,
+        "y": 15
+      },
+      "size": {
+        "width": 5,
+        "height": 5
+      }
+    },
+    {
+      "roomID": "room_003",
+      "name": "Dining Room",
+      "floor": 1,
+      "notes": "",
+      "position": {
+        "x": 10,
+        "y": -2
+      },
+      "size": {
+        "width": 5,
+        "height": 5
+      }
+    },
+    {
+      "roomID": "room_002",
+      "name": "Kitchen",
+      "floor": 1,
+      "notes": "",
+      "position": {
+        "x": 16,
+        "y": -2
+      },
+      "size": {
+        "width": 5,
+        "height": 5
+      }
+    },
+    {
+      "roomID": "room_004",
+      "name": "Ogre Pantry",
+      "floor": 1,
+      "notes": "",
+      "position": {
+        "x": 16,
+        "y": 4
+      },
+      "size": {
+        "width": 5,
+        "height": 5
+      }
+    },
+    {
+      "roomID": "room_005",
+      "name": "Study",
+      "floor": 1,
+      "notes": "",
+      "position": {
+        "x": 16,
+        "y": 15
+      },
+      "size": {
+        "width": 5,
+        "height": 5
+      }
+    },
+    {
+      "roomID": "room_006",
+      "name": "Repeating Hall of Endless Doors",
+      "floor": 2,
+      "notes": "",
+      "position": {
+        "x": 8,
+        "y": 12
+      },
+      "size": {
+        "width": 5,
+        "height": 5
+      }
+    },
+    {
+      "roomID": "room_007",
+      "name": "Sewer???",
+      "floor": -1,
+      "notes": "",
+      "position": {
+        "x": 19,
+        "y": 11
+      },
+      "size": {
+        "width": 5,
+        "height": 5
+      }
+    },
+    {
+      "roomID": "room_008",
+      "name": "Garden path",
+      "floor": 1,
+      "notes": "",
+      "position": {
+        "x": 4,
+        "y": 15
+      },
+      "size": {
+        "width": 5,
+        "height": 5
+      }
+    },
+    {
+      "roomID": "room_009",
+      "name": "Greenhouse",
+      "floor": 1,
+      "notes": "",
+      "position": {
+        "x": -2,
+        "y": 15
+      },
+      "size": {
+        "width": 5,
+        "height": 5
+      }
+    },
+    {
+      "roomID": "room_010",
+      "name": "Ballroom",
+      "floor": 1,
+      "notes": "",
+      "position": {
+        "x": 4,
+        "y": -2
+      },
+      "size": {
+        "width": 5,
+        "height": 5
+      }
+    },
+    {
+      "roomID": "room_011",
+      "name": "Arcane Study",
+      "floor": 1,
+      "notes": "",
+      "position": {
+        "x": -2,
+        "y": -2
+      },
+      "size": {
+        "width": 5,
+        "height": 5
+      }
+    },
+    {
+      "roomID": "room_012",
+      "name": "Vampire Tower",
+      "floor": 2,
+      "notes": "",
+      "position": {
+        "x": -5,
+        "y": 2
+      },
+      "size": {
+        "width": 5,
+        "height": 5
+      }
+    },
+    {
+      "roomID": "room_013",
+      "name": "Dragon Arena",
+      "floor": 1,
+      "notes": "",
+      "position": {
+        "x": -8,
+        "y": -2
+      },
+      "size": {
+        "width": 5,
+        "height": 5
+      }
+    }
+  ],
+  "connections": [
+    {
+      "roomA": null,
+      "roomB": null,
+      "roomAConnectionSide": null,
+      "roomBConnectionSide": null,
+      "directionTo": "B",
+      "name": "Hallway"
+    },
+    {
+      "roomA": null,
+      "roomB": null,
+      "roomAConnectionSide": null,
+      "roomBConnectionSide": null,
+      "directionTo": "A",
+      "name": "Locked Door"
+    },
+    {
+      "roomA": null,
+      "roomB": null,
+      "roomAConnectionSide": null,
+      "roomBConnectionSide": null,
+      "directionTo": "both",
+      "name": "Hallway"
+    },
+    {
+      "roomA": null,
+      "roomB": null,
+      "roomAConnectionSide": null,
+      "roomBConnectionSide": null,
+      "directionTo": "both",
+      "name": "Hallway"
+    },
+    {
+      "roomA": null,
+      "roomB": null,
+      "roomAConnectionSide": null,
+      "roomBConnectionSide": null,
+      "directionTo": "both",
+      "name": "Hallway"
+    },
+    {
+      "roomA": "room_003",
+      "roomB": "room_001",
+      "roomAConnectionSide": "NONE",
+      "roomBConnectionSide": "NONE",
+      "directionTo": "both",
+      "name": "New Connection"
+    },
+    {
+      "roomA": "room_003",
+      "roomB": "room_002",
+      "roomAConnectionSide": "NONE",
+      "roomBConnectionSide": "NONE",
+      "directionTo": "A",
+      "name": "New Connection"
+    },
+    {
+      "roomA": "room_002",
+      "roomB": "room_004",
+      "roomAConnectionSide": "NONE",
+      "roomBConnectionSide": "NONE",
+      "directionTo": "A",
+      "name": "New Connection"
+    },
+    {
+      "roomA": "room_005",
+      "roomB": "room_001",
+      "roomAConnectionSide": "NONE",
+      "roomBConnectionSide": "NONE",
+      "directionTo": "A",
+      "name": "New Connection"
+    },
+    {
+      "roomA": "room_006",
+      "roomB": "room_001",
+      "roomAConnectionSide": "NONE",
+      "roomBConnectionSide": "NONE",
+      "directionTo": "A",
+      "name": "New Connection"
+    },
+    {
+      "roomA": "room_007",
+      "roomB": "room_005",
+      "roomAConnectionSide": "NONE",
+      "roomBConnectionSide": "NONE",
+      "directionTo": "A",
+      "name": "New Connection"
+    },
+    {
+      "roomA": "room_008",
+      "roomB": "room_001",
+      "roomAConnectionSide": "NONE",
+      "roomBConnectionSide": "NONE",
+      "directionTo": "A",
+      "name": "New Connection"
+    },
+    {
+      "roomA": "room_009",
+      "roomB": "room_008",
+      "roomAConnectionSide": "NONE",
+      "roomBConnectionSide": "NONE",
+      "directionTo": "A",
+      "name": "New Connection"
+    },
+    {
+      "roomA": "room_011",
+      "roomB": "room_013",
+      "roomAConnectionSide": "NONE",
+      "roomBConnectionSide": "NONE",
+      "directionTo": "A",
+      "name": "New Connection"
+    },
+    {
+      "roomA": "room_011",
+      "roomB": "room_010",
+      "roomAConnectionSide": "NONE",
+      "roomBConnectionSide": "NONE",
+      "directionTo": "A",
+      "name": "New Connection"
+    },
+    {
+      "roomA": "room_011",
+      "roomB": "room_012",
+      "roomAConnectionSide": "NONE",
+      "roomBConnectionSide": "NONE",
+      "directionTo": "A",
+      "name": "New Connection"
+    },
+    {
+      "roomA": "room_010",
+      "roomB": "room_003",
+      "roomAConnectionSide": "NONE",
+      "roomBConnectionSide": "NONE",
+      "directionTo": "A",
+      "name": "New Connection"
+    }
+  ]
+}
