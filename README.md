@@ -798,6 +798,9 @@ Current Step: 5
 3. Swap the floor-selection arrows.
 4. Make the connection endpoint selection square larger and make it disappear when the connection editor closes.
 5. Resize room names with the room so they remain readable.
+
+HoverExceptions in roomRenderer.js ... best to leave it as is? or invert it because we have FAR more fields that are not user facing than are. factor in how complex the refactor is going to be.
+
 6. Make the default room editor size large enough that nothing is clipped.
 7. Don't close the room editor when saving; add a changed indicator.
 8. Decide what happens to the room editor when editing a connection. Decided: close the room editor if the edit connections button was clicked. Any other way of getting to the connection editor will ignore the room editor as it has been doing.
