@@ -37,6 +37,8 @@ export const MAP_ORIGIN = MAP_SIZE / 2;
 // to a connection endpoint.
 export const CONNECTION_ROOM_RANGE = 10;
 
+export const CONNECTION_CLICK_RANGE = 2;
+
 
 // Valid attachment sides for room connection endpoints.
 export const CONNECTION_SIDES = [
