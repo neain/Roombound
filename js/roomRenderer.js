@@ -533,6 +533,8 @@ function selectRoom(
                 editorContext.zoom,
                 editorContext.currentFloor
             );
+
+            closeRoomEditor();
         });
 
         deleteButton.addEventListener("click", () => {
