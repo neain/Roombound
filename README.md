@@ -803,9 +803,9 @@ Current Step: 10
 * Load map from URL
 8. Decide what happens to the room editor when editing a connection. Decided: close the room editor if the edit connections button was clicked. Any other way of getting to the connection editor will ignore the room editor as it has been doing.
 9. Make connection paths clickable to open their editor.
-10. Visually indicate on the map which connection is currently being edited.
-11. Make the connection editor follow clicks on rooms/connections.
-12. Improve the connection-list interaction instead of repeating the same text/button hierarchy.
+10. Improve the connection-list interaction instead of repeating the same text/button hierarchy.
+11. Visually indicate on the map which connection is currently being edited.
+12. 
 13. Clean up connection-editor sorting/arrows/default ordering.
 14. Don't open the room editor just because a room was moved.
 15. Add NONE connection visuals.

@@ -680,6 +680,38 @@ body {
 
 .menu-item-with-submenu {
     position: relative;
+
+    width: 100%;
+
+    padding: 8px 12px;
+
+    color: black;
+    background: white;
+    border: none;
+    border-bottom: 1px solid #ddd;
+
+    text-align: left;
+    font-size: 14px;
+
+    cursor: default;
+}
+
+.menu-item-with-submenu::after {
+    content: "›";
+
+    position: absolute;
+
+    right: 10px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    font-size: 18px;
+    line-height: 1;
+}
+
+.menu-item-with-submenu:hover {
+    background: #eee;
 }
 
 .menu-item-with-submenu:hover .load-submenu {

@@ -48,8 +48,8 @@ export function initializeMapMenu({
     // Save Map button.
     const saveMapMenuButton = document.createElement("button");
 
-    // Load Map button.
-    const loadMapMenuButton = document.createElement("button");
+    // Load Map menu item that reveals the Load submenu on hover.
+    const loadMapMenuButton = document.createElement("div");
 
     // Load-from-URL submenu.
     const loadSubmenu = document.createElement("div");
