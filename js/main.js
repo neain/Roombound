@@ -1027,6 +1027,7 @@ function getSerializableMap() {
             notes: room.notes || "",
             position: { ...room.position },
             size: { ...room.size },
+            textSize: room.textSize || 16,
             editorSize: room.editorSize
                 ? { ...room.editorSize }
                 : { width: 200, height: 300 }

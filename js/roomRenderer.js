@@ -42,11 +42,15 @@ const hoverExceptions = [
     "connections",
     "position",
     "size",
-    "editorSize"
+    "editorSize",
+    "textSize"
 ];
 
 // Shared tooltip used when hovering over rooms.
 const roomTooltip = document.createElement("div");
+
+// Default room-name font size before any room-specific adjustment.
+const DEFAULT_ROOM_TEXT_SIZE = 16;
 
 // The room currently selected by the user.
 let selectedRoom = null;
@@ -69,9 +73,72 @@ let isNewRoom = false;
 let editorContext = null;
 
 
+
+
 // ============================================================
 // ROOM RENDERING
 // ============================================================
+
+// Determines the largest font size that allows a room's name to fit inside
+// the room without overflowing. The browser's normal word wrapping is used,
+// so individual words are never manually split.
+function calculateRoomTextSize(room) {
+    const roomElement = document.createElement("div");
+    let textSize;
+    let roomWidth;
+    let roomHeight;
+    let fits;
+    let fitsAtDefaultSize;
+
+    roomWidth = gridToPixels(room.size.width);
+    roomHeight = gridToPixels(room.size.height);
+
+    roomElement.classList.add("room");
+
+    roomElement.textContent = room.name;
+
+    roomElement.style.width = `${roomWidth}px`;
+    roomElement.style.height = `${roomHeight}px`;
+    roomElement.style.position = "absolute";
+    roomElement.style.visibility = "hidden";
+    roomElement.style.pointerEvents = "none";
+    roomElement.style.left = "-10000px";
+    roomElement.style.top = "0";
+
+    document.body.appendChild(roomElement);
+
+    roomElement.style.fontSize =
+        `${DEFAULT_ROOM_TEXT_SIZE}px`;
+
+    fitsAtDefaultSize =
+        roomElement.scrollWidth <= roomElement.clientWidth &&
+        roomElement.scrollHeight <= roomElement.clientHeight;
+
+    if (fitsAtDefaultSize) {
+        document.body.removeChild(roomElement);
+        return DEFAULT_ROOM_TEXT_SIZE;
+    }
+
+    for (
+        textSize = DEFAULT_ROOM_TEXT_SIZE;
+        textSize > 1;
+        textSize--
+    ) {
+        roomElement.style.fontSize = `${textSize}px`;
+
+        fits =
+            roomElement.scrollWidth <= roomElement.clientWidth &&
+            roomElement.scrollHeight <= roomElement.clientHeight;
+
+        if (fits) {
+            break;
+        }
+    }
+
+    document.body.removeChild(roomElement);
+
+    return Math.max(1, textSize - 1);
+}
 
 // Removes the current room elements and redraws every room in the map.
 //
@@ -139,8 +206,10 @@ export function renderRooms(
         roomElement.style.height =
             `${gridToPixels(room.size.height, zoom)}px`;
 
+        // Older maps may not have a stored text size yet. Those rooms use the
+        // default size until they are saved again.
         roomElement.style.fontSize =
-            `${16 * zoom}px`;
+            `${(room.textSize ?? DEFAULT_ROOM_TEXT_SIZE) * zoom}px`;
 
         roomElement.addEventListener(
             "mousedown",
@@ -250,6 +319,7 @@ export function createRoom(
             width: 5,
             height: 5
         },
+        textSize: DEFAULT_ROOM_TEXT_SIZE,
         editorSize: {
             width: 200,
             height: 300
@@ -558,8 +628,8 @@ function getRoomHoverInfo(room) {
 
 // Saves the current contents of the room editor back into the selected room.
 //
-// The editor's current dimensions and screen position are also remembered so
-// they can be restored the next time an editor is opened.
+// The room name's font size is recalculated from the room's current name and
+// dimensions so the saved value always reflects the latest room state.
 function saveRoomEditor() {
     const inputs = editorContent.querySelectorAll("input");
     const textarea = editorContent.querySelector("textarea");
@@ -577,6 +647,10 @@ function saveRoomEditor() {
     }
 
     selectedRoom.notes = textarea.value;
+
+    // Recalculate the room-name font size using the newly saved room data.
+    selectedRoom.textSize =
+        calculateRoomTextSize(selectedRoom);
 
     selectedRoom.editorSize = {
         width: roomEditor.offsetWidth,
