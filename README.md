@@ -789,7 +789,7 @@ The development progression was:
 Steps 1–26 are currently working in prototype form.
 Started the polish list.
 Steps 1-4 are currently marked as complete.
-Current Step: between 4 and 5
+Current Step: 5
 
 
 ### Polish List
@@ -797,10 +797,6 @@ Current Step: between 4 and 5
 2. Hamburger menu with New Map, Save/Load, Options, etc.
 3. Swap the floor-selection arrows.
 4. Make the connection endpoint selection square larger and make it disappear when the connection editor closes.
-
-Refactor repeated room/map rendering arguments into context objects.
-Review room objects vs. rendering context and simplify function signatures.
-
 5. Resize room names with the room so they remain readable.
 6. Make the default room editor size large enough that nothing is clipped.
 7. Don't close the room editor when saving; add a changed indicator.
