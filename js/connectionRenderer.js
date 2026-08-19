@@ -78,7 +78,7 @@ export function renderConnections(mapView) {
         zoom,
         currentFloor
     } = mapView;
-    
+
     connectionLayer.innerHTML = "";
 
     // --------------------------------------------------------
@@ -218,186 +218,374 @@ export function renderConnections(mapView) {
     // Draw connections
     // --------------------------------------------------------
 
-for (const connection of map.connections) {
-    const roomA = getRoom(map, connection.roomA);
-    if (!roomA) continue;
+    for (const connection of map.connections) {
+        const roomA = getRoom(map, connection.roomA);
+        if (!roomA) continue;
 
-    const roomB = connection.roomB
-        ? getRoom(map, connection.roomB)
-        : null;
+        const roomB = connection.roomB
+            ? getRoom(map, connection.roomB)
+            : null;
 
-    // --------------------------------------------------------
-    // Visibility rule (Option B)
-    // Show the connection if at least one endpoint is on the
-    // currently selected floor.
-    // --------------------------------------------------------
-    const roomAOnFloor = roomA.floor === currentFloor;
-    const roomBOnFloor = roomB ? roomB.floor === currentFloor : false;
+        // --------------------------------------------------------
+        // Visibility rule (Option B)
+        // Show the connection if at least one endpoint is on the
+        // currently selected floor.
+        // --------------------------------------------------------
+        const roomAOnFloor = roomA.floor === currentFloor;
+        const roomBOnFloor = roomB ? roomB.floor === currentFloor : false;
 
-    if (!roomAOnFloor && !roomBOnFloor) {
-        continue; // neither end is on this floor → skip
+        if (!roomAOnFloor && !roomBOnFloor) {
+            continue; // neither end is on this floor → skip
+        }
+
+        // --------------------------------------------------------
+        // Geometry (still calculated for both rooms even if one
+        // is on a different floor)
+        // --------------------------------------------------------
+        const roomAConnections =
+            connectionData.get(roomA.roomID)?.[connection.roomAConnectionSide];
+
+        if (!roomAConnections) continue;
+
+        const roomAIndex = roomAConnections.findIndex(
+            (entry) => entry.connection === connection
+        );
+
+        const roomAPoint =
+            connectionPoints
+                .get(roomA.roomID)
+                ?.[connection.roomAConnectionSide]
+                ?.[roomAIndex];
+
+        if (!roomAPoint) continue;
+
+        let roomBPoint = null;
+
+        if (roomB && connection.roomBConnectionSide) {
+            const roomBConnections =
+                connectionData.get(roomB.roomID)?.[connection.roomBConnectionSide];
+
+            if (roomBConnections) {
+                const roomBIndex = roomBConnections.findIndex(
+                    (entry) => entry.connection === connection
+                );
+
+                roomBPoint =
+                    connectionPoints
+                        .get(roomB.roomID)
+                        ?.[connection.roomBConnectionSide]
+                        ?.[roomBIndex];
+            }
+        }
+
+        // Fallback for unresolved / NONE side (same as before)
+        if (!roomBPoint) {
+            roomBPoint = getConnectionPoint(
+                roomA,
+                connection.roomAConnectionSide,
+                roomAIndex,
+                roomAConnections.length,
+                0,
+                zoom
+            );
+
+            if (!roomB) {
+                roomBPoint = getFreeConnectionPoint(
+                    roomA,
+                    connection.roomAConnectionSide,
+                    zoom
+                );
+            }
+        }
+
+        // --------------------------------------------------------
+        // Draw the line (full geometry – Option B)
+        // --------------------------------------------------------
+        const line = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+        );
+
+        line.setAttribute("x1", roomAPoint.x);
+        line.setAttribute("y1", roomAPoint.y);
+        line.setAttribute("x2", roomBPoint.x);
+        line.setAttribute("y2", roomBPoint.y);
+        line.classList.add("connection");
+
+        // Direction arrows (same as before)
+        if (
+            connection.directionTo === "A" ||
+            connection.directionTo === "both"
+        ) {
+            line.setAttribute("marker-start", "url(#arrowhead-start)");
+        }
+
+        if (
+            connection.directionTo === "B" ||
+            connection.directionTo === "both"
+        ) {
+            line.setAttribute("marker-end", "url(#arrowhead-end)");
+        }
+
+        connectionLayer.appendChild(line);
+
+        // --------------------------------------------------------
+        // Inter-floor indicator (↑ / ↓)
+        // Place the indicator near the endpoint that is NOT on
+        // the current floor.
+        // --------------------------------------------------------
+        if (roomB && roomAOnFloor !== roomBOnFloor) {
+            const offFloorPoint = roomAOnFloor ? roomBPoint : roomAPoint;
+            const otherFloor = roomAOnFloor ? roomB.floor : roomA.floor;
+            const isUp = otherFloor > currentFloor;
+
+            const indicator = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "text"
+            );
+
+            indicator.setAttribute("x", offFloorPoint.x);
+            indicator.setAttribute("y", offFloorPoint.y);
+            indicator.setAttribute("text-anchor", "middle");
+            indicator.setAttribute("dominant-baseline", "middle");
+            indicator.setAttribute("font-size", `${14 * zoom}`);
+            indicator.setAttribute("font-weight", "bold");
+            indicator.setAttribute("fill", "#000");
+            indicator.classList.add("floor-indicator");
+
+            // Slight offset so it doesn’t sit exactly on the endpoint
+            const offset = 12 * zoom;
+            indicator.setAttribute(
+                "dy",
+                isUp ? `-${offset}` : `${offset}`
+            );
+
+            indicator.textContent = isUp ? "↑" : "↓";
+
+            connectionLayer.appendChild(indicator);
+        }
+
+        // --------------------------------------------------------
+        // Selected endpoint marker (unchanged)
+        // --------------------------------------------------------
+        if (
+            selectedEndpoint &&
+            selectedEndpoint.connection === connection
+        ) {
+            const point =
+                selectedEndpoint.endpoint === "A"
+                    ? roomAPoint
+                    : roomBPoint;
+
+            const range = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "rect"
+            );
+
+            const rangeSize = gridToPixels(
+                CONNECTION_ROOM_RANGE * 2,
+                zoom
+            );
+
+            range.setAttribute("x", point.x - rangeSize / 2);
+            range.setAttribute("y", point.y - rangeSize / 2);
+            range.setAttribute("width", rangeSize);
+            range.setAttribute("height", rangeSize);
+            range.classList.add("connection-endpoint-range");
+
+            connectionLayer.appendChild(range);
+        }
     }
+}
 
-    // --------------------------------------------------------
-    // Geometry (still calculated for both rooms even if one
-    // is on a different floor)
-    // --------------------------------------------------------
-    const roomAConnections =
-        connectionData.get(roomA.roomID)?.[connection.roomAConnectionSide];
+// ============================================================
+// CONNECTION HIT TESTING
+// ============================================================
 
-    if (!roomAConnections) continue;
+// Returns every visible connection whose rendered line is within the given
+// pixel range of the supplied SVG/map coordinates.
+//
+// The returned connections are ordered from closest to farthest so callers
+// can use the first connection as the most likely intended selection.
+export function getConnectionsNearPoint(
+    mapView,
+    x,
+    y,
+    range
+) {
+    const {
+        map,
+        zoom,
+        currentFloor
+    } = mapView;
 
-    const roomAIndex = roomAConnections.findIndex(
-        (entry) => entry.connection === connection
-    );
+    const connectionData =
+        analyzeConnections(map);
 
-    const roomAPoint =
-        connectionPoints
-            .get(roomA.roomID)
-            ?.[connection.roomAConnectionSide]
-            ?.[roomAIndex];
+    const connectionPoints =
+        getConnectionPoints(
+            map,
+            connectionData,
+            zoom
+        );
 
-    if (!roomAPoint) continue;
+    const nearbyConnections = [];
 
-    let roomBPoint = null;
+    for (const connection of map.connections) {
+        const roomA = getRoom(map, connection.roomA);
 
-    if (roomB && connection.roomBConnectionSide) {
-        const roomBConnections =
-            connectionData.get(roomB.roomID)?.[connection.roomBConnectionSide];
+        if (!roomA) {
+            continue;
+        }
 
-        if (roomBConnections) {
-            const roomBIndex = roomBConnections.findIndex(
+        const roomB = connection.roomB
+            ? getRoom(map, connection.roomB)
+            : null;
+
+        const roomAOnFloor =
+            roomA.floor === currentFloor;
+
+        const roomBOnFloor =
+            roomB?.floor === currentFloor;
+
+        if (!roomAOnFloor && !roomBOnFloor) {
+            continue;
+        }
+
+        const roomAConnections =
+            connectionData.get(roomA.roomID)
+                ?.[connection.roomAConnectionSide];
+
+        if (!roomAConnections) {
+            continue;
+        }
+
+        const roomAIndex =
+            roomAConnections.findIndex(
                 (entry) => entry.connection === connection
             );
 
-            roomBPoint =
-                connectionPoints
-                    .get(roomB.roomID)
-                    ?.[connection.roomBConnectionSide]
-                    ?.[roomBIndex];
+        const roomAPoint =
+            connectionPoints
+                .get(roomA.roomID)
+                ?.[connection.roomAConnectionSide]
+                ?.[roomAIndex];
+
+        if (!roomAPoint) {
+            continue;
         }
-    }
 
-    // Fallback for unresolved / NONE side (same as before)
-    if (!roomBPoint) {
-        roomBPoint = getConnectionPoint(
-            roomA,
-            connection.roomAConnectionSide,
-            roomAIndex,
-            roomAConnections.length,
-            0,
-            zoom
-        );
+        let roomBPoint = null;
 
-        if (!roomB) {
-            roomBPoint = getFreeConnectionPoint(
+        if (roomB && connection.roomBConnectionSide) {
+            const roomBConnections =
+                connectionData.get(roomB.roomID)
+                    ?.[connection.roomBConnectionSide];
+
+            if (roomBConnections) {
+                const roomBIndex =
+                    roomBConnections.findIndex(
+                        (entry) => entry.connection === connection
+                    );
+
+                roomBPoint =
+                    connectionPoints
+                        .get(roomB.roomID)
+                        ?.[connection.roomBConnectionSide]
+                        ?.[roomBIndex];
+            }
+        }
+
+        if (!roomBPoint) {
+            roomBPoint = getConnectionPoint(
                 roomA,
                 connection.roomAConnectionSide,
+                roomAIndex,
+                roomAConnections.length,
+                0,
                 zoom
             );
+
+            if (!roomB) {
+                roomBPoint = getFreeConnectionPoint(
+                    roomA,
+                    connection.roomAConnectionSide,
+                    zoom
+                );
+            }
+        }
+
+        const distance =
+            getPointToSegmentDistance(
+                x,
+                y,
+                roomAPoint.x,
+                roomAPoint.y,
+                roomBPoint.x,
+                roomBPoint.y
+            );
+
+        if (distance <= range) {
+            nearbyConnections.push({
+                connection,
+                distance
+            });
         }
     }
 
-    // --------------------------------------------------------
-    // Draw the line (full geometry – Option B)
-    // --------------------------------------------------------
-    const line = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "line"
+    nearbyConnections.sort(
+        (a, b) => a.distance - b.distance
     );
 
-    line.setAttribute("x1", roomAPoint.x);
-    line.setAttribute("y1", roomAPoint.y);
-    line.setAttribute("x2", roomBPoint.x);
-    line.setAttribute("y2", roomBPoint.y);
-    line.classList.add("connection");
-
-    // Direction arrows (same as before)
-    if (
-        connection.directionTo === "A" ||
-        connection.directionTo === "both"
-    ) {
-        line.setAttribute("marker-start", "url(#arrowhead-start)");
-    }
-
-    if (
-        connection.directionTo === "B" ||
-        connection.directionTo === "both"
-    ) {
-        line.setAttribute("marker-end", "url(#arrowhead-end)");
-    }
-
-    connectionLayer.appendChild(line);
-
-    // --------------------------------------------------------
-    // Inter-floor indicator (↑ / ↓)
-    // Place the indicator near the endpoint that is NOT on
-    // the current floor.
-    // --------------------------------------------------------
-    if (roomB && roomAOnFloor !== roomBOnFloor) {
-        const offFloorPoint = roomAOnFloor ? roomBPoint : roomAPoint;
-        const otherFloor = roomAOnFloor ? roomB.floor : roomA.floor;
-        const isUp = otherFloor > currentFloor;
-
-        const indicator = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "text"
-        );
-
-        indicator.setAttribute("x", offFloorPoint.x);
-        indicator.setAttribute("y", offFloorPoint.y);
-        indicator.setAttribute("text-anchor", "middle");
-        indicator.setAttribute("dominant-baseline", "middle");
-        indicator.setAttribute("font-size", `${14 * zoom}`);
-        indicator.setAttribute("font-weight", "bold");
-        indicator.setAttribute("fill", "#000");
-        indicator.classList.add("floor-indicator");
-
-        // Slight offset so it doesn’t sit exactly on the endpoint
-        const offset = 12 * zoom;
-        indicator.setAttribute(
-            "dy",
-            isUp ? `-${offset}` : `${offset}`
-        );
-
-        indicator.textContent = isUp ? "↑" : "↓";
-
-        connectionLayer.appendChild(indicator);
-    }
-
-    // --------------------------------------------------------
-    // Selected endpoint marker (unchanged)
-    // --------------------------------------------------------
-    if (
-        selectedEndpoint &&
-        selectedEndpoint.connection === connection
-    ) {
-        const point =
-            selectedEndpoint.endpoint === "A"
-                ? roomAPoint
-                : roomBPoint;
-
-        const range = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "rect"
-        );
-
-        const rangeSize = gridToPixels(
-            CONNECTION_ROOM_RANGE * 2,
-            zoom
-        );
-
-        range.setAttribute("x", point.x - rangeSize / 2);
-        range.setAttribute("y", point.y - rangeSize / 2);
-        range.setAttribute("width", rangeSize);
-        range.setAttribute("height", rangeSize);
-        range.classList.add("connection-endpoint-range");
-
-        connectionLayer.appendChild(range);
-    }
-}
+    return nearbyConnections.map(
+        (entry) => entry.connection
+    );
 }
 
+
+// Returns the shortest distance between a point and a line segment.
+function getPointToSegmentDistance(
+    pointX,
+    pointY,
+    startX,
+    startY,
+    endX,
+    endY
+) {
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+
+    if (deltaX === 0 && deltaY === 0) {
+        return Math.hypot(
+            pointX - startX,
+            pointY - startY
+        );
+    }
+
+    const projection =
+        (
+            (pointX - startX) * deltaX +
+            (pointY - startY) * deltaY
+        ) /
+        (deltaX * deltaX + deltaY * deltaY);
+
+    const position =
+        Math.max(
+            0,
+            Math.min(1, projection)
+        );
+
+    const closestX =
+        startX + position * deltaX;
+
+    const closestY =
+        startY + position * deltaY;
+
+    return Math.hypot(
+        pointX - closestX,
+        pointY - closestY
+    );
+}
 
 // ============================================================
 // CONNECTION ANALYSIS

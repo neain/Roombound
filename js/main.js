@@ -41,7 +41,7 @@ import {
 // If working on how connections are drawn, positioned, spaced along room
 // sides, or represented as SVG, inspect:
 //   ./connectionRenderer.js
-import { renderConnections } from "./connectionRenderer.js";
+import { getConnectionsNearPoint, renderConnections } from "./connectionRenderer.js";
 
 // Connection creation and editing.
 // CURRENT: createConnection()
@@ -49,7 +49,7 @@ import { renderConnections } from "./connectionRenderer.js";
 //         and the Edit Connections UI will be handled here.
 // If working on creating or editing connections from the map UI, inspect:
 //   ./connectionEditor.js
-import { createConnection } from "./connectionEditor.js";
+import { createConnection, openConnectionEditorForConnections } from "./connectionEditor.js";
 
 
 // ============================================================
@@ -78,6 +78,9 @@ const mapView = {
     zoom: 1,
     currentFloor: 1
 };
+
+// Maximum distance from a connection path at which a click can select it.
+const CONNECTION_CLICK_RANGE = 2;
 
 // Zoom limits and the amount each Ctrl+mouse-wheel action changes the zoom.
 const MIN_ZOOM = 0.25;
@@ -1108,6 +1111,84 @@ mapElement.addEventListener(
         }
 
         editor.querySelector(".room-editor-cancel").click();
+    }
+);
+
+// Clicking near a connection opens the connection editor with every nearby
+// connection. Room clicks take priority so connections cannot be selected
+// through a room.
+mapElement.addEventListener(
+    "click",
+    (event) => {
+        const mapRect =
+            mapElement.getBoundingClientRect();
+
+        const clickX =
+            event.clientX -
+            mapRect.left +
+            mapElement.scrollLeft;
+
+        const clickY =
+            event.clientY -
+            mapRect.top +
+            mapElement.scrollTop;
+
+        const worldX =
+            pixelsToGrid(
+                clickX,
+                mapView.zoom
+            );
+
+        const worldY =
+            pixelsToGrid(
+                clickY,
+                mapView.zoom
+            );
+
+        const clickedRoom =
+            map.rooms.some(
+                (room) => {
+                    const roomX = room.position.x;
+                    const roomY = room.position.y;
+                    const roomWidth = room.size.width;
+                    const roomHeight = room.size.height;
+
+                    return (
+                        worldX >= roomX &&
+                        worldX <= roomX + roomWidth &&
+                        worldY >= roomY &&
+                        worldY <= roomY + roomHeight
+                    );
+                }
+            );
+
+        if (clickedRoom) {
+            return;
+        }
+
+        const connections =
+            getConnectionsNearPoint(
+                mapView,
+                clickX,
+                clickY,
+                gridToPixels(
+                    CONNECTION_CLICK_RANGE,
+                    mapView.zoom
+                )
+            );
+
+        if (connections.length === 0) {
+            return;
+        }
+
+        openConnectionEditorForConnections(
+            map,
+            connections,
+            mapElement,
+            connectionLayer,
+            mapView.zoom,
+            mapView.currentFloor
+        );
     }
 );
 

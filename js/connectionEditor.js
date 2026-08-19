@@ -187,14 +187,14 @@ function getEditorState() {
 //
 // Every connection involving the selected room is included, regardless of
 // whether the room is endpoint A or endpoint B.
-export function openConnectionEditor(map, room, mapElement, connectionLayer, zoom, currentFloor) {
-    connectionEditorContext = {
-        map,
-        connectionLayer,
-        zoom,
-        currentFloor
-    };
-
+export function openConnectionEditor(
+    map,
+    room,
+    mapElement,
+    connectionLayer,
+    zoom,
+    currentFloor
+) {
     const connections = [];
 
     for (const connection of map.connections) {
@@ -214,6 +214,104 @@ export function openConnectionEditor(map, room, mapElement, connectionLayer, zoo
             roomB
         });
     }
+
+    openConnectionEditorWithConnections(
+        map,
+        room,
+        connections,
+        null,
+        mapElement,
+        connectionLayer,
+        zoom,
+        currentFloor
+    );
+}
+
+
+// Opens the connection editor for an explicitly supplied set of
+// connections. The first connection in the list is selected automatically.
+export function openConnectionEditorForConnections(
+    map,
+    connections,
+    mapElement,
+    connectionLayer,
+    zoom,
+    currentFloor
+) {
+    if (!connections || connections.length === 0) {
+        return;
+    }
+
+    const firstConnection = connections[0];
+
+    const roomA =
+        getRoom(
+            map,
+            firstConnection.roomA
+        );
+
+    const roomB =
+        getRoom(
+            map,
+            firstConnection.roomB
+        );
+
+    const room =
+        roomA || roomB;
+
+    if (!room) {
+        return;
+    }
+
+    const connectionEntries =
+        connections.map(
+            (connection) => ({
+                connection,
+                roomA: getRoom(
+                    map,
+                    connection.roomA
+                ),
+                roomB: getRoom(
+                    map,
+                    connection.roomB
+                )
+            })
+        );
+
+    openConnectionEditorWithConnections(
+        map,
+        room,
+        connectionEntries,
+        firstConnection,
+        mapElement,
+        connectionLayer,
+        zoom,
+        currentFloor
+    );
+}
+
+
+// Builds and displays the connection editor from an explicit connection list.
+function openConnectionEditorWithConnections(
+    map,
+    room,
+    connections,
+    selectedConnectionToOpen,
+    mapElement,
+    connectionLayer,
+    zoom,
+    currentFloor
+) {
+
+    let initiallySelectedEntry = null;
+    let initiallySelectedElement = null;
+
+    connectionEditorContext = {
+        map,
+        connectionLayer,
+        zoom,
+        currentFloor
+    };
 
     editedRoom = room;
 
@@ -238,7 +336,10 @@ export function openConnectionEditor(map, room, mapElement, connectionLayer, zoo
     closeButton.textContent = "×";
     closeButton.classList.add("connection-editor-close");
 
-    closeButton.addEventListener("click", closeConnectionEditor);
+    closeButton.addEventListener(
+        "click",
+        closeConnectionEditor
+    );
 
     editorHeader.appendChild(editorTitle);
     editorHeader.appendChild(closeButton);
@@ -271,26 +372,61 @@ export function openConnectionEditor(map, room, mapElement, connectionLayer, zoo
             "connection-editor-connection"
         );
 
-        updateConnectionElement(entry, connectionElement);
+        updateConnectionElement(
+            entry,
+            connectionElement
+        );
 
         connectionElement.addEventListener(
             "click",
             () => {
-                selectConnection(entry, connectionElement);
+                selectConnection(
+                    entry,
+                    connectionElement
+                );
             }
         );
 
         editorContent.appendChild(connectionElement);
+
+        if (
+            selectedConnectionToOpen &&
+            entry.connection === selectedConnectionToOpen
+        ) {
+            initiallySelectedEntry = entry;
+            initiallySelectedElement = connectionElement;
+        }
+
+        if (
+            selectedConnectionToOpen &&
+            entry.connection === selectedConnectionToOpen
+        ) {
+            selectConnection(
+                entry,
+                connectionElement
+            );
+        }
     }
 
     connectionEditor.appendChild(editorContent);
 
     document.body.appendChild(connectionEditor);
 
+    if (
+        initiallySelectedEntry &&
+        initiallySelectedElement
+    ) {
+        selectConnection(
+            initiallySelectedEntry,
+            initiallySelectedElement
+        );
+    }
+
     startConnectionEditorDragging(editorHeader);
 
     console.log(
-        `Opened connection editor for ${room.name}`,
+        "Opened connection editor for",
+        room.name,
         connections
     );
 }
