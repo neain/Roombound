@@ -246,6 +246,7 @@ body {
 /* --- Buttons --- */
 
 .room-editor-buttons {
+    flex-wrap: wrap;
     display: flex;
     justify-content: center;
     gap: 6px;

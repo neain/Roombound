@@ -1027,7 +1027,6 @@ function getSerializableMap() {
             notes: room.notes || "",
             position: { ...room.position },
             size: { ...room.size },
-            textSize: room.textSize || 16,
             editorSize: room.editorSize
                 ? { ...room.editorSize }
                 : { width: 200, height: 300 }
@@ -1102,6 +1101,11 @@ function loadMapFromData(data) {
 
     data.rooms.forEach(room => map.rooms.push(room));
     data.connections.forEach(conn => map.connections.push(conn));
+
+    // Restore the shared room-editor size, or use the default for older maps.
+    map.editorSize = data.editorSize
+        ? { ...data.editorSize }
+        : { width: 400, height: 500 };
 
     // Close any open editors (simple approach for now).
     editors.forEach(el => el.remove());

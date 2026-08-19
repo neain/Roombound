@@ -789,7 +789,7 @@ The development progression was:
 Steps 1–26 are currently working in prototype form.
 Started the polish list.
 Steps 1-4 are currently marked as complete.
-Current Step: 5
+Current Step: 6
 
 
 ### Polish List
@@ -798,9 +798,6 @@ Current Step: 5
 3. Swap the floor-selection arrows.
 4. Make the connection endpoint selection square larger and make it disappear when the connection editor closes.
 5. Resize room names with the room so they remain readable.
-
-HoverExceptions in roomRenderer.js ... best to leave it as is? or invert it because we have FAR more fields that are not user facing than are. factor in how complex the refactor is going to be.
-
 6. Make the default room editor size large enough that nothing is clipped.
 7. Don't close the room editor when saving; add a changed indicator.
 8. Decide what happens to the room editor when editing a connection. Decided: close the room editor if the edit connections button was clicked. Any other way of getting to the connection editor will ignore the room editor as it has been doing.
@@ -836,6 +833,9 @@ HoverExceptions in roomRenderer.js ... best to leave it as is? or invert it beca
 
 * Nail down bugs
 * The URL for the github pages that is hosting the webpage based in github is https://neain.github.io/Roombound/ technicly at index.html, but thats implied.
+
+### Things for codex to decide when re-factoring the entire file
+* HoverExceptions in roomRenderer.js ... best to leave it as is? or invert it because we have FAR more fields that are not user facing than are. factor in how complex the refactor is going to be.
 
 ### Possible Bugs
 * when opening a connection to be edited, its not closing the other connections in the same list (this may end up not being a bug as other polish steps are modifying this list)

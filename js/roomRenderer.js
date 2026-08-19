@@ -319,11 +319,7 @@ export function createRoom(
             width: 5,
             height: 5
         },
-        textSize: DEFAULT_ROOM_TEXT_SIZE,
-        editorSize: {
-            width: 200,
-            height: 300
-        }
+        textSize: DEFAULT_ROOM_TEXT_SIZE
     };
 
     map.rooms.push(room);
@@ -453,10 +449,10 @@ function selectRoom(
         roomEditor.classList.add("room-editor");
 
         roomEditor.style.width =
-            `${room.editorSize.width}px`;
+            `${map.editorSize.width}px`;
 
         roomEditor.style.height =
-            `${room.editorSize.height}px`;
+            `${map.editorSize.height}px`;
 
         // --------------------------------------------------------
         // Editor header
@@ -598,10 +594,10 @@ function selectRoom(
 
     // Every room can remember its preferred editor dimensions.
     roomEditor.style.width =
-        `${room.editorSize.width}px`;
+        `${map.editorSize.width}px`;
 
     roomEditor.style.height =
-        `${room.editorSize.height}px`;
+        `${map.editorSize.height}px`;
 
     updateRoomEditor();
 }
@@ -652,11 +648,11 @@ function saveRoomEditor() {
     selectedRoom.textSize =
         calculateRoomTextSize(selectedRoom);
 
-    selectedRoom.editorSize = {
+    editorContext.map.editorSize = {
         width: roomEditor.offsetWidth,
         height: roomEditor.offsetHeight
     };
-
+    
     isNewRoom = false;
 
     editorPosition = {
