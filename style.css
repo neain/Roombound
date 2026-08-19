@@ -140,10 +140,28 @@ body {
     z-index: 1000;
 }
 
+/* ============================================================
+   EDITOR WINDOWS
+   ============================================================ */
+
+.room-editor,
+.connection-editor {
+    color: black;
+    background: white;
+    border: 1px solid black;
+}
+
+.room-editor-header,
+.connection-editor-header {
+    color: white;
+    background: #333333;
+    border: 1px solid black;
+}
 
 /* ============================================================
    ROOM EDITOR
    ============================================================ */
+
 
 .room-editor-title-group {
     display: flex;
@@ -175,10 +193,6 @@ body {
     flex-direction: column;
 
     z-index: 1001;
-
-    color: black;
-    background: white;
-    border: 1px solid black;
 }
 
 .room-editor-delete {
@@ -192,10 +206,6 @@ body {
 .room-editor-header {
     cursor: move;
     user-select: none;
-
-    color: rgb(0, 0, 0);
-    background: rgb(38, 51, 230);
-    border: 1px solid black;
 
     display: flex;
     align-items: center;
@@ -295,10 +305,6 @@ body {
     flex-direction: column;
 
     z-index: 1001;
-
-    color: black;
-    background: white;
-    border: 1px solid black;
 }
 
 .connection-editor-endpoint-options {
@@ -343,10 +349,6 @@ body {
 .connection-editor-header {
     cursor: move;
     user-select: none;
-
-    color: rgb(0, 0, 0);
-    background: rgb(38, 51, 230);
-    border: 1px solid black;
 
     display: flex;
     align-items: center;

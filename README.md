@@ -789,7 +789,7 @@ The development progression was:
 Steps 1–26 are currently working in prototype form.
 Started the polish list.
 Steps 1-4 are currently marked as complete.
-Current Step: 7
+Current Step: 8
 
 
 ### Polish List
@@ -800,6 +800,8 @@ Current Step: 7
 5. Resize room names with the room so they remain readable.
 6. Make the default room editor size large enough that nothing is clipped.
 7. Don't close the room editor when saving; add a changed indicator.
+* Consolidate editor-window color CSS properties.
+* see how hard it would be to direct the load option at a github/web address
 8. Decide what happens to the room editor when editing a connection. Decided: close the room editor if the edit connections button was clicked. Any other way of getting to the connection editor will ignore the room editor as it has been doing.
 9. Make connection paths clickable to open their editor.
 10. Visually indicate on the map which connection is currently being edited.
@@ -817,7 +819,6 @@ Current Step: 7
 22. Allow rooms to be recolored.
 23. Allow room size/color changes, including resizing via a corner drag.
 24. Allow different room shapes.
-25. Consolidate editor-window color CSS properties.
 26. Save As + smarter Save behavior.
 27. Up/down floor controls in the room context menu.
 28. Remove floor 0, with an option for people who want it.
