@@ -805,6 +805,10 @@ Current Step: 11
 9. Make connection paths clickable to open their editor.
 10. Improve the connection-list interaction instead of repeating the same text/button hierarchy.
 11. Visually indicate on the map which connection is currently being edited.
+* undo step 7* and set the windows to different colors
+* visualy indicate that the current room is being selected. change its color to that of the room editor window bar.
+* visualy indicate that the current connection is being selected. change its color to that of the connection editor window bar.
+
 12. 
 13. Clean up connection-editor sorting/arrows/default ordering.
 14. Don't open the room editor just because a room was moved.
@@ -828,7 +832,11 @@ Current Step: 11
 33. Show looping connections with a looping arrow.
 34. Add in the library that would let the connections avoid rooms.
 
-* options menu items: Change the default color of rooms and room text. change the default size of rooms. change the size of the connection endpoint selector square.
+* options menu items: 
+Change the default color of rooms and room text. 
+change the default size of rooms. 
+change the size of the connection endpoint selector square.
+Change the color of the selected connection / room / endpoint as well as its associated editer window
 
 * add tutorial to web page: GitHub sharing walkthrough
 * add ability to save a map/url combination so you can hand it to a friend and they just load it without any extra work. should just be an export button in the main file list?

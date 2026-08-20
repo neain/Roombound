@@ -213,6 +213,13 @@ body {
     color: white;
     background: #333333;
     border: 1px solid black;
+
+    cursor: move;
+    user-select: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 /* ============================================================
@@ -231,11 +238,11 @@ body {
     font-weight: bold;
 }
 
-.room-editor {
+.room-editor,
+.connection-editor {
     position: fixed;
 
     top: 20px;
-    right: 20px;
 
     width: 300px;
     min-width: 200px;
@@ -252,6 +259,10 @@ body {
     z-index: 1001;
 }
 
+.room-editor {
+    right: 20px;
+}
+
 .room-editor-delete {
     padding: 4px 10px;
     cursor: pointer;
@@ -259,29 +270,6 @@ body {
 }
 
 /* --- Header --- */
-
-.room-editor-header {
-    cursor: move;
-    user-select: none;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.room-editor-close {
-    padding: 0 4px;
-
-    border: none;
-    background: transparent;
-
-    color: #ff0000;
-    font-size: 20px;
-    font-weight: bold;
-
-    cursor: pointer;
-}
-
 
 /* --- Content --- */
 
@@ -344,25 +332,10 @@ body {
    ============================================================ */
 
 .connection-editor {
-    position: fixed;
-
-    top: 20px;
     right: 340px;
-
-    width: 300px;
-    min-width: 200px;
-    min-height: 300px;
-
-    padding: 10px;
-
-    resize: both;
-    overflow: auto;
-
-    display: flex;
-    flex-direction: column;
-
-    z-index: 1001;
 }
+
+
 
 .connection-editor-endpoint-options {
     display: flex;
@@ -403,15 +376,7 @@ body {
 
 /* --- Header --- */
 
-.connection-editor-header {
-    cursor: move;
-    user-select: none;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
+.room-editor-close,
 .connection-editor-close {
     padding: 0 4px;
 
