@@ -211,9 +211,20 @@ body {
 .room-editor-header,
 .connection-editor-header {
     color: white;
-    background: #333333;
     border: 1px solid black;
+}
 
+.room-editor-header {
+    background: #2f5f8f;
+}
+
+.connection-editor-header {
+    background: #367878;
+}
+/* --- Header --- */
+
+.room-editor-header,
+.connection-editor-header {
     cursor: move;
     user-select: none;
 

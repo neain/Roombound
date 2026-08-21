@@ -2,6 +2,10 @@
 // IMPORTS
 // ============================================================
 
+import {
+    getSelectedRoom
+} from "./roomEditor.js";
+
 // Map file saving and loading.
 // CURRENT: saveMap(), loadMap(), loadMapFromUrl(), loadMapFromData()
 // If working on the Roombound JSON file format or file persistence, inspect:
@@ -65,8 +69,7 @@ import {
 //   ./roomRenderer.js
 import {
     renderRooms,
-    createRoom,
-    getSelectedRoom
+    createRoom
 } from "./roomRenderer.js";
 
 // Connection rendering and connection geometry.
