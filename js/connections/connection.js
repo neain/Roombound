@@ -26,7 +26,7 @@ export function createConnection(
         roomB: null,
         roomAConnectionSide: "NONE",
         roomBConnectionSide: null,
-        directionTo: "A",
+        directionTo: "both",
         name: "New Connection"
     };
 
