@@ -236,6 +236,29 @@ body {
 .connection-editor-header {
     background: #367878;
 }
+
+.connection-editor-header {
+    background: #367878;
+}
+
+.connection-selection-highlight {
+    stroke: #367878;
+    stroke-width: 6px;
+    filter: drop-shadow(0 0 3px #367878);
+    animation: connection-selection-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes connection-selection-pulse {
+    0%,
+    100% {
+        opacity: 0.7;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
 /* --- Header --- */
 
 .room-editor-header,

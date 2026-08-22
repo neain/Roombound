@@ -9,6 +9,7 @@
 //
 // CURRENT PUBLIC FUNCTIONS:
 //   openConnectionEditor()
+//   openConnectionEditorForConnections()
 //   createConnection()
 //
 // INTERNAL STATE:
@@ -24,7 +25,7 @@
 //   - Create and manage the main connection editor UI.
 //   - Select connections and connection directions.
 //   - Refresh connection display after changes.
-//   - Handle editor dragging and closing.
+//   - Handle editor closing.
 //   - Provide the state bridge used by specialized connection modules.
 //
 // INTERNAL MODULES:
@@ -45,6 +46,15 @@
 //       Endpoint position and room-range calculations.
 //       CURRENT: getSelectedEndpointRoom()
 //       CURRENT: getSelectedEndpointPoint()
+//
+//   ./connectionEditorUI.js
+//       Connection editor row/control construction.
+//       CURRENT: updateConnectionElement()
+//       CURRENT: getDirectionSymbol()
+//
+//   ./connectionEditorDragging.js
+//       Connection editor dragging behavior.
+//       CURRENT: startConnectionEditorDragging()
 //
 // RELATED MODULES:
 //   ./connectionRenderer.js
@@ -86,6 +96,8 @@ import {
 //   ./connectionRenderer.js
 import {
     renderConnections,
+    setSelectedConnection,
+    clearSelectedConnection,
     setSelectedConnectionEndpoint,
     clearSelectedConnectionEndpoint
 } from "./connectionRenderer.js";
@@ -110,6 +122,17 @@ import {
     getSelectedEndpointRoom,
     getSelectedEndpointPoint
 } from "./connections/connectionGeometry.js";
+
+// Connection editor UI.
+import {
+    updateConnectionElement,
+    getDirectionSymbol
+} from "./connections/connectionEditorUI.js";
+
+// Connection editor dragging.
+import {
+    startConnectionEditorDragging
+} from "./connections/connectionEditorDragging.js";
 
 
 // ============================================================
@@ -302,7 +325,6 @@ function openConnectionEditorWithConnections(
     zoom,
     currentFloor
 ) {
-
     let initiallySelectedEntry = null;
     let initiallySelectedElement = null;
 
@@ -377,7 +399,17 @@ function openConnectionEditorWithConnections(
 
         updateConnectionElement(
             entry,
-            connectionElement
+            connectionElement,
+            {
+                selectConnection,
+                selectConnectionEndpoint: (endpoint) => {
+                    selectConnectionEndpoint(
+                        getEditorState(),
+                        endpoint
+                    );
+                },
+                selectConnectionDirection
+            }
         );
 
         connectionElement.addEventListener(
@@ -424,7 +456,10 @@ function openConnectionEditorWithConnections(
         );
     }
 
-    startConnectionEditorDragging(editorHeader);
+    startConnectionEditorDragging(
+        editorHeader,
+        connectionEditor
+    );
 
     console.log(
         "Opened connection editor for",
@@ -453,6 +488,10 @@ function selectConnection(entry, connectionElement) {
         element: connectionElement
     };
 
+    setSelectedConnection(
+        entry.connection
+    );
+
     selectedEndpoint = null;
 
     clearSelectedConnectionEndpoint();
@@ -465,6 +504,14 @@ function selectConnection(entry, connectionElement) {
         connectionElement.querySelector(
             ".connection-editor-options"
         );
+
+    // Redraw so the newly selected connection receives its visual highlight.
+    renderConnections({
+        map: connectionEditorContext.map,
+        connectionLayer: connectionEditorContext.connectionLayer,
+        zoom: connectionEditorContext.zoom,
+        currentFloor: connectionEditorContext.currentFloor
+    });
 
     console.log("Selected connection:", entry);
 }
@@ -582,161 +629,6 @@ function setConnectionDirection(direction) {
 // CONNECTION DISPLAY
 // ============================================================
 
-// Updates the visible connection controls from the current connection data.
-function updateConnectionElement(entry, connectionElement) {
-    const connection = entry.connection;
-    const roomAName = entry.roomA?.name || "Unconnected";
-    const roomBName = entry.roomB?.name || "Unconnected";
-
-    const roomASide =
-        connection.roomAConnectionSide &&
-        connection.roomAConnectionSide !== "NONE"
-            ? ` (${connection.roomAConnectionSide})`
-            : "";
-
-    const roomBSide =
-        connection.roomBConnectionSide &&
-        connection.roomBConnectionSide !== "NONE"
-            ? ` (${connection.roomBConnectionSide})`
-            : "";
-
-    connectionElement.innerHTML = "";
-
-    connectionOptions = document.createElement("div");
-
-    connectionOptions.classList.add(
-        "connection-editor-options"
-    );
-
-    // Prevent clicks on endpoint/direction controls from
-    // re-selecting the parent connection.
-    connectionOptions.addEventListener(
-        "click",
-        (event) => {
-            event.stopPropagation();
-        }
-    );
-
-    const roomAButton =
-        document.createElement("button");
-
-    roomAButton.textContent =
-        `${roomAName}${roomASide}`;
-
-    roomAButton.classList.add(
-        "connection-editor-endpoint"
-    );
-
-    const directionButton =
-        document.createElement("button");
-
-    directionButton.textContent =
-        getDirectionSymbol(
-            connection.directionTo
-        );
-
-    directionButton.classList.add(
-        "connection-editor-direction"
-    );
-
-    const roomBButton =
-        document.createElement("button");
-
-    roomBButton.textContent =
-        `${roomBSide}${roomBName}`;
-
-    roomBButton.classList.add(
-        "connection-editor-endpoint"
-    );
-
-    roomAButton.addEventListener(
-        "click",
-        (event) => {
-            event.stopPropagation();
-
-            selectedConnection = {
-                entry,
-                element: connectionElement
-            };
-
-            connectionElement.classList.add("selected");
-            connectionOptions =
-                connectionElement.querySelector(
-                    ".connection-editor-options"
-                );
-
-            selectConnectionEndpoint(
-                getEditorState(),
-                "A"
-            );
-        }
-    );
-
-    directionButton.addEventListener(
-        "click",
-        (event) => {
-            event.stopPropagation();
-
-            selectedConnection = {
-                entry,
-                element: connectionElement
-            };
-
-            connectionElement.classList.add("selected");
-            connectionOptions =
-                connectionElement.querySelector(
-                    ".connection-editor-options"
-                );
-
-            selectConnectionDirection();
-        }
-    );
-
-    roomBButton.addEventListener(
-        "click",
-        (event) => {
-            event.stopPropagation();
-
-            selectedConnection = {
-                entry,
-                element: connectionElement
-            };
-
-            connectionElement.classList.add("selected");
-            connectionOptions =
-                connectionElement.querySelector(
-                    ".connection-editor-options"
-                );
-
-            selectConnectionEndpoint(
-                getEditorState(),
-                "B"
-            );
-        }
-    );
-
-    connectionOptions.appendChild(roomAButton);
-    connectionOptions.appendChild(directionButton);
-    connectionOptions.appendChild(roomBButton);
-
-    connectionElement.appendChild(connectionOptions);
-}
-
-
-// Returns the visual direction symbol for a directionTo value.
-function getDirectionSymbol(directionTo) {
-    if (directionTo === "A") {
-        return "←";
-    }
-
-    if (directionTo === "both") {
-        return "↔";
-    }
-
-    return "→";
-}
-
-
 // Refreshes the selected connection's visible text and redraws the map after
 // a connection property changes.
 function refreshSelectedConnection() {
@@ -757,45 +649,21 @@ function refreshSelectedConnection() {
         connection.roomB
     );
 
-    updateConnectionElement(
-        entry,
-        selectedConnection.element
-    );
-
-    // Keep the permanently visible connection controls synchronized with
-    // the current endpoint and direction data.
-    const directionButton =
-        connectionOptions.querySelector(
-            ".connection-editor-direction"
+    connectionOptions =
+        updateConnectionElement(
+            entry,
+            selectedConnection.element,
+            {
+                selectConnection,
+                selectConnectionEndpoint: (endpoint) => {
+                    selectConnectionEndpoint(
+                        getEditorState(),
+                        endpoint
+                    );
+                },
+                selectConnectionDirection
+            }
         );
-
-    directionButton.textContent =
-        getDirectionSymbol(
-            connection.directionTo
-        );
-
-    const endpointButtons =
-        connectionOptions.querySelectorAll(
-            ".connection-editor-endpoint"
-        );
-
-    const roomASide =
-        connection.roomAConnectionSide &&
-        connection.roomAConnectionSide !== "NONE"
-            ? ` (${connection.roomAConnectionSide})`
-            : "";
-
-    const roomBSide =
-        connection.roomBConnectionSide &&
-        connection.roomBConnectionSide !== "NONE"
-            ? ` (${connection.roomBConnectionSide})`
-            : "";
-
-    endpointButtons[0].textContent =
-        `${entry.roomA?.name || "Unconnected"}${roomASide}`;
-
-    endpointButtons[1].textContent =
-        `${roomBSide}${entry.roomB?.name || "Unconnected"}`;
 
     // Keep the side selector synchronized with the currently selected
     // endpoint after the connection data changes.
@@ -829,66 +697,13 @@ function refreshSelectedConnection() {
         }
     }
 
-    // BEGIN EDIT
-    // renderConnections() now expects a mapView object rather than
-    // positional arguments.
+    // renderConnections() expects a mapView object.
     renderConnections({
         map: connectionEditorContext.map,
         connectionLayer: connectionEditorContext.connectionLayer,
         zoom: connectionEditorContext.zoom,
         currentFloor: connectionEditorContext.currentFloor
     });
-    // END EDIT
-}
-
-
-// ============================================================
-// CONNECTION EDITOR DRAGGING
-// ============================================================
-
-// Adds dragging behavior to the connection editor's header.
-function startConnectionEditorDragging(editorHeader) {
-    let startMouseX;
-    let startMouseY;
-    let startEditorX;
-    let startEditorY;
-
-    // Records the mouse/editor positions when the header is grabbed.
-    function startDrag(event) {
-        event.preventDefault();
-
-        startMouseX = event.clientX;
-        startMouseY = event.clientY;
-
-        startEditorX = connectionEditor.offsetLeft;
-        startEditorY = connectionEditor.offsetTop;
-
-        document.addEventListener("mousemove", drag);
-        document.addEventListener("mouseup", stopDrag);
-    }
-
-    // Moves the editor to follow the mouse.
-    function drag(event) {
-        const mouseDeltaX = event.clientX - startMouseX;
-        const mouseDeltaY = event.clientY - startMouseY;
-
-        connectionEditor.style.left =
-            `${startEditorX + mouseDeltaX}px`;
-
-        connectionEditor.style.top =
-            `${startEditorY + mouseDeltaY}px`;
-
-        connectionEditor.style.right = "auto";
-        connectionEditor.style.bottom = "auto";
-    }
-
-    // Removes the temporary drag listeners when the editor is released.
-    function stopDrag() {
-        document.removeEventListener("mousemove", drag);
-        document.removeEventListener("mouseup", stopDrag);
-    }
-
-    editorHeader.addEventListener("mousedown", startDrag);
 }
 
 
@@ -905,19 +720,17 @@ function closeConnectionEditor() {
     connectionEditor.remove();
 
     clearSelectedConnectionEndpoint();
+    clearSelectedConnection();
 
     // Redraw after clearing the endpoint selection so the visual marker
     // disappears from the map immediately.
-    // BEGIN EDIT
-    // renderConnections() now expects a mapView object rather than
-    // positional arguments.
+    // renderConnections() expects a mapView object.
     renderConnections({
         map: connectionEditorContext.map,
         connectionLayer: connectionEditorContext.connectionLayer,
         zoom: connectionEditorContext.zoom,
         currentFloor: connectionEditorContext.currentFloor
     });
-    // END EDIT
 
     connectionEditor = null;
     editedRoom = null;

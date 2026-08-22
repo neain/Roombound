@@ -29,9 +29,26 @@ const arrowSize = 4;
 // CONNECTION RENDERING STATE
 // ============================================================
 
+// The connection currently selected by the connection editor.
+let selectedConnection = null;
+
 // The connection endpoint currently selected by the connection editor.
 let selectedEndpoint = null;
 
+// ============================================================
+// CONNECTION EDITOR CONNECTION SELECTION
+// ============================================================
+
+// Sets the connection currently highlighted by the editor.
+export function setSelectedConnection(connection) {
+    selectedConnection = connection || null;
+}
+
+
+// Clears the currently highlighted connection.
+export function clearSelectedConnection() {
+    selectedConnection = null;
+}
 
 // ============================================================
 // CONNECTION EDITOR ENDPOINT SELECTION
@@ -297,6 +314,30 @@ export function renderConnections(mapView) {
                 );
             }
         }
+
+        // --------------------------------------------------------
+        // Selected connection highlight
+        // --------------------------------------------------------
+        // Draw a wider line underneath the actual connection so the
+        // selection remains clearly defined rather than relying entirely
+        // on a blurred drop shadow.
+        if (selectedConnection === connection) {
+            const highlight = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "line"
+            );
+
+            highlight.setAttribute("x1", roomAPoint.x);
+            highlight.setAttribute("y1", roomAPoint.y);
+            highlight.setAttribute("x2", roomBPoint.x);
+            highlight.setAttribute("y2", roomBPoint.y);
+            highlight.classList.add(
+                "connection-selection-highlight"
+            );
+
+            connectionLayer.appendChild(highlight);
+        }
+
 
         // --------------------------------------------------------
         // Draw the line (full geometry – Option B)
