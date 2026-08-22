@@ -806,20 +806,21 @@ Current Step: 11
 10. Improve the connection-list interaction instead of repeating the same text/button hierarchy.
 11. Visually indicate on the map which connection is currently being edited.
 * undo step 7* and set the windows to different colors
-* visualy indicate that the current room is being selected. change its color to that of the room editor window bar.
-* visualy indicate that the current connection is being selected. change its color to that of the connection editor window bar.
+
+* visualy indicate that the current room is being selected. Dropshadow... maybe add flashing? or blinking?
+* visualy indicate that the current connection is being selected. dropshadow again, maybe also change the connection color to that of the connection editor window bar.
 
 12. 
-13. Clean up connection-editor sorting/arrows/default ordering.
+13. Clean up connection-editor sorting/arrows/default ordering. change default new connection to both instead of one way.
 14. Don't open the room editor just because a room was moved.
 15. Add NONE connection visuals.
-16. Fix NE/NW/SE/SW attachment points.
-17. Add a context menu for new connection creation.
-18. Add the main-map right-click context menu.
-19. Improve how new rooms are created. Add context menu asking for its name and how many connections to add to it.
-20. Reconsider Edit Room button placement. See how two rows look.
+16. Add NE/NW/SE/SW attachment points. ask gpt if there is a good convention, but put them below the current list unless it has a good idea. maybe with a line break?
+17. Add a context window for new connection creation.
+18. Add the main-map right-click context menu. same as the hamburger menu? maybe exactly the same, just wherever the right click happens? (or context sensitive. empty map > new room line break > normal menu)
+19. Improve how new rooms are created. Add context menu asking for its name and how many connections to add to it. maybe set its color? might need to add color to the room data...
+20. 
 21. Double-click blank map space to create a room there.
-22. Allow rooms to be recolored.
+22. Allow rooms to be recolored. maybe just an extra small rainbow button to the right? of the rest of the buttons.
 23. Allow room size/color changes, including resizing via a corner drag.
 24. Allow different room shapes.
 26. Save As + smarter Save behavior.
