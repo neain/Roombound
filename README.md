@@ -806,11 +806,8 @@ Current Step: 11
 10. Improve the connection-list interaction instead of repeating the same text/button hierarchy.
 11. Visually indicate on the map which connection is currently being edited.
 * undo step 7* and set the windows to different colors
-
 * visualy indicate that the current room is being selected. Dropshadow... maybe add flashing? or blinking?
-* visualy indicate that the current connection is being selected. dropshadow again, maybe also change the connection color to that of the connection editor window bar.
-
-12. 
+12. visualy indicate that the current connection is being selected. 
 13. Clean up connection-editor sorting/arrows/default ordering. change default new connection to both instead of one way.
 14. Don't open the room editor just because a room was moved.
 15. Add NONE connection visuals.

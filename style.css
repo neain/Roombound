@@ -95,6 +95,21 @@ body {
     z-index: 1;
 }
 
+.room-selected {
+    animation: room-editor-selection 2s ease-in-out infinite;
+}
+
+@keyframes room-editor-selection {
+    0%,
+    100% {
+        box-shadow: 0 0 0 6px rgba(47, 95, 143, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px rgba(47, 95, 143, 1);
+    }
+}
+
 
 /* --- Connections --- */
 

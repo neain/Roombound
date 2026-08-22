@@ -414,6 +414,14 @@ function closeRoomEditor() {
     roomEditor = null;
     editorContent = null;
     selectedRoom = null;
+
+    renderRooms(
+        editorContext.map,
+        editorContext.mapElement,
+        editorContext.connectionLayer,
+        editorContext.zoom,
+        editorContext.currentFloor
+    );
 }
 
 // Rebuilds the contents of the room editor from the currently selected room.

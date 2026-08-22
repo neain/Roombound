@@ -27,7 +27,7 @@ import { renderConnections } from "./connectionRenderer.js";
 // CURRENT: selectRoom()
 // If changing room editor behavior, inspect:
 //   ./roomEditor.js
-import { selectRoom } from "./roomEditor.js";
+import { getSelectedRoom, selectRoom } from "./roomEditor.js";
 
 
 // ============================================================
@@ -84,6 +84,10 @@ export function renderRooms(
 
         roomElement.classList.add("room");
         roomElement.dataset.roomId = room.roomID;
+
+        if (room === getSelectedRoom()) {
+           roomElement.classList.add("room-selected");
+        }
 
         roomElement.textContent = room.name;
 
@@ -153,6 +157,20 @@ export function renderRooms(
                     connectionLayer,
                     zoom,
                     currentFloor
+                );
+
+                mapElement
+                    .querySelectorAll(".room")
+                    .forEach(
+                        (element) => {
+                            element.classList.remove(
+                                "room-selected"
+                            );
+                        }
+                    );
+
+                roomElement.classList.add(
+                    "room-selected"
                 );
             }
         );
