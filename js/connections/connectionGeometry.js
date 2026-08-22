@@ -176,7 +176,7 @@ export function getSelectedEndpointPoint(
 }
 
 
-// Returns an approximate physical point for a connected room endpoint.
+// Returns the grid-space point for a room's selected attachment position.
 export function getRoomEndpointPoint(
     room,
     side
@@ -216,6 +216,30 @@ export function getRoomEndpointPoint(
             return {
                 x: left,
                 y: top + height / 2
+            };
+
+        case "NE":
+            return {
+                x: left + width,
+                y: top
+            };
+
+        case "NW":
+            return {
+                x: left,
+                y: top
+            };
+
+        case "SE":
+            return {
+                x: left + width,
+                y: top + height
+            };
+
+        case "SW":
+            return {
+                x: left,
+                y: top + height
             };
 
         default:
@@ -269,6 +293,26 @@ export function getFreeEndpointPoint(
 
         case "W":
             endpoint.x -= 3;
+            break;
+
+        case "NE":
+            endpoint.x += 3;
+            endpoint.y -= 3;
+            break;
+
+        case "NW":
+            endpoint.x -= 3;
+            endpoint.y -= 3;
+            break;
+
+        case "SE":
+            endpoint.x += 3;
+            endpoint.y += 3;
+            break;
+
+        case "SW":
+            endpoint.x -= 3;
+            endpoint.y += 3;
             break;
     }
 

@@ -421,6 +421,20 @@ export function createEndpointSideOptions(
             ? connection.roomAConnectionSide
             : connection.roomBConnectionSide;
 
+    // Keep the cardinal attachment points together and visually separate
+    // the four corner attachment points in the same dropdown.
+    const cardinalOptions =
+        document.createElement("optgroup");
+
+    cardinalOptions.label =
+        "Sides";
+
+    const cornerOptions =
+        document.createElement("optgroup");
+
+    cornerOptions.label =
+        "Corners";
+
     for (const side of CONNECTION_SIDES) {
         const option =
             document.createElement("option");
@@ -431,10 +445,20 @@ export function createEndpointSideOptions(
         option.textContent =
             side.label;
 
-        sideSelect.appendChild(
-            option
-        );
+        if (
+            side.value === "NE" ||
+            side.value === "NW" ||
+            side.value === "SE" ||
+            side.value === "SW"
+        ) {
+            cornerOptions.appendChild(option);
+        } else {
+            cardinalOptions.appendChild(option);
+        }
     }
+
+    sideSelect.appendChild(cardinalOptions);
+    sideSelect.appendChild(cornerOptions);
 
     sideSelect.value =
         currentSide || "NONE";

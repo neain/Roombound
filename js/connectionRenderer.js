@@ -648,6 +648,10 @@ export function analyzeConnections(map) {
                 E: [],
                 S: [],
                 W: [],
+                NE: [],
+                NW: [],
+                SE: [],
+                SW: [],
                 NONE: []
             }
         );
@@ -766,6 +770,54 @@ export function getConnectionPoints(
                         )
                 ),
 
+                NE: sides.NE.map(
+                    (_, index) =>
+                        getConnectionPoint(
+                            room,
+                            "NE",
+                            index,
+                            sides.NE.length,
+                            0,
+                            zoom
+                        )
+                ),
+
+                NW: sides.NW.map(
+                    (_, index) =>
+                        getConnectionPoint(
+                            room,
+                            "NW",
+                            index,
+                            sides.NW.length,
+                            0,
+                            zoom
+                        )
+                ),
+
+                SE: sides.SE.map(
+                    (_, index) =>
+                        getConnectionPoint(
+                            room,
+                            "SE",
+                            index,
+                            sides.SE.length,
+                            0,
+                            zoom
+                        )
+                ),
+
+                SW: sides.SW.map(
+                    (_, index) =>
+                        getConnectionPoint(
+                            room,
+                            "SW",
+                            index,
+                            sides.SW.length,
+                            0,
+                            zoom
+                        )
+                ),
+
                 NONE: sides.NONE.map(
                     (_, index) =>
                         getConnectionPoint(room, "NONE",index, sides.NONE.length, 0, zoom)
@@ -814,6 +866,26 @@ function getFreeConnectionPoint(
 
         case "W":
             point.x -= distance;
+            break;
+
+        case "NE":
+            point.x += distance;
+            point.y -= distance;
+            break;
+
+        case "NW":
+            point.x -= distance;
+            point.y -= distance;
+            break;
+
+        case "SE":
+            point.x += distance;
+            point.y += distance;
+            break;
+
+        case "SW":
+            point.x -= distance;
+            point.y += distance;
             break;
     }
 
@@ -891,6 +963,30 @@ export function getConnectionPoint(
             return {
                 x: left + width / 2,
                 y: top + height / 2
+            };
+
+        case "NE":
+            return {
+                x: left + width,
+                y: top
+            };
+
+        case "NW":
+            return {
+                x: left,
+                y: top
+            };
+
+        case "SE":
+            return {
+                x: left + width,
+                y: top + height
+            };
+
+        case "SW":
+            return {
+                x: left,
+                y: top + height
             };
 
         default:

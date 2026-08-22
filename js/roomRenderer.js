@@ -132,10 +132,12 @@ export function renderRooms(
         roomElement.style.fontSize =
             `${(room.textSize ?? 16) * zoom}px`;
 
+        let roomWasDragged = false;
+
         roomElement.addEventListener(
             "mousedown",
             (event) => {
-                startDragging(
+                roomWasDragged = startDragging(
                     event,
                     room,
                     roomElement,
@@ -150,6 +152,11 @@ export function renderRooms(
         roomElement.addEventListener(
             "click",
             () => {
+                if (roomElement.dataset.dragged === "true") {
+                    delete roomElement.dataset.dragged;
+                    return;
+                }
+
                 selectRoom(
                     room,
                     map,
@@ -370,11 +377,13 @@ export function startDragging(
     const startRoomX = room.position.x;
     const startRoomY = room.position.y;
 
-    event.preventDefault();
+    let hasDragged = false;
 
     if (event.button !== 0) {
         return;
     }
+
+    event.preventDefault();
 
     roomTooltip.style.display = "none";
 
@@ -385,6 +394,10 @@ export function startDragging(
 
         const mouseDeltaY =
             event.clientY - startMouseY;
+
+        if (mouseDeltaX !== 0 || mouseDeltaY !== 0) {
+            hasDragged = true;
+        }
 
         const deltaGridX =
             pixelsToGrid(mouseDeltaX, zoom);
@@ -425,6 +438,10 @@ export function startDragging(
             "mouseup",
             stopDragging
         );
+
+        if (hasDragged) {
+            roomElement.dataset.dragged = "true";
+        }
 
         console.log(
             `Moved ${room.name} to`,

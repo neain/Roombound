@@ -61,6 +61,22 @@ export const CONNECTION_SIDES = [
     {
         value: "W",
         label: "West"
+    },
+    {
+        value: "NE",
+        label: "Northeast"
+    },
+    {
+        value: "NW",
+        label: "Northwest"
+    },
+    {
+        value: "SE",
+        label: "Southeast"
+    },
+    {
+        value: "SW",
+        label: "Southwest"
     }
 ];
 
