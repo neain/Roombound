@@ -788,7 +788,7 @@ The development progression was:
 
 Steps 1–26 are currently working in prototype form.
 Started the polish list.
-Current Step: 15
+Current Step: 17
 
 
 ### Polish List
@@ -815,29 +815,34 @@ Current Step: 15
 17. Add a context window for new connection creation.
 18. Add the main-map right-click context menu. same as the hamburger menu? maybe exactly the same, just wherever the right click happens? (or context sensitive. empty map > new room line break > normal menu)
 19. Improve how new rooms are created. Add context menu asking for its name and how many connections to add to it. maybe set its color? might need to add color to the room data...
-20. 
+20. Allow Connections from the room, back to itself and make the line visible.
 21. Double-click blank map space to create a room there.
 22. Allow rooms to be recolored. maybe just an extra small rainbow button to the right? of the rest of the buttons.
-23. Allow room size/color changes, including resizing via a corner drag.
+23. Allow room size changes, including resizing via a corner drag.
 24. Allow different room shapes.
 26. Save As + smarter Save behavior.
 27. Up/down floor controls in the room context menu.
-28. Remove floor 0, with an option for people who want it.
+28. Remove floor 0
 29. Better visualization of rooms on other floors, including stairs.
-30. Make rooms on other floors partially visible / non-selectable.
+30. Make rooms on other floors partially visible / non-selectable? im still not sold on this at all. maybe just rooms connected to the connections to the currently selected room? ask gpt for ideas and options.
 31. Hover information for cross-floor connections.
 32. Multi-select rooms and move them together.
 33. Show looping connections with a looping arrow.
-34. Add in the library that would let the connections avoid rooms.
+34. add support for floors between whole numbers. (ex. floor 2.5, floor 2.25, floor 2.125, etc.) maybe just ensure that all floors are visible when selecting the floor dropdown?
+
+
+45. add options menu. ideas are below
+50. add ability to save a map/url combination so you can hand it to a friend and they just load it without any extra work. should just be an export button in the main file list?
 
 * options menu items: 
 Change the default color of rooms and room text. 
 change the default size of rooms. 
 change the size of the connection endpoint selector square.
 Change the color of the selected connection / room / endpoint as well as its associated editer window
+Give the user the ability to have a floor 0. default is floor 1, floor 2, and floor -1 with nothing in between.
 
 * add tutorial to web page: GitHub sharing walkthrough
-* add ability to save a map/url combination so you can hand it to a friend and they just load it without any extra work. should just be an export button in the main file list?
+
 
 
 * Nail down bugs
@@ -848,7 +853,127 @@ Change the color of the selected connection / room / endpoint as well as its ass
 
 ### Possible Bugs
 * when opening a connection to be edited, its not closing the other connections in the same list (this may end up not being a bug as other polish steps are modifying this list)
----
+
+### Next Version Ideas
+#### Function Explosion  V1.1
+Before beginning the next major connection-system rework, completely refactor
+the JavaScript function architecture into a deliberately layered structure.
+
+The goal is to make individual functions highly isolated while creating clear
+and consistent boundaries between related functionality.
+
+1. Split every function into its own JavaScript file.
+
+2. Group related functions into folders based on their parent functionality.
+   For example, room-related functions would live together in a `rooms/`
+   folder, while connection-related functions would live together in a
+   `connections/` folder.
+
+3. Create a router JavaScript file for each function folder.
+
+4. The router is the public interface for its folder. Functions remain
+   exported from their individual files, but other parts of the program
+   should treat direct access to those files as off-limits.
+
+5. Any code that needs functionality from another folder should access it
+   through that folder's router rather than importing the individual function
+   directly.
+
+6. Keep router files intentionally sparse. Their primary responsibilities
+   should be:
+   - Importing the functions belonging to that system.
+   - Exporting those functions as the system's public interface.
+   - Providing clear comments describing what each function does and when it
+     should be used.
+
+7. `main.js` remains the core of the application. It should communicate with
+   the various systems through their router files rather than reaching into
+   their individual implementation files.
+
+8. Keep the imports in `main.js` well documented. Comments should provide a
+   useful roadmap of what each router/system is responsible for so that the
+   overall architecture can be understood without opening every function.
+
+9. The same principle applies within larger systems. A router should provide
+   the doorway into its group of functions, while the individual functions
+   should focus on one responsibility each.
+
+10. Preserve existing behavior during the refactor. This is an architectural
+    refactor, not a feature change.
+
+11. Routers may own shared state when multiple functions within their system
+    need access to that state. If only one function needs a piece of state,
+    it should remain local to that function or be passed to it as an argument.
+
+    This keeps routers from becoming general-purpose storage containers while
+    still giving related functions a controlled way to share important system
+    state.
+
+The resulting structure should conceptually follow:
+
+    main.js
+        ↓
+    system router
+        ↓
+    individual function
+
+JavaScript technically allows functions to be imported directly from their
+individual files. This is intentional. The router structure is an architectural
+convention rather than a language-enforced restriction.
+
+The purpose is to make the codebase easier to navigate, understand, replace,
+and extend. In particular, this should provide a clean foundation for the
+planned connection-system rework.
+
+This refactor should happen after the current polish list is complete and
+before beginning the next-version connection rework.
+
+#### Connection Endpoint Refactor V1.2
+
+Refactor connections so that endpoints are independent of rooms rather than storing
+room references and attachment sides directly.
+
+1. **Independent Connection Endpoints**
+   - Change connections to store two independent endpoints.
+   - Each endpoint has its own map position.
+   - An endpoint may either be attached to a room connection node or exist freely on
+     the map.
+   - This allows connections to be moved and positioned independently of rooms.
+
+2. **Room Connection Nodes**
+   - Add standard connection nodes to rooms:
+     - N, NE, E, SE, S, SW, W, NW
+   - Nodes should be visually available as attachment targets when editing or moving
+     connection endpoints.
+   - Nodes can remain implicit rather than being stored as separate room data.
+
+3. **Sticky Endpoint Attachment**
+   - Allow a free connection endpoint to be dragged onto a room connection node.
+   - When an endpoint is attached to a node, its position should be derived from the
+     room and node rather than stored independently.
+   - Moving the room therefore moves any attached connection endpoints automatically.
+
+4. **Endpoint Detachment**
+   - Allow an attached endpoint to be dragged away from its room node.
+   - The endpoint becomes a free-floating endpoint and retains its current map position.
+   - This should make it possible to reposition connection endpoints without changing
+     the room itself.
+
+5. **Connection Editor Updates**
+   - Update the connection editor to work with independent endpoints rather than
+     treating the endpoints as properties of Room A and Room B.
+   - Allow each endpoint to be attached, detached, and repositioned independently.
+   - Preserve the existing direction and connection-name editing behavior.
+
+6. **Replace the Existing Connection Format**
+   - The new endpoint model becomes the only supported connection format.
+   - Existing maps using the current room-based connection format do not need to be
+     migrated or supported.
+   - Recreate existing maps as necessary rather than adding compatibility code solely
+     to preserve the old format.
+   - Once Roombound has been released with maps created by other users, future
+     breaking data-model changes should consider backward compatibility or migration
+     support.
 
 ## 14. Initial MVP
 
