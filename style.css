@@ -83,6 +83,10 @@ body {
     z-index: 1;
 }
 
+.room-ghost {
+    opacity: 0.5;
+}
+
 .room-shape {
     position: absolute;
 
@@ -207,6 +211,19 @@ body {
     50% {
         box-shadow: 0 0 0 6px rgba(47, 95, 143, 1);
     }
+}
+
+.room-selection-rectangle {
+    position: absolute;
+    box-sizing: border-box;
+    border: 1px solid #3399ff;
+    background-color: rgba(51, 153, 255, 0.15);
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.room-box-selecting {
+    user-select: none;
 }
 
 

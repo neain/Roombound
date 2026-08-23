@@ -1,39 +1,91 @@
 // ============================================================
-// IMPORTS
+// ROOM RENDERING ROUTER
 // ============================================================
 
-// Shared map/grid utilities.
-// CURRENT: GRID_SIZE, MAP_ORIGIN, gridToPixels(), gridToWorldPixels(),
-//          pixelsToGrid()
-// FUTURE: Additional room-position/grid utilities should come from here
-//         rather than being duplicated in this file.
-// If working on room coordinates, dimensions, or grid conversion, inspect:
-//   ./mapUtils.js
+// Renders every room currently visible on the map.
+//
+// Clears the existing room elements, creates room elements for the current
+// floor, applies the current selection state, and handles ghost rooms when
+// they have been supplied by the connection editor.
+
+// Creates a new temporary room centered on the currently visible portion
+// of the map.
+//
+// The room is passed to the new-room context, which determines whether the
+// room is ultimately added to the map.
+
+// Deletes a room from the map and removes any connections that reference it.
+//
+// Redraws the affected rooms and connections after the deletion.
+
+// Moves a room while the left mouse button is held down.
+//
+// Converts mouse movement into grid movement, updates the room's stored
+// position, updates its visible position, and redraws affected connections.
+
+// Resizes a room while its resize handle is dragged.
+//
+// Converts mouse movement into grid dimensions, updates the room's stored
+// size, updates its visible size, and redraws affected connections.
 import {
-    GRID_SIZE,
-    MAP_ORIGIN,
-    gridToPixels,
-    gridToWorldPixels,
-    pixelsToGrid
-} from "./mapUtils.js";
+    renderGhostRooms as renderGhostRoomsImpl
+} from "./roomRendering/renderGhostRooms.js";
 
-// Connection rendering and connection geometry.
-// CURRENT: renderConnections()
-// If changing how room movement/creation/deletion affects connections, inspect:
-//   ./connectionRenderer.js
-import { renderConnections } from "./connectionRenderer.js";
+import {
+    renderRooms as renderRoomsImpl
+} from "./roomRendering/renderRooms.js";
 
-// Room editor.
-// CURRENT: selectRoom()
-// If changing how room rendering/selection affects the room editor, inspect:
-//   ./roomEditor.js
-import { getSelectedRoom, selectRoom } from "./roomEditor.js";
+import {
+    createRoom as createRoomImpl
+} from "./roomRendering/createRoom.js";
 
-// New room creation context.
-// CURRENT: openNewRoomContext()
-// If changing the new-room creation workflow, inspect:
-//   ./newRoomContext.js
-import { openNewRoomContext } from "./newRoomContext.js";
+import {
+    deleteRoom as deleteRoomImpl
+} from "./roomRendering/deleteRoom.js";
+
+import {
+    startDragging as startDraggingImpl
+} from "./roomRendering/startDragging.js";
+
+import {
+    startResizing as startResizingImpl
+} from "./roomRendering/startResizing.js";
+
+import {
+    createRoomElement as createRoomElementImpl
+} from "./roomRendering/createRoomElement.js";
+
+// =================================================================================================
+// TEMPORARY!!!
+// =================================================================================================
+import {
+    selectRoom as selectRoomImpl,
+    addRoomToSelection as addRoomToSelectionImpl,
+    removeRoomFromSelection as removeRoomFromSelectionImpl,
+    clearRoomSelection as clearRoomSelectionImpl,
+    isRoomSelected as isRoomSelectedImpl,
+    getSelectedRooms as getSelectedRoomsImpl,
+    startBoxSelection as startBoxSelectionImpl
+} from "./roomRendering/roomSelection.js";
+
+// ============================================================
+// ROOM RENDERING HELPERS
+// ============================================================
+
+// Sets the rooms that should remain visible as ghosts while the connection
+// editor is open.
+//
+// Ghost rooms remain visible regardless of the current floor.
+
+// Clears the rooms currently being displayed as ghosts.
+
+// Builds the information displayed in the room tooltip.
+//
+// Internal room properties listed in hoverExceptions are excluded so the
+// tooltip only displays normal room information.
+import {
+    getRoomHoverInfo as getRoomHoverInfoImpl
+} from "./roomRendering/rendererHelper.js";
 
 // ============================================================
 // ROOM STATE
@@ -41,7 +93,7 @@ import { openNewRoomContext } from "./newRoomContext.js";
 
 // Room properties that should not be displayed in the room tooltip or editor.
 // These are structural/internal properties rather than normal room details.
-const hoverExceptions = [
+export const hoverExceptions = [
     "roomID",
     "connections",
     "position",
@@ -50,533 +102,98 @@ const hoverExceptions = [
     "textSize"
 ];
 
+// Rooms that should remain visible while the connection editor is open,
+// even when they are on another floor.
+export let ghostRooms = null;
+
+
+// Sets the rooms that should remain visible while the connection editor is
+// open, regardless of their floor.
+export function setGhostRooms(rooms) {
+    ghostRooms = rooms || null;
+}
+
+// Clears the rooms currently being displayed as ghosts.
+export function clearGhostRooms() {
+    ghostRooms = null;
+}
+
 // Shared tooltip used when hovering over rooms.
-const roomTooltip = document.createElement("div");
-
+export const roomTooltip = document.createElement("div");
 
 // ============================================================
-// ROOM RENDERING
+// ROOM RENDERING ROUTER
 // ============================================================
 
-// Removes the current room elements and redraws every room in the map.
-//
-// The room data itself is not modified here. This function only converts the
-// current map data into visible room elements.
-export function renderRooms(
-    map,
-    mapElement,
-    connectionLayer,
-    zoom,
-    currentFloor
-) {
-    if (!roomTooltip.parentElement) {
-        roomTooltip.classList.add("room-tooltip");
-        mapElement.appendChild(roomTooltip);
-    }
-
-    // Rendering is currently done by rebuilding the room elements from the
-    // map data. This keeps the displayed rooms synchronized with the data.
-    mapElement.querySelectorAll(".room").forEach(
-        (roomElement) => roomElement.remove()
-    );
-
-    for (const room of map.rooms) {
-        const roomElement = document.createElement("div");
-        const roomShape = document.createElement("div");
-        const resizeHandle = document.createElement("div");
-
-        if (room.floor !== currentFloor) {
-            continue;
-        }
-
-        roomElement.classList.add("room");
-        roomElement.dataset.roomId = room.roomID;
-
-        roomShape.classList.add(
-            "room-shape",
-            `room-shape-${room.shape || "rectangle"}`
-        );
-
-        if (room.color) {
-            roomShape.style.backgroundColor =
-                room.color;
-        }
-
-        if (room === getSelectedRoom()) {
-            roomElement.classList.add("room-selected");
-        }
-
-        roomShape.textContent = room.name;
-
-        roomElement.appendChild(roomShape);
-
-        resizeHandle.classList.add(
-            "room-resize-handle"
-        );
-
-        resizeHandle.addEventListener(
-            "mousedown",
-            (event) => {
-                event.stopPropagation();
-
-                startResizing(
-                    event,
-                    room,
-                    roomElement,
-                    map,
-                    connectionLayer,
-                    zoom,
-                    currentFloor
-                );
-            }
-        );
-
-        roomElement.appendChild(
-            resizeHandle
-        );
-
-        roomElement.addEventListener(
-            "mouseenter",
-            (event) => {
-                roomTooltip.textContent = getRoomHoverInfo(room);
-
-                roomTooltip.style.left =
-                    `${event.clientX + 10}px`;
-
-                roomTooltip.style.top =
-                    `${event.clientY + 10}px`;
-
-                roomTooltip.style.display = "block";
-            }
-        );
-
-        roomElement.addEventListener(
-            "mouseleave",
-            () => {
-                roomTooltip.style.display = "none";
-            }
-        );
-
-        // Position and size are stored in grid coordinates but displayed in
-        // world pixels, with the current zoom applied.
-        roomElement.style.left =
-            `${gridToWorldPixels(room.position.x, zoom)}px`;
-
-        roomElement.style.top =
-            `${gridToWorldPixels(room.position.y, zoom)}px`;
-
-        roomElement.style.width =
-            `${gridToPixels(room.size.width, zoom)}px`;
-
-        roomElement.style.height =
-            `${gridToPixels(room.size.height, zoom)}px`;
-
-        // Older maps may not have a stored text size yet. Those rooms use the
-        // default size until they are saved again.
-        roomShape.style.fontSize =
-            `${(room.textSize ?? 16) * zoom}px`;
-
-        let roomWasDragged = false;
-
-        roomElement.addEventListener(
-            "mousedown",
-            (event) => {
-                roomWasDragged = startDragging(
-                    event,
-                    room,
-                    roomElement,
-                    map,
-                    connectionLayer,
-                    zoom,
-                    currentFloor
-                );
-            }
-        );
-
-        roomElement.addEventListener(
-            "click",
-            () => {
-                if (roomElement.dataset.dragged === "true") {
-                    delete roomElement.dataset.dragged;
-                    return;
-                }
-
-                selectRoom(
-                    room,
-                    map,
-                    mapElement,
-                    connectionLayer,
-                    zoom,
-                    currentFloor
-                );
-
-                mapElement
-                    .querySelectorAll(".room")
-                    .forEach(
-                        (element) => {
-                            element.classList.remove(
-                                "room-selected"
-                            );
-                        }
-                    );
-
-                roomElement.classList.add(
-                    "room-selected"
-                );
-            }
-        );
-
-        mapElement.appendChild(roomElement);
-    }
+// Routes requests to render every visible room on the map.
+export function renderRooms(...args) {
+    return renderRoomsImpl(...args);
 }
 
-
-// ============================================================
-// ROOM CREATION / DELETION
-// ============================================================
-
-// Creates a new room centered on the currently visible portion of the map.
-//
-// The room is created as temporary data and passed to the new-room context.
-// It is not added to the map until the user presses Create.
-export function createRoom(
-    map,
-    mapElement,
-    connectionLayer,
-    zoom,
-    currentFloor
-) {
-    let highestRoomNumber = 0;
-    let roomNumber;
-    let centerX;
-    let centerY;
-    let worldX;
-    let worldY;
-    let room;
-
-    for (const room of map.rooms) {
-        const match = room.roomID.match(/^room_(\d+)$/);
-
-        if (!match) {
-            continue;
-        }
-
-        highestRoomNumber =
-            Math.max(
-                highestRoomNumber,
-                Number(match[1])
-            );
-    }
-
-    roomNumber =
-        String(highestRoomNumber + 1).padStart(3, "0");
-
-    // Determine the center of the currently visible map area.
-    centerX =
-        mapElement.scrollLeft +
-        mapElement.clientWidth / 2;
-
-    centerY =
-        mapElement.scrollTop +
-        mapElement.clientHeight / 2;
-
-    // Convert that screen position back into map grid coordinates.
-    worldX =
-        (centerX - MAP_ORIGIN * zoom) /
-        (GRID_SIZE * zoom);
-
-    worldY =
-        (centerY - MAP_ORIGIN * zoom) /
-        (GRID_SIZE * zoom);
-
-    // Create the room as temporary data. The new-room context decides whether
-    // this room is eventually added to the map.
-    room = {
-        roomID: `room_${roomNumber}`,
-        name: "New Room",
-        floor: currentFloor,
-        notes: "",
-        connections: [],
-        position: {
-            x: Math.round(worldX - 2.5),
-            y: Math.round(worldY - 2.5)
-        },
-        size: {
-            width: 5,
-            height: 5
-        },
-        textSize: 16
-    };
-
-    openNewRoomContext({
-        map,
-        room,
-        mapElement,
-        connectionLayer,
-        zoom,
-        currentFloor
-    });
+// Routes requests to create a new temporary room.
+export function createRoom(...args) {
+    return createRoomImpl(...args);
 }
 
-// Deletes a room from the map by ID and removes any connections that
-// reference it. Then redraws the affected map elements.
-//
-// If the requested room does not exist, nothing happens.
-export function deleteRoom(
-    map,
-    roomID,
-    mapElement,
-    connectionLayer,
-    zoom,
-    currentFloor
-) {
-    const roomIndex = map.rooms.findIndex(
-        (room) => room.roomID === roomID
-    );
-
-    if (roomIndex === -1) {
-        return;
-    }
-
-    // Remove the room.
-    map.rooms.splice(roomIndex, 1);
-
-    // Remove every connection that points to this room
-    // (either as roomA or roomB).
-    map.connections = map.connections.filter(
-        (conn) => conn.roomA !== roomID && conn.roomB !== roomID
-    );
-
-    renderRooms(
-        map,
-        mapElement,
-        connectionLayer,
-        zoom,
-        currentFloor
-    );
-
-    renderConnections({
-        map,
-        connectionLayer,
-        zoom,
-        currentFloor
-    });
+// Routes requests to delete a room and its associated connections.
+export function deleteRoom(...args) {
+    return deleteRoomImpl(...args);
 }
 
-
-// ============================================================
-// ROOM TOOLTIP
-// ============================================================
-
-// Builds the information shown when the mouse hovers over a room.
-//
-// Internal/structural room properties listed in hoverExceptions are omitted.
-function getRoomHoverInfo(room) {
-    return Object.entries(room)
-        .filter(([key]) => !hoverExceptions.includes(key))
-        .map(([key, value]) => `${key}: ${value}`)
-        .join("\n");
+// Routes requests to begin dragging a room.
+export function startDragging(...args) {
+    return startDraggingImpl(...args);
 }
 
-
-// ============================================================
-// ROOM DRAGGING
-// ============================================================
-
-// Moves a room while the left mouse button is held down.
-//
-// The room's position remains stored in grid coordinates. Mouse movement is
-// converted into grid movement so rooms continue to snap to the grid.
-export function startDragging(
-    event,
-    room,
-    roomElement,
-    map,
-    connectionLayer,
-    zoom,
-    currentFloor
-) {
-    const startMouseX = event.clientX;
-    const startMouseY = event.clientY;
-    const startRoomX = room.position.x;
-    const startRoomY = room.position.y;
-
-    let hasDragged = false;
-
-    if (event.button !== 0) {
-        return;
-    }
-
-    event.preventDefault();
-
-    roomTooltip.style.display = "none";
-
-    // Updates the room position while the mouse is moving.
-    function drag(event) {
-        const mouseDeltaX =
-            event.clientX - startMouseX;
-
-        const mouseDeltaY =
-            event.clientY - startMouseY;
-
-        if (mouseDeltaX !== 0 || mouseDeltaY !== 0) {
-            hasDragged = true;
-        }
-
-        const deltaGridX =
-            pixelsToGrid(mouseDeltaX, zoom);
-
-        const deltaGridY =
-            pixelsToGrid(mouseDeltaY, zoom);
-
-        room.position.x =
-            startRoomX + deltaGridX;
-
-        room.position.y =
-            startRoomY + deltaGridY;
-
-        roomElement.style.left =
-            `${gridToWorldPixels(room.position.x, zoom)}px`;
-
-        roomElement.style.top =
-            `${gridToWorldPixels(room.position.y, zoom)}px`;
-
-        // Connections depend on room positions, so they need to be redrawn
-        // while the room is being moved.
-        renderConnections({
-            map,
-            connectionLayer,
-            zoom,
-            currentFloor
-        });
-    }
-
-    // Removes the temporary mouse listeners when dragging ends.
-    function stopDragging() {
-        document.removeEventListener(
-            "mousemove",
-            drag
-        );
-
-        document.removeEventListener(
-            "mouseup",
-            stopDragging
-        );
-
-        if (hasDragged) {
-            roomElement.dataset.dragged = "true";
-        }
-
-        console.log(
-            `Moved ${room.name} to`,
-            room.position
-        );
-    }
-
-    document.addEventListener(
-        "mousemove",
-        drag
-    );
-
-    document.addEventListener(
-        "mouseup",
-        stopDragging
-    );
+// Routes requests to begin resizing a room.
+export function startResizing(...args) {
+    return startResizingImpl(...args);
 }
 
-// Resizes a room while the bottom-right resize handle is dragged.
-//
-// The room's top-left position remains fixed. Width and height are stored in
-// grid coordinates and snap to whole grid units.
-export function startResizing(
-    event,
-    room,
-    roomElement,
-    map,
-    connectionLayer,
-    zoom,
-    currentFloor
-) {
-    const startMouseX = event.clientX;
-    const startMouseY = event.clientY;
-    const startWidth = room.size.width;
-    const startHeight = room.size.height;
+// Routes requests to create the visible DOM element for a room.
+export function createRoomElement(...args) {
+    return createRoomElementImpl(...args);
+}
 
-    if (event.button !== 0) {
-        return;
-    }
+// Routes requests to render ghost rooms supplied by the connection editor.
+export function renderGhostRooms(...args) {
+    return renderGhostRoomsImpl(...args);
+}
 
-    event.preventDefault();
+export function selectRoom(...args) {
+    return selectRoomImpl(...args);
+}
 
-    roomTooltip.style.display = "none";
+export function addRoomToSelection(...args) {
+    return addRoomToSelectionImpl(...args);
+}
 
-    // Updates the room size while the mouse is moving.
-    function resize(event) {
-        const mouseDeltaX =
-            event.clientX - startMouseX;
+export function removeRoomFromSelection(...args) {
+    return removeRoomFromSelectionImpl(...args);
+}
 
-        const mouseDeltaY =
-            event.clientY - startMouseY;
+export function clearRoomSelection(...args) {
+    return clearRoomSelectionImpl(...args);
+}
 
-        const deltaGridX =
-            pixelsToGrid(mouseDeltaX, zoom);
+export function isRoomSelected(...args) {
+    return isRoomSelectedImpl(...args);
+}
 
-        const deltaGridY =
-            pixelsToGrid(mouseDeltaY, zoom);
+export function getSelectedRooms(...args) {
+    return getSelectedRoomsImpl(...args);
+}
 
-        room.size.width =
-            Math.max(
-                1,
-                startWidth + deltaGridX
-            );
+// Routes requests to begin room box selection.
+export function startBoxSelection(...args) {
+    return startBoxSelectionImpl(...args);
+}
 
-        room.size.height =
-            Math.max(
-                1,
-                startHeight + deltaGridY
-            );
+// ============================================================
+// ROOM RENDERING HELPERS
+// ============================================================
 
-        roomElement.style.width =
-            `${gridToPixels(room.size.width, zoom)}px`;
-
-        roomElement.style.height =
-            `${gridToPixels(room.size.height, zoom)}px`;
-
-        // Connections can depend on the room's dimensions, so redraw them
-        // while the room is being resized.
-        renderConnections({
-            map,
-            connectionLayer,
-            zoom,
-            currentFloor
-        });
-    }
-
-    // Removes the temporary mouse listeners when resizing ends.
-    function stopResizing() {
-        document.removeEventListener(
-            "mousemove",
-            resize
-        );
-
-        document.removeEventListener(
-            "mouseup",
-            stopResizing
-        );
-
-        console.log(
-            `Resized ${room.name} to`,
-            room.size
-        );
-    }
-
-    document.addEventListener(
-        "mousemove",
-        resize
-    );
-
-    document.addEventListener(
-        "mouseup",
-        stopResizing
-    );
+// Routes requests to build the information displayed in a room tooltip.
+export function getRoomHoverInfo(...args) {
+    return getRoomHoverInfoImpl(...args);
 }

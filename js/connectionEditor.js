@@ -98,7 +98,6 @@ import {
     renderConnections,
     setSelectedConnection,
     clearSelectedConnection,
-    setSelectedConnectionEndpoint,
     clearSelectedConnectionEndpoint
 } from "./connectionRenderer.js";
 
@@ -109,29 +108,30 @@ import {
 // Connection endpoint editing.
 import {
     selectConnectionEndpoint,
-    createEndpointOptions,
-    setConnectionEndpointRoom,
     createEndpointSideOptions,
-    setConnectionEndpointSide,
     removeConnectionContextOptions
 } from "./connections/connectionEndpoints.js";
 
 // Connection geometry and endpoint positioning.
 import {
-    getSelectedEndpointRoom,
-    getSelectedEndpointPoint
+    getSelectedEndpointRoom
 } from "./connections/connectionGeometry.js";
 
 // Connection editor UI.
 import {
-    updateConnectionElement,
-    getDirectionSymbol
+    updateConnectionElement
 } from "./connections/connectionEditorUI.js";
 
 // Connection editor dragging.
 import {
     startConnectionEditorDragging
 } from "./connections/connectionEditorDragging.js";
+
+import {
+    renderRooms,
+    setGhostRooms,
+    clearGhostRooms
+} from "./roomRenderer.js";
 
 
 // ============================================================
@@ -339,6 +339,34 @@ function openConnectionEditorWithConnections(
     };
 
     editedRoom = room;
+
+    // Keep every room involved in the displayed connections visible while
+    // the connection editor is open, regardless of floor.
+    const ghostRoomSet = new Set();
+
+    ghostRoomSet.add(room);
+
+    for (const entry of connections) {
+        if (entry.roomA) {
+            ghostRoomSet.add(entry.roomA);
+        }
+
+        if (entry.roomB) {
+            ghostRoomSet.add(entry.roomB);
+        }
+    }
+
+    setGhostRooms(
+        [...ghostRoomSet]
+    );
+
+    renderRooms(
+        map,
+        mapElement,
+        connectionLayer,
+        zoom,
+        currentFloor
+    );
 
     if (connectionEditor) {
         connectionEditor.remove();
@@ -760,7 +788,17 @@ function closeConnectionEditor() {
         return;
     }
 
+    clearGhostRooms();
+
     connectionEditor.remove();
+
+    renderRooms(
+        connectionEditorContext.map,
+        connectionEditorContext.mapElement,
+        connectionEditorContext.connectionLayer,
+        connectionEditorContext.zoom,
+        connectionEditorContext.currentFloor
+    );
 
     if (closeEditorClickHandler) {
         connectionEditorContext.mapElement.removeEventListener(

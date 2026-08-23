@@ -37,9 +37,18 @@ import {
 
 // Room selection without opening the room editor.
 import {
-    selectRoomWithoutEditor
+    selectRoomWithoutEditor,
+    openRoomEditor
 } from "./roomEditor.js";
 
+import {
+} from "./roomRenderer.js";
+
+import {
+    clearRoomSelection,
+    startBoxSelection,
+    getSelectedRooms
+} from "./roomRenderer.js";
 
 // ============================================================
 // MAP INTERACTION
@@ -63,8 +72,9 @@ export function initializeMapInteractions({
     let panStartY;
     let scrollStartX;
     let scrollStartY;
-
     let contextMenu = null;
+
+    let boxSelectionState = {dragged: false};
 
 
     // ========================================================
@@ -98,6 +108,67 @@ export function initializeMapInteractions({
             document.createElement("button");
 
         if (room) {
+            const openRoomEditorMenuButton =
+                document.createElement("button");
+
+            const newConnectionMenuButton =
+                document.createElement("button");
+
+            openRoomEditorMenuButton.classList.add(
+                "menu-item"
+            );
+
+            openRoomEditorMenuButton.textContent =
+                "Open Room Editor";
+
+            openRoomEditorMenuButton.addEventListener(
+                "click",
+                () => {
+                    closeContextMenu();
+
+                    openRoomEditor(
+                        room,
+                        map,
+                        mapElement,
+                        mapView.connectionLayer,
+                        mapView.zoom,
+                        mapView.currentFloor
+                    );
+                }
+            );
+
+            contextMenu.appendChild(
+                openRoomEditorMenuButton
+            );
+
+            const selectedRooms =
+                getSelectedRooms();
+
+            if (selectedRooms.length >= 2) {
+                const editSelectedRoomsMenuButton =
+                    document.createElement("button");
+
+                editSelectedRoomsMenuButton.classList.add(
+                    "menu-item"
+                );
+
+                editSelectedRoomsMenuButton.textContent =
+                    "Edit Selected Rooms";
+
+                editSelectedRoomsMenuButton.addEventListener(
+                    "click",
+                    () => {
+                        closeContextMenu();
+
+                        // Multi-room editor will be implemented here.
+                    }
+                );
+
+                contextMenu.appendChild(
+                    editSelectedRoomsMenuButton
+                );
+            }
+
             newConnectionMenuButton.classList.add(
                 "menu-item"
             );
@@ -121,6 +192,7 @@ export function initializeMapInteractions({
                 newConnectionMenuButton
             );
         } else {
+
             newRoomMenuButton.classList.add(
                 "menu-item"
             );
@@ -191,17 +263,37 @@ export function initializeMapInteractions({
                     return;
                 }
 
-                // Right-clicking a room selects it without opening the editor.
-                selectRoomWithoutEditor(room);
+                // Right-clicking an already-selected room preserves the current
+                // selection. Right-clicking an unselected room starts a new
+                // single-room selection.
+                const selectedRooms =
+                    getSelectedRooms();
 
-                // Refresh room rendering so the selection highlight appears.
+                if (!selectedRooms.includes(room)) {
+                    selectRoomWithoutEditor(room);
+                }
+
+                // Refresh room rendering so the current selection highlights
+                // are reflected visually.
+                const currentSelectedRooms =
+                    getSelectedRooms();
+
                 mapElement
                     .querySelectorAll(".room")
                     .forEach(
                         (element) => {
+                            const elementRoom =
+                                map.rooms.find(
+                                    (candidate) =>
+                                        candidate.roomID ===
+                                        element.dataset.roomId
+                                );
+
                             element.classList.toggle(
                                 "room-selected",
-                                element === roomElement
+                                currentSelectedRooms.includes(
+                                    elementRoom
+                                )
                             );
                         }
                     );
@@ -234,12 +326,12 @@ export function initializeMapInteractions({
                     x: clickX,
                     y: clickY
                 }
-            );        
+            );
         }
     );
 
-    // Double-clicking empty map space starts new-room creation at the
-    // clicked map position.
+    // Double-clicking a room opens the editor for that specific room.
+    // Double-clicking empty map space starts new-room creation.
     mapElement.addEventListener(
         "dblclick",
         (event) => {
@@ -247,6 +339,28 @@ export function initializeMapInteractions({
                 event.target.closest?.(".room");
 
             if (roomElement) {
+                const roomID =
+                    roomElement.dataset.roomId;
+
+                const room =
+                    map.rooms.find(
+                        (candidate) =>
+                            candidate.roomID === roomID
+                    );
+
+                if (!room) {
+                    return;
+                }
+
+                openRoomEditor(
+                    room,
+                    map,
+                    mapElement,
+                    mapView.connectionLayer,
+                    mapView.zoom,
+                    mapView.currentFloor
+                );
+
                 return;
             }
 
@@ -278,6 +392,39 @@ export function initializeMapInteractions({
     );
 
     // ========================================================
+    // ROOM BOX SELECTION
+    // ========================================================
+
+    // Begin a potential room-selection box when the left mouse button is
+    // pressed over empty map space.
+    mapElement.addEventListener(
+        "mousedown",
+        (event) => {
+            if (event.button !== 0) {
+                return;
+            }
+
+            if (
+                event.target.closest &&
+                event.target.closest(".room")
+            ) {
+                return;
+            }
+
+            boxSelectionState.dragged = false;
+
+            startBoxSelection(
+                event,
+                map,
+                mapElement,
+                mapView.zoom,
+                mapView.currentFloor,
+                boxSelectionState
+            );
+        }
+    );
+
+    // ========================================================
     // MAP CLICK
     // ========================================================
 
@@ -287,6 +434,12 @@ export function initializeMapInteractions({
     mapElement.addEventListener(
         "click",
         (event) => {
+
+            if (boxSelectionState.dragged) {
+                boxSelectionState.dragged = false;
+                return;
+            }
+
             closeContextMenu();
 
             const mapRect =
@@ -354,6 +507,22 @@ export function initializeMapInteractions({
                 );
 
             if (connections.length === 0) {
+                // Normal empty-map clicks clear the room selection.
+                // Shift-click preserves the current selection.
+                if (!event.shiftKey) {
+                    clearRoomSelection();
+
+                    mapElement
+                        .querySelectorAll(".room-selected")
+                        .forEach(
+                            (element) => {
+                                element.classList.remove(
+                                    "room-selected"
+                                );
+                            }
+                        );
+                }
+
                 const editor =
                     document.querySelector(".room-editor");
 
@@ -406,6 +575,37 @@ export function initializeMapInteractions({
         { passive: false }
     );
 
+    // ========================================================
+    // ROOM BOX SELECTION
+    // ========================================================
+
+    // Begin a potential room-selection box when the left mouse button is
+    // pressed over empty map space. The box itself is only created once the
+    // pointer moves far enough to count as a drag.
+    mapElement.addEventListener(
+        "mousedown",
+        (event) => {
+            if (event.button !== 0) {
+                return;
+            }
+
+            if (
+                event.target.closest &&
+                event.target.closest(".room")
+            ) {
+                return;
+            }
+
+            startBoxSelection(
+                event,
+                map,
+                mapElement,
+                mapView.zoom,
+                mapView.currentFloor,
+                boxSelectionState
+            );
+        }
+    );
 
     // ========================================================
     // MAP PANNING
@@ -413,54 +613,54 @@ export function initializeMapInteractions({
 
     // Begin panning when the right mouse button is pressed over empty map
     // space. Right-clicking a room is reserved for the context menu.
-mapElement.addEventListener(
-    "mousedown",
-    (event) => {
-        if (event.button !== 2) {
-            return;
+    mapElement.addEventListener(
+        "mousedown",
+        (event) => {
+            if (event.button !== 2) {
+                return;
+            }
+
+            isPanning = true;
+            hasPanned = false;
+
+            panStartX = event.clientX;
+            panStartY = event.clientY;
+
+            scrollStartX = mapElement.scrollLeft;
+            scrollStartY = mapElement.scrollTop;
         }
-
-        isPanning = true;
-        hasPanned = false;
-
-        panStartX = event.clientX;
-        panStartY = event.clientY;
-
-        scrollStartX = mapElement.scrollLeft;
-        scrollStartY = mapElement.scrollTop;
-    }
-);
+    );
 
     // Move the map viewport while right-click panning is active.
-document.addEventListener(
-    "mousemove",
-    (event) => {
-        if (!isPanning) {
-            return;
+    document.addEventListener(
+        "mousemove",
+        (event) => {
+            if (!isPanning) {
+                return;
+            }
+
+            const mouseDeltaX =
+                event.clientX - panStartX;
+
+            const mouseDeltaY =
+                event.clientY - panStartY;
+
+            if (
+                Math.abs(mouseDeltaX) > 3 ||
+                Math.abs(mouseDeltaY) > 3
+            ) {
+                hasPanned = true;
+            }
+
+            mapElement.scrollLeft =
+                scrollStartX -
+                mouseDeltaX;
+
+            mapElement.scrollTop =
+                scrollStartY -
+                mouseDeltaY;
         }
-
-        const mouseDeltaX =
-            event.clientX - panStartX;
-
-        const mouseDeltaY =
-            event.clientY - panStartY;
-
-        if (
-            Math.abs(mouseDeltaX) > 3 ||
-            Math.abs(mouseDeltaY) > 3
-        ) {
-            hasPanned = true;
-        }
-
-        mapElement.scrollLeft =
-            scrollStartX -
-            mouseDeltaX;
-
-        mapElement.scrollTop =
-            scrollStartY -
-            mouseDeltaY;
-    }
-);
+    );
 
     // Stop panning when the right mouse button is released.
     document.addEventListener(

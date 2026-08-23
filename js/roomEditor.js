@@ -72,12 +72,11 @@ export function selectRoomWithoutEditor(room) {
     selectedRoom = room;
 }
 
-// Selects a room and opens or updates the room editor for it.
+// Opens the room editor for a specific room.
 //
-// The editor keeps a reference to the selected room rather than creating a
-// separate copy. Save/Cancel behavior is therefore handled by the editor's
-// existing state and lifecycle.
-export function selectRoom(
+// This is intentionally separate from room selection so selecting a room does
+// not implicitly open its editor.
+export function openRoomEditor(
     room,
     map,
     mapElement,
@@ -99,7 +98,7 @@ export function selectRoom(
         currentFloor
     };
 
-    // Create the editor the first time a room is selected.
+    // Create the editor the first time a room is opened.
     if (!roomEditor) {
         const editorHeader = document.createElement("div");
         const editorTitleGroup = document.createElement("div");
@@ -319,6 +318,30 @@ export function selectRoom(
 
     setEditorChanged(false);
     updateRoomEditor();
+}
+
+// Selects a room and opens or updates the room editor for it.
+//
+// This remains as a compatibility wrapper for existing room-creation code.
+// Normal room selection remains separate from opening the editor.
+export function selectRoom(
+    room,
+    map,
+    mapElement,
+    connectionLayer,
+    zoom,
+    currentFloor,
+    newRoom = false
+) {
+    openRoomEditor(
+        room,
+        map,
+        mapElement,
+        connectionLayer,
+        zoom,
+        currentFloor,
+        newRoom
+    );
 }
 
 
