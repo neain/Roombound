@@ -355,7 +355,7 @@ function saveRoomEditor() {
                 .replace(": ", "");
 
         if (key === "floor") {
-            selectedRoom.floor = Number(input.value) || 1;
+            selectedRoom.floor = Number(input.value);
         } else if (key === "name") {
             selectedRoom.name = input.value;
         }
@@ -482,25 +482,29 @@ function updateRoomEditor() {
             continue;
         }
 
-        // Standard editable single-value fields.
-        if (key === "name" || key === "floor") {
-            const fieldContainer = document.createElement("div");
-            const label = document.createElement("label");
-            const input = document.createElement("input");
+    // Standard editable single-value fields.
+    if (key === "name" || key === "floor") {
+        const fieldContainer = document.createElement("div");
+        const label = document.createElement("label");
+        const input = document.createElement("input");
 
-            fieldContainer.classList.add("room-editor-field");
+        fieldContainer.classList.add("room-editor-field");
 
-            label.textContent = `${key}: `;
+        label.textContent = `${key}: `;
 
-            input.type = "text";
-            input.value = value;
+        input.type =
+            key === "floor"
+                ? "number"
+                : "text";
 
-            fieldContainer.appendChild(label);
-            fieldContainer.appendChild(input);
-            editorContent.appendChild(fieldContainer);
+        input.value = value;
 
-            continue;
-        }
+        fieldContainer.appendChild(label);
+        fieldContainer.appendChild(input);
+        editorContent.appendChild(fieldContainer);
+
+        continue;
+    }
 
         // Notes use a textarea so multiple lines can be entered.
         if (key === "notes") {

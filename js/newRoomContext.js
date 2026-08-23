@@ -174,8 +174,14 @@ export function openNewRoomContext(
     floorInput.addEventListener(
         "input",
         () => {
-            newRoom.floor =
-                Number(floorInput.value) || 1;
+            const floor =
+                Number(floorInput.value);
+
+            if (Number.isNaN(floor)) {
+                return;
+            }
+
+            newRoom.floor = floor;
 
             updateContext();
         }

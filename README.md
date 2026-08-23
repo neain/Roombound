@@ -790,7 +790,7 @@ Steps 1–26 are currently working in prototype form.
 Current Step: Polish List (see header)
 
 
-### Polish List - Current Step 27
+### Polish List - Current Step 29
 1. Zoom bar + visible zoom level + possibly keyboard shortcuts.
 2. Hamburger menu with New Map, Save/Load, Options, etc.
 3. Swap the floor-selection arrows.
@@ -823,12 +823,13 @@ Current Step: Polish List (see header)
 26. Save As + smarter Save behavior.
 27. Up/down floor controls in the room context menu.
 28. Remove floor 0
+* add support for floors between whole numbers. (ex. floor 2.5, floor 2.25, floor 2.125, etc.) maybe just ensure that all floors are visible when selecting the floor dropdown?
 29. Better visualization of rooms on other floors, including stairs.
 30. Make rooms on other floors partially visible / non-selectable? im still not sold on this at all. maybe just rooms connected to the connections to the currently selected room? ask gpt for ideas and options.
 31. Hover information for cross-floor connections.
 32. Multi-select rooms and move them together.
 33. Show looping connections with a looping arrow.
-34. add support for floors between whole numbers. (ex. floor 2.5, floor 2.25, floor 2.125, etc.) maybe just ensure that all floors are visible when selecting the floor dropdown?
+34. 
 35. add auto-contrast to the room text when the room color changes
 36. Allow Connections from the room, back to itself and make the line visible.
 37. change the 'height' of the context windows. bring the clicked one to the front.

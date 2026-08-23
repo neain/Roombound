@@ -8,6 +8,15 @@
 //
 // ============================================================
 
+// ============================================================
+// FLOOR SETTINGS
+// ============================================================
+
+// Whether the hidden/debug floor 0 should be available to the user.
+//
+// FUTURE: This should eventually be supplied by the Options menu rather
+// than being hardcoded here.
+const SHOW_FLOOR_ZERO = false;
 
 // ============================================================
 // FLOOR HELPERS
@@ -15,25 +24,73 @@
 
 /**
  * Returns an array of floor numbers that should appear in the dropdown.
- * Includes every floor that currently has rooms, plus one floor below
- * the lowest and one floor above the highest.
+ *
+ * Normal integer floors are included around the range of the map, except
+ * floor 0. Any floor that actually contains a room but is not part of the
+ * normal integer range is added separately. This includes floor 0 and
+ * fractional floors.
  */
 function getFloorOptions(map) {
-    const floors = map.rooms.map(r => r.floor);
-    const min = floors.length > 0 ? Math.min(...floors) : 0;
-    const max = floors.length > 0 ? Math.max(...floors) : 2;
+    const floors = map.rooms.map(
+        room => room.floor
+    );
+
+    console.log(
+        "Room floors:",
+        floors
+    );
+
     const options = [];
+    let min;
+    let max;
     let floor;
 
     if (map.rooms.length === 0) {
-        return [0, 1, 2];
+        return [-1, 1, 2];
     }
 
-    for (floor = min - 1; floor <= max + 1; floor++) {
+    min = Math.min(...floors);
+    max = Math.max(...floors);
+
+    // Add the normal integer floor range, except floor 0.
+    for (
+        floor = Math.floor(min);
+        floor <= Math.ceil(max);
+        floor++
+    ) {
+        if (floor === 0) {
+            continue;
+        }
+
         options.push(floor);
     }
 
+    // Add any occupied floor that is not already in the normal range.
+    for (const roomFloor of floors) {
+        if (!options.includes(roomFloor)) {
+            options.push(roomFloor);
+        }
+    }
+
+    options.sort(
+        (a, b) => a - b
+    );
+
     return options;
+}
+
+/**
+ * Returns the next floor in the given direction, skipping floor 0 when it
+ * is hidden.
+ */
+function getAdjacentFloor(currentFloor, direction) {
+    let floor = currentFloor + direction;
+
+    if (!SHOW_FLOOR_ZERO && floor === 0) {
+        floor += direction;
+    }
+
+    return floor;
 }
 
 
@@ -115,11 +172,21 @@ export function initializeFloorControl({
     // --------------------------------------------------------
 
     floorUpButton.addEventListener("click", () => {
-        setCurrentFloor(mapView.currentFloor + 1);
+        setCurrentFloor(
+            getAdjacentFloor(
+                mapView.currentFloor,
+                1
+            )
+        );
     });
 
     floorDownButton.addEventListener("click", () => {
-        setCurrentFloor(mapView.currentFloor - 1);
+        setCurrentFloor(
+            getAdjacentFloor(
+                mapView.currentFloor,
+                -1
+            )
+        );
     });
 
 
