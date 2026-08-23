@@ -299,37 +299,6 @@ body {
     margin-left: auto;
 }
 
-.new-connection-context {
-    position: fixed;
-
-    top: 20px;
-    right: 20px;
-
-    width: fit-content;
-    min-width: 200px;
-    min-height: 300px;
-
-    padding: 10px;
-
-    resize: both;
-    overflow: auto;
-
-    display: flex;
-    flex-direction: column;
-
-    z-index: 1001;
-}
-
-.new-connection-context-header {
-    cursor: move;
-
-    margin-bottom: 10px;
-
-    border-bottom: 1px solid black;
-
-    padding-bottom: 10px;
-}
-
 .new-connection-context-preview {
     white-space: nowrap;
     text-align: center;
@@ -338,8 +307,12 @@ body {
 .new-connection-context-content {
     display: flex;
     flex-direction: column;
+    gap: 6px;
 
-    gap: 10px;
+    padding-top: 6px;
+
+    flex: 1;
+    min-height: 0;
 
     overflow: auto;
 }
@@ -428,7 +401,15 @@ body {
 }
 
 .room-editor-header,
-.connection-editor-header {
+.connection-editor-header,
+.new-connection-context-header {
+    cursor: move;
+    user-select: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
     color: white;
     border: 1px solid black;
 }
@@ -437,11 +418,8 @@ body {
     background: #2f5f8f;
 }
 
-.connection-editor-header {
-    background: #367878;
-}
-
-.connection-editor-header {
+.connection-editor-header,
+.new-connection-context-header {
     background: #367878;
 }
 
@@ -492,7 +470,8 @@ body {
 }
 
 .room-editor,
-.connection-editor {
+.connection-editor,
+.new-connection-context {
     position: fixed;
 
     top: 20px;
@@ -584,7 +563,8 @@ body {
    CONNECTION EDITOR
    ============================================================ */
 
-.connection-editor {
+.connection-editor,
+.new-connection-context {
     right: 340px;
 }
 

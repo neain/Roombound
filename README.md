@@ -831,6 +831,7 @@ Current Step: 23
 34. add support for floors between whole numbers. (ex. floor 2.5, floor 2.25, floor 2.125, etc.) maybe just ensure that all floors are visible when selecting the floor dropdown?
 35. add auto-contrast to the room text when the room color changes
 36. Allow Connections from the room, back to itself and make the line visible.
+37. change the 'height' of the context windows. bring the clicked one to the front.
 
 
 45. add options menu. ideas are below

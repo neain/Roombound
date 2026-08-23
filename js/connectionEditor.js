@@ -332,6 +332,7 @@ function openConnectionEditorWithConnections(
 
     connectionEditorContext = {
         map,
+        mapElement,
         connectionLayer,
         zoom,
         currentFloor
@@ -448,8 +449,11 @@ function openConnectionEditorWithConnections(
 
     document.body.appendChild(connectionEditor);
 
-      // Install the outside-click listener after the opening click has finished.
+    // Install the map-click listener after the opening click has finished.
     // Otherwise the click that opened the editor would immediately close it.
+    //
+    // Only a click on the empty map background closes the editor.
+    // Clicking rooms, connections, or the editor itself leaves it open.
     setTimeout(
         () => {
             if (!connectionEditor) {
@@ -468,17 +472,23 @@ function openConnectionEditorWithConnections(
                         return;
                     }
 
+                    if (
+                        event.target !== mapElement
+                    ) {
+                        return;
+                    }
+
                     closeConnectionEditor();
                 };
 
-            document.addEventListener(
+            mapElement.addEventListener(
                 "click",
                 closeEditorClickHandler
             );
         },
         0
     );
-    
+
     if (
         initiallySelectedEntry &&
         initiallySelectedElement
@@ -753,7 +763,7 @@ function closeConnectionEditor() {
     connectionEditor.remove();
 
     if (closeEditorClickHandler) {
-        document.removeEventListener(
+        connectionEditorContext.mapElement.removeEventListener(
             "click",
             closeEditorClickHandler
         );

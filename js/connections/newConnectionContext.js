@@ -39,9 +39,6 @@ let firstRoom = null;
 let secondRoom = null;
 let direction = "both";
 
-// Document listener used to close the context when clicking outside it.
-let closeContextClickHandler = null;
-
 // Map/rendering information needed when the connection is created.
 let creationContext = null;
 
@@ -176,7 +173,9 @@ export function openNewConnectionContext(
 
     leftButton.addEventListener(
         "click",
-        () => {
+        (event) => {
+            event.stopPropagation();
+
             direction = "A";
             updateContext();
         }
@@ -184,7 +183,9 @@ export function openNewConnectionContext(
 
     bothButton.addEventListener(
         "click",
-        () => {
+        (event) => {
+            event.stopPropagation();
+
             direction = "both";
             updateContext();
         }
@@ -192,7 +193,9 @@ export function openNewConnectionContext(
 
     rightButton.addEventListener(
         "click",
-        () => {
+        (event) => {
+            event.stopPropagation();
+
             direction = "B";
             updateContext();
         }
@@ -336,37 +339,6 @@ export function openNewConnectionContext(
 
     document.body.appendChild(
         newConnectionContext
-    );
-
-    // Install the outside-click listener after the opening click has finished.
-    // Otherwise the click that opened the context would immediately close it.
-    setTimeout(
-        () => {
-            if (!newConnectionContext) {
-                return;
-            }
-
-            closeContextClickHandler =
-                (event) => {
-                    if (!newConnectionContext) {
-                        return;
-                    }
-
-                    if (
-                        newConnectionContext.contains(event.target)
-                    ) {
-                        return;
-                    }
-
-                    closeNewConnectionContext();
-                };
-
-            document.addEventListener(
-                "click",
-                closeContextClickHandler
-            );
-        },
-        0
     );
 
     startNewConnectionContextDragging(
@@ -594,7 +566,10 @@ function addNoneButton(
 
     button.addEventListener(
         "click",
-        callback
+        (event) => {
+            event.stopPropagation();
+            callback();
+        }
     );
 
     container.appendChild(button);
@@ -643,7 +618,10 @@ function addRoomButton(
 
     button.addEventListener(
         "click",
-        callback
+        (event) => {
+            event.stopPropagation();
+            callback();
+        }
     );
 
     container.appendChild(button);
@@ -836,24 +814,16 @@ function startNewConnectionContextDragging(
 // ============================================================
 
 // Closes the new connection context without modifying the map.
-function closeNewConnectionContext() {
+export function closeNewConnectionContext() {
     if (!newConnectionContext) {
         return;
     }
 
     newConnectionContext.remove();
 
-    if (closeContextClickHandler) {
-        document.removeEventListener(
-            "click",
-            closeContextClickHandler
-        );
-    }
-
     newConnectionContext = null;
     firstRoom = null;
     secondRoom = null;
     direction = "both";
     creationContext = null;
-    closeContextClickHandler = null;
 }
