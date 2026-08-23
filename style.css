@@ -80,11 +80,18 @@ body {
 .room {
     position: absolute;
 
+    z-index: 1;
+}
+
+.room-shape {
+    position: absolute;
+
+    inset: 0;
+
     display: flex;
     align-items: center;
     justify-content: center;
 
-    border: 2px solid #ffffff;
     background: #333333;
 
     color: #ffffff;
@@ -92,7 +99,99 @@ body {
     font-size: 16px;
 
     overflow: hidden;
+
     z-index: 1;
+}
+
+.room-shape-circle {
+    border-radius: 50%;
+}
+
+.room-shape-triangle {
+    clip-path: polygon(
+        50% 0%,
+        100% 100%,
+        0% 100%
+    );
+}
+
+.room-shape-diamond {
+    clip-path: polygon(
+        50% 0%,
+        100% 50%,
+        50% 100%,
+        0% 50%
+    );
+}
+
+.room-shape-hexagon {
+    clip-path: polygon(
+        25% 0%,
+        75% 0%,
+        100% 50%,
+        75% 100%,
+        25% 100%,
+        0% 50%
+    );
+}
+
+.room-shape-octagon {
+    clip-path: polygon(
+        30% 0%,
+        70% 0%,
+        100% 30%,
+        100% 70%,
+        70% 100%,
+        30% 100%,
+        0% 70%,
+        0% 30%
+    );
+}
+
+.room-shape-star {
+    clip-path: polygon(
+        50% 0%,
+        61% 35%,
+        98% 35%,
+        68% 57%,
+        79% 91%,
+        50% 70%,
+        21% 91%,
+        32% 57%,
+        2% 35%,
+        39% 35%
+    );
+}
+
+.room-resize-handle {
+    position: absolute;
+
+    right: 0;
+    bottom: 0;
+
+    width: 16px;
+    height: 16px;
+
+    cursor: nwse-resize;
+
+    z-index: 2;
+}
+
+.room-resize-handle::after {
+    content: "";
+
+    position: absolute;
+
+    right: 2px;
+    bottom: 2px;
+
+    width: 0;
+    height: 0;
+
+    border-right: 8px solid #cccccc;
+    border-top: 8px solid transparent;
+
+    filter: drop-shadow(0 0 3px black);
 }
 
 .room-selected {

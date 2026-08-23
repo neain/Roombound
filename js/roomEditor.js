@@ -343,6 +343,7 @@ function setEditorChanged(changed) {
 // The room name's font size is recalculated from the room's current name and
 // dimensions so the saved value always reflects the latest room state.
 function saveRoomEditor() {
+    const shapeSelect = editorContent.querySelector(".room-editor-shape");
     const inputs = editorContent.querySelectorAll("input");
     const textarea = editorContent.querySelector("textarea");
     let colorText;
@@ -358,6 +359,10 @@ function saveRoomEditor() {
         } else if (key === "name") {
             selectedRoom.name = input.value;
         }
+    }
+
+    if (shapeSelect) {
+        selectedRoom.shape = shapeSelect.value;
     }
 
     colorText =
@@ -510,6 +515,61 @@ function updateRoomEditor() {
         editorContent.appendChild(field);
     }
 
+    const shapeFieldContainer =
+        document.createElement("div");
+
+    const shapeLabel =
+        document.createElement("label");
+
+    const shapeSelect =
+        document.createElement("select");
+
+    const shapes = [
+        ["rectangle", "Rectangle"],
+        ["circle", "Circle"],
+        ["triangle", "Triangle"],
+        ["diamond", "Diamond"],
+        ["hexagon", "Hexagon"],
+        ["octagon", "Octagon"],
+        ["star", "Star"]
+    ];
+
+    shapeFieldContainer.classList.add(
+        "room-editor-field"
+    );
+
+    shapeLabel.textContent =
+        "shape: ";
+
+    shapeSelect.classList.add(
+        "room-editor-shape"
+    );
+
+    for (const [value, label] of shapes) {
+        const option =
+            document.createElement("option");
+
+        option.value = value;
+        option.textContent = label;
+
+        shapeSelect.appendChild(option);
+    }
+
+    shapeSelect.value =
+        selectedRoom.shape || "rectangle";
+
+    shapeFieldContainer.appendChild(
+        shapeLabel
+    );
+
+    shapeFieldContainer.appendChild(
+        shapeSelect
+    );
+
+    editorContent.appendChild(
+        shapeFieldContainer
+    );
+
     // Color is always displayed between floor and notes, regardless of whether
     // the room currently has a custom color.
     const colorFieldContainer = document.createElement("div");
@@ -560,6 +620,7 @@ function updateRoomEditor() {
     notesFieldContainer.appendChild(notesLabel);
     notesFieldContainer.appendChild(notesTextarea);
 
+    editorContent.appendChild(shapeFieldContainer);
     editorContent.appendChild(colorFieldContainer);
     editorContent.appendChild(notesFieldContainer);
 }

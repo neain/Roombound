@@ -787,11 +787,10 @@ The development progression was:
 ### Current Position
 
 Steps 1–26 are currently working in prototype form.
-Started the polish list.
-Current Step: 23
+Current Step: Polish List (see header)
 
 
-### Polish List
+### Polish List - Current Step 26
 1. Zoom bar + visible zoom level + possibly keyboard shortcuts.
 2. Hamburger menu with New Map, Save/Load, Options, etc.
 3. Swap the floor-selection arrows.
@@ -819,7 +818,8 @@ Current Step: 23
 21. Double-click blank map space to create a room there.
 22. Allow rooms to be recolored. maybe just an extra small rainbow button to the right? of the rest of the buttons.
 23. Allow room size changes, including resizing via a corner drag.
-24. Allow different room shapes.
+24. remove the border around the rooms so that multiple rooms can be 'combined' to make a single larger shape thats not a perfect rectangle,
+25. Allow different room shapes.
 26. Save As + smarter Save behavior.
 27. Up/down floor controls in the room context menu.
 28. Remove floor 0
@@ -832,6 +832,8 @@ Current Step: 23
 35. add auto-contrast to the room text when the room color changes
 36. Allow Connections from the room, back to itself and make the line visible.
 37. change the 'height' of the context windows. bring the clicked one to the front.
+* change the 'height' of clicked shapes, bring the clicked one to the front.
+38. add ability to group overlapping rooms into a single shaped room. underlying data will still be a rectangle, but the draw part will just keep the previous shapes and draw them in the area.
 
 
 45. add options menu. ideas are below
