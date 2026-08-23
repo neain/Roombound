@@ -39,6 +39,9 @@ let firstRoom = null;
 let secondRoom = null;
 let direction = "both";
 
+// Document listener used to close the context when clicking outside it.
+let closeContextClickHandler = null;
+
 // Map/rendering information needed when the connection is created.
 let creationContext = null;
 
@@ -333,6 +336,37 @@ export function openNewConnectionContext(
 
     document.body.appendChild(
         newConnectionContext
+    );
+
+    // Install the outside-click listener after the opening click has finished.
+    // Otherwise the click that opened the context would immediately close it.
+    setTimeout(
+        () => {
+            if (!newConnectionContext) {
+                return;
+            }
+
+            closeContextClickHandler =
+                (event) => {
+                    if (!newConnectionContext) {
+                        return;
+                    }
+
+                    if (
+                        newConnectionContext.contains(event.target)
+                    ) {
+                        return;
+                    }
+
+                    closeNewConnectionContext();
+                };
+
+            document.addEventListener(
+                "click",
+                closeContextClickHandler
+            );
+        },
+        0
     );
 
     startNewConnectionContextDragging(
@@ -809,9 +843,17 @@ function closeNewConnectionContext() {
 
     newConnectionContext.remove();
 
+    if (closeContextClickHandler) {
+        document.removeEventListener(
+            "click",
+            closeContextClickHandler
+        );
+    }
+
     newConnectionContext = null;
     firstRoom = null;
     secondRoom = null;
     direction = "both";
     creationContext = null;
+    closeContextClickHandler = null;
 }

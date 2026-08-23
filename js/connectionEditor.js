@@ -156,6 +156,9 @@ let selectedEndpoint = null;
 // The container holding the currently displayed endpoint options.
 let connectionOptions = null;
 
+// Document listener used to close the editor when clicking outside it.
+let closeEditorClickHandler = null;
+
 
 // ============================================================
 // CONNECTION EDITOR STATE ACCESS
@@ -445,6 +448,37 @@ function openConnectionEditorWithConnections(
 
     document.body.appendChild(connectionEditor);
 
+      // Install the outside-click listener after the opening click has finished.
+    // Otherwise the click that opened the editor would immediately close it.
+    setTimeout(
+        () => {
+            if (!connectionEditor) {
+                return;
+            }
+
+            closeEditorClickHandler =
+                (event) => {
+                    if (!connectionEditor) {
+                        return;
+                    }
+
+                    if (
+                        connectionEditor.contains(event.target)
+                    ) {
+                        return;
+                    }
+
+                    closeConnectionEditor();
+                };
+
+            document.addEventListener(
+                "click",
+                closeEditorClickHandler
+            );
+        },
+        0
+    );
+    
     if (
         initiallySelectedEntry &&
         initiallySelectedElement
@@ -718,6 +752,13 @@ function closeConnectionEditor() {
 
     connectionEditor.remove();
 
+    if (closeEditorClickHandler) {
+        document.removeEventListener(
+            "click",
+            closeEditorClickHandler
+        );
+    }
+
     clearSelectedConnectionEndpoint();
     clearSelectedConnection();
 
@@ -737,6 +778,7 @@ function closeConnectionEditor() {
     selectedEndpoint = null;
     connectionOptions = null;
     connectionEditorContext = null;
+    closeEditorClickHandler = null;
 }
 
 
