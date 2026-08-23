@@ -102,10 +102,9 @@ import {
     clearSelectedConnectionEndpoint
 } from "./connectionRenderer.js";
 
-// Connection-level operations.
 import {
-    createConnection as createConnectionInternal
-} from "./connections/connection.js";
+    openNewConnectionContext
+} from "./connections/newConnectionContext.js";
 
 // Connection endpoint editing.
 import {
@@ -745,16 +744,14 @@ function closeConnectionEditor() {
 // PUBLIC CONNECTION OPERATIONS
 // ============================================================
 
-// Keeps connection creation available through the existing public module.
+// Opens the new connection context using the supplied room as the initial
+// first endpoint.
 export function createConnection(
     mapView,
     room
 ) {
-    return createConnectionInternal(
-        mapView.map,
-        room,
-        mapView.connectionLayer,
-        mapView.zoom,
-        mapView.currentFloor
+    openNewConnectionContext(
+        mapView,
+        room
     );
 }

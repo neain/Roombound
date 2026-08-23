@@ -11,22 +11,23 @@ import {
 // CONNECTION CREATION
 // ============================================================
 
-// Creates a new connection using the new map-level connection model.
-//
-// The connection is initially attached to room A and has no room B yet.
+// Creates a new map-level connection from the selections made by the
+// new-connection context.
 export function createConnection(
     map,
-    room,
+    roomA,
+    roomB,
+    directionTo,
     connectionLayer,
     zoom,
     currentFloor
 ) {
     const connection = {
-        roomA: room.roomID,
-        roomB: null,
+        roomA: roomA.roomID,
+        roomB: roomB.roomID,
         roomAConnectionSide: "NONE",
-        roomBConnectionSide: null,
-        directionTo: "both",
+        roomBConnectionSide: "NONE",
+        directionTo,
         name: "New Connection"
     };
 
@@ -42,7 +43,9 @@ export function createConnection(
     });
 
     console.log(
-        `Created connection from ${room.name}`,
+        `Created connection from ${roomA.name} to ${roomB.name}`,
         connection
     );
+
+    return connection;
 }

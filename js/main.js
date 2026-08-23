@@ -245,6 +245,9 @@ newConnectionButton.addEventListener(
 
         // A connection cannot be started without a source room.
         if (!room) {
+            alert(
+                "Please select a room before creating a new connection."
+            );
             return;
         }
 

@@ -217,10 +217,139 @@ body {
 
 .room-editor,
 .connection-editor,
+.new-connection-context,
 .load-url-dialog {
     color: black;
     background: white;
     border: 1px solid black;
+}
+
+.new-connection-context {
+    position: fixed;
+
+    top: 20px;
+    right: 20px;
+
+    width: fit-content;
+    min-width: 200px;
+    min-height: 300px;
+
+    padding: 10px;
+
+    resize: both;
+    overflow: auto;
+
+    display: flex;
+    flex-direction: column;
+
+    z-index: 1001;
+}
+
+.new-connection-context-header {
+    cursor: move;
+
+    margin-bottom: 10px;
+
+    border-bottom: 1px solid black;
+
+    padding-bottom: 10px;
+}
+
+.new-connection-context-preview {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.new-connection-context-content {
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+
+    overflow: auto;
+}
+
+.new-connection-context-section {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+.new-connection-context-label {
+    font-weight: bold;
+}
+
+.new-connection-context-room-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+.new-connection-context-room {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+
+    width: 100%;
+
+    padding: 4px;
+
+    text-align: left;
+}
+
+.new-connection-context-room-name {
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.new-connection-context-room-floor {
+    margin-left: 10px;
+
+    white-space: nowrap;
+
+    text-align: right;
+}
+
+.new-connection-context-room,
+.new-connection-context-direction button {
+    border: 2px solid transparent;
+}
+
+.new-connection-context-room.selected,
+.new-connection-context-direction button.selected {
+    border-color: black;
+}
+
+.new-connection-context-room.selected {
+    font-weight: bold;
+}
+.new-connection-context-direction {
+    display: flex;
+
+    justify-content: center;
+
+    gap: 5px;
+}
+
+.new-connection-context-direction button {
+    min-width: 40px;
+}
+
+.new-connection-context-direction button.selected {
+    font-weight: bold;
+}
+
+.new-connection-context-buttons {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 5px;
+
+    margin-top: 10px;
 }
 
 .room-editor-header,
