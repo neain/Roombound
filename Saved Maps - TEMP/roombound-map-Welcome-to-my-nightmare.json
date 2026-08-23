@@ -18,7 +18,9 @@
       "size": {
         "width": 5,
         "height": 5
-      }
+      },
+      "shape": "star",
+      "textSize": 16
     },
     {
       "roomID": "room_003",
@@ -32,7 +34,9 @@
       "size": {
         "width": 5,
         "height": 5
-      }
+      },
+      "color": "",
+      "shape": ""
     },
     {
       "roomID": "room_002",
@@ -40,13 +44,15 @@
       "floor": 1,
       "notes": "",
       "position": {
-        "x": 16,
-        "y": -2
+        "x": 22,
+        "y": -8
       },
       "size": {
         "width": 5,
         "height": 5
-      }
+      },
+      "color": "",
+      "shape": ""
     },
     {
       "roomID": "room_004",
@@ -60,7 +66,9 @@
       "size": {
         "width": 5,
         "height": 5
-      }
+      },
+      "color": "",
+      "shape": ""
     },
     {
       "roomID": "room_005",
@@ -74,7 +82,9 @@
       "size": {
         "width": 5,
         "height": 5
-      }
+      },
+      "color": "",
+      "shape": ""
     },
     {
       "roomID": "room_006",
@@ -88,7 +98,9 @@
       "size": {
         "width": 5,
         "height": 5
-      }
+      },
+      "color": "",
+      "shape": ""
     },
     {
       "roomID": "room_007",
@@ -102,7 +114,9 @@
       "size": {
         "width": 5,
         "height": 5
-      }
+      },
+      "color": "",
+      "shape": ""
     },
     {
       "roomID": "room_008",
@@ -116,7 +130,9 @@
       "size": {
         "width": 5,
         "height": 5
-      }
+      },
+      "color": "",
+      "shape": ""
     },
     {
       "roomID": "room_009",
@@ -130,7 +146,9 @@
       "size": {
         "width": 5,
         "height": 5
-      }
+      },
+      "color": "",
+      "shape": ""
     },
     {
       "roomID": "room_010",
@@ -144,7 +162,9 @@
       "size": {
         "width": 5,
         "height": 5
-      }
+      },
+      "color": "",
+      "shape": ""
     },
     {
       "roomID": "room_011",
@@ -158,7 +178,9 @@
       "size": {
         "width": 5,
         "height": 5
-      }
+      },
+      "color": "",
+      "shape": ""
     },
     {
       "roomID": "room_012",
@@ -172,7 +194,9 @@
       "size": {
         "width": 5,
         "height": 5
-      }
+      },
+      "color": "",
+      "shape": ""
     },
     {
       "roomID": "room_013",
@@ -186,7 +210,9 @@
       "size": {
         "width": 5,
         "height": 5
-      }
+      },
+      "color": "#a0b148",
+      "shape": "circle"
     }
   ],
   "connections": [

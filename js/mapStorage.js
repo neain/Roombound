@@ -32,14 +32,13 @@ function getSerializableMap(map) {
         editorSize: map.editorSize
             ? { ...map.editorSize }
             : { width: 400, height: 500 },
-        rooms: map.rooms.map(room => ({
-            roomID: room.roomID,
-            name: room.name,
-            floor: room.floor,
-            notes: room.notes || "",
-            position: { ...room.position },
-            size: { ...room.size }
-        })),
+        rooms: map.rooms.map(room => {
+            const savedRoom = { ...room };
+
+            delete savedRoom.editorSize;
+
+            return savedRoom;
+        }),
         connections: map.connections.map(conn => ({
             roomA: conn.roomA,
             roomB: conn.roomB,
