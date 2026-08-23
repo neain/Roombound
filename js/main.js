@@ -68,6 +68,14 @@ import {
     initializeMapMenu
 } from "./mapMenu.js";
 
+// Multi-room editing.
+// CURRENT: openMultiRoomEditor()
+// If working on editing the currently selected group of rooms, inspect:
+//   ./multiRoomEditor.js
+import {
+    openMultiRoomEditor
+} from "./multiRoomEditor.js";
+
 // Room rendering, room interaction, and room editing.
 // CURRENT: renderRooms(), startDragging(), createRoom(), deleteRoom(),
 //          getSelectedRoom()
@@ -366,6 +374,7 @@ initializeMapInteractions({
     zoomStep: getZoomStep(),
     openConnectionEditorForConnections,
     openNewRoomContext,
+    openMultiRoomEditor,
     createConnection
 });
 

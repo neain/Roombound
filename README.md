@@ -831,7 +831,7 @@ Current Step: Polish List (see header)
 * add double click on a room to open the room editor.
 * add right click context menu -> open the room editor
 * change the right click context menu to have a line IF and only IF multi rooms are selected (no change to double clicking, I currently want that to be single room)
-* explode the temp file with multi-functions
+* explode the temp file with multi-functions, roomRenderer,js and the new file below multiRoomRenderer
 33. Show looping connections with a looping arrow.
 34. Add ability to copy and paste rooms with normal shortcuts (ctrl + c, ctrl + v)
 35. add auto-contrast to the room text when the room color changes

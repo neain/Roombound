@@ -42,9 +42,6 @@ import {
 } from "./roomEditor.js";
 
 import {
-} from "./roomRenderer.js";
-
-import {
     clearRoomSelection,
     startBoxSelection,
     getSelectedRooms
@@ -64,6 +61,7 @@ export function initializeMapInteractions({
     zoomStep,
     openConnectionEditorForConnections,
     openNewRoomContext,
+    openMultiRoomEditor,
     createConnection
 }) {
     let isPanning = false;
@@ -160,7 +158,13 @@ export function initializeMapInteractions({
                     () => {
                         closeContextMenu();
 
-                        // Multi-room editor will be implemented here.
+                        openMultiRoomEditor(
+                            map,
+                            mapElement,
+                            mapView.connectionLayer,
+                            mapView.zoom,
+                            mapView.currentFloor
+                        );
                     }
                 );
 
@@ -527,13 +531,36 @@ export function initializeMapInteractions({
                     document.querySelector(".room-editor");
 
                 if (
-                    (event.target === mapElement ||
-                    event.target === mapWorld) &&
-                    editor
+                    event.target === mapElement ||
+                    event.target === mapWorld
                 ) {
-                    editor
-                        .querySelector(".room-editor-cancel")
-                        .click();
+                    const roomEditor =
+                        document.querySelector(".room-editor");
+
+                    const multiRoomEditor =
+                        document.querySelector(".multi-room-editor");
+
+                    if (roomEditor) {
+                        const cancelButton =
+                            roomEditor.querySelector(
+                                ".room-editor-cancel"
+                            );
+
+                        if (cancelButton) {
+                            cancelButton.click();
+                        }
+                    }
+
+                    if (multiRoomEditor) {
+                        const cancelButton =
+                            multiRoomEditor.querySelector(
+                                ".multi-room-editor-cancel"
+                            );
+
+                        if (cancelButton) {
+                            cancelButton.click();
+                        }
+                    }
                 }
 
                 return;
