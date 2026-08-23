@@ -831,9 +831,10 @@ Current Step: Polish List (see header)
 * add double click on a room to open the room editor.
 * add right click context menu -> open the room editor
 * change the right click context menu to have a line IF and only IF multi rooms are selected (no change to double clicking, I currently want that to be single room)
-* explode the temp file with multi-functions, roomRenderer,js and the new file below multiRoomRenderer
+* explode the temp file with multi-functions, roomRenderer,js
 33. Show looping connections with a looping arrow.
 34. Add ability to copy and paste rooms with normal shortcuts (ctrl + c, ctrl + v)
+*. add the same functionality in one step in the muti-room editor duplicate button
 35. add auto-contrast to the room text when the room color changes
 36. Allow Connections from the room, back to itself and make the line visible.
 37. change the 'height' of the context windows. bring the clicked one to the front.
@@ -919,6 +920,19 @@ and consistent boundaries between related functionality.
     This keeps routers from becoming general-purpose storage containers while
     still giving related functions a controlled way to share important system
     state.
+
+12. Individual functions may access other functions within their own system
+   through the system router, even when this creates a circular module
+   dependency between the router and its functions.
+
+   Functions should not import sibling implementation files directly when
+   the sibling is part of the same routed system. Instead, they should reach
+   back through the router. This keeps the router as the consistent public
+   boundary for the system, even when the dependency graph technically loops
+   back through it.
+
+   Circular dependencies involving system routers are therefore intentional
+   and acceptable when they preserve the architectural boundary.
 
 The resulting structure should conceptually follow:
 
