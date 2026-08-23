@@ -12,8 +12,8 @@
       "floor": 1,
       "notes": "additional exit below the main staircase? I dont remember where that goes if we investigated that.",
       "position": {
-        "x": 10,
-        "y": 15
+        "x": 5,
+        "y": 20
       },
       "size": {
         "width": 5,
@@ -28,7 +28,7 @@
       "floor": 1,
       "notes": "",
       "position": {
-        "x": 10,
+        "x": 5,
         "y": -2
       },
       "size": {
@@ -44,8 +44,8 @@
       "floor": 1,
       "notes": "",
       "position": {
-        "x": 22,
-        "y": -8
+        "x": 13,
+        "y": -2
       },
       "size": {
         "width": 5,
@@ -60,8 +60,8 @@
       "floor": 1,
       "notes": "",
       "position": {
-        "x": 16,
-        "y": 4
+        "x": 13,
+        "y": 6
       },
       "size": {
         "width": 5,
@@ -76,8 +76,8 @@
       "floor": 1,
       "notes": "",
       "position": {
-        "x": 16,
-        "y": 15
+        "x": 13,
+        "y": 20
       },
       "size": {
         "width": 5,
@@ -92,8 +92,8 @@
       "floor": 2,
       "notes": "",
       "position": {
-        "x": 8,
-        "y": 12
+        "x": 10,
+        "y": 14
       },
       "size": {
         "width": 5,
@@ -108,8 +108,8 @@
       "floor": -1,
       "notes": "",
       "position": {
-        "x": 19,
-        "y": 11
+        "x": 20,
+        "y": 25
       },
       "size": {
         "width": 5,
@@ -124,8 +124,8 @@
       "floor": 1,
       "notes": "",
       "position": {
-        "x": 4,
-        "y": 15
+        "x": -3,
+        "y": 20
       },
       "size": {
         "width": 5,
@@ -140,8 +140,8 @@
       "floor": 1,
       "notes": "",
       "position": {
-        "x": -2,
-        "y": 15
+        "x": -11,
+        "y": 20
       },
       "size": {
         "width": 5,
@@ -156,7 +156,7 @@
       "floor": 1,
       "notes": "",
       "position": {
-        "x": 4,
+        "x": -3,
         "y": -2
       },
       "size": {
@@ -172,7 +172,7 @@
       "floor": 1,
       "notes": "",
       "position": {
-        "x": -2,
+        "x": -11,
         "y": -2
       },
       "size": {
@@ -189,7 +189,7 @@
       "notes": "",
       "position": {
         "x": -5,
-        "y": 2
+        "y": 4
       },
       "size": {
         "width": 5,
@@ -204,7 +204,7 @@
       "floor": 1,
       "notes": "",
       "position": {
-        "x": -8,
+        "x": -19,
         "y": -2
       },
       "size": {
