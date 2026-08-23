@@ -21,6 +21,7 @@ import {
 //   ./mapStorage.js
 import {
     saveMap,
+    saveMapAs,
     loadMap,
     loadMapFromUrl
 } from "./mapStorage.js";
@@ -336,6 +337,7 @@ console.log(
 // Connect the menu UI to the application's map operations.
 initializeMapMenu({
     saveMap: () => saveMap(map),
+    saveMapAs: () => saveMapAs(map),
     loadMap: () => loadMap(map, updateZoom),
     loadMapFromUrl: (url) =>
         loadMapFromUrl(map, url, updateZoom),

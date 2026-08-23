@@ -7,6 +7,17 @@ const CURRENT_MAP_VERSION = 1;
 
 
 // ============================================================
+// MAP FILE STATE
+// ============================================================
+
+// File handle for the currently associated local map file.
+//
+// This is intentionally not stored inside the map JSON because it is
+// browser-specific UI state rather than map data.
+let currentFileHandle = null;
+
+
+// ============================================================
 // MAP STORAGE
 // ============================================================
 
@@ -40,10 +51,45 @@ function getSerializableMap(map) {
     };
 }
 
+
+// ============================================================
+// FILE SYSTEM ACCESS API
+// ============================================================
+
+/**
+ * Writes the current map data to an existing File System Access API handle.
+ */
+async function writeMapToFileHandle(
+    map,
+    fileHandle
+) {
+    const data = getSerializableMap(map);
+    const json = JSON.stringify(data, null, 2);
+
+    const writable =
+        await fileHandle.createWritable();
+
+    await writable.write(json);
+    await writable.close();
+
+    console.log(
+        `Map saved to ${fileHandle.name}`
+    );
+}
+
+
+// ============================================================
+// LEGACY SAVE FALLBACK
+// ============================================================
+
 /**
  * Downloads the current map as a JSON file.
+ *
+ * This is the fallback for browsers that do not support the File System
+ * Access API. The browser's normal download behavior determines whether
+ * the user is prompted for a save location.
  */
-export function saveMap(map) {
+function saveMapWithDownload(map) {
     const data = getSerializableMap(map);
     const json = JSON.stringify(data, null, 2);
     const blob = new Blob(
@@ -60,8 +106,118 @@ export function saveMap(map) {
     a.click();
 
     URL.revokeObjectURL(url);
+
     console.log("Map saved");
 }
+
+
+// ============================================================
+// SAVE
+// ============================================================
+
+/**
+ * Saves the current map.
+ *
+ * If the browser supports the File System Access API and a file has already
+ * been associated with the map, the existing file is overwritten.
+ *
+ * Browsers without the API use the legacy download behavior instead.
+ */
+export async function saveMap(map) {
+    // Browsers without File System Access API support use the old behavior.
+    if (!window.showSaveFilePicker) {
+        saveMapWithDownload(map);
+        return;
+    }
+
+    if (currentFileHandle) {
+        try {
+            await writeMapToFileHandle(
+                map,
+                currentFileHandle
+            );
+
+            return;
+        } catch (error) {
+            // If the existing file can no longer be written, fall through to
+            // Save As so the user can choose another destination.
+            console.warn(
+                "Could not overwrite the current map file.",
+                error
+            );
+        }
+    }
+
+    await saveMapAs(map);
+}
+
+
+// ============================================================
+// SAVE AS
+// ============================================================
+
+/**
+ * Always prompts the user to choose a file.
+ *
+ * Browsers with File System Access API support use the native save picker.
+ * Other browsers fall back to the browser's normal download behavior.
+ */
+export async function saveMapAs(map) {
+    const suggestedName =
+        currentFileHandle?.name ||
+        `roombound-map-${new Date().toISOString().slice(0, 10)}.json`;
+
+    // Use the File System Access API when available.
+    if (window.showSaveFilePicker) {
+        try {
+            const fileHandle =
+                await window.showSaveFilePicker({
+                    suggestedName,
+                    types: [
+                        {
+                            description: "Roombound Map",
+                            accept: {
+                                "application/json": [".json"]
+                            }
+                        }
+                    ]
+                });
+
+            currentFileHandle = fileHandle;
+
+            await writeMapToFileHandle(
+                map,
+                currentFileHandle
+            );
+        } catch (error) {
+            // The user cancelling the file picker is normal and should not
+            // produce an error dialog.
+            if (error.name === "AbortError") {
+                return;
+            }
+
+            console.error(
+                "Could not save map.",
+                error
+            );
+
+            alert(
+                "Could not save the map.\n\n" +
+                error.message
+            );
+        }
+
+        return;
+    }
+
+    // Browsers without File System Access API support use the old behavior.
+    saveMapWithDownload(map);
+}
+
+
+// ============================================================
+// MAP VALIDATION
+// ============================================================
 
 /**
  * Basic validation of a loaded map object.
@@ -79,8 +235,15 @@ function isValidMapData(data) {
     return true;
 }
 
+
+// ============================================================
+// MAP LOADING
+// ============================================================
+
 /**
  * Replaces the current map with loaded data and re-renders.
+ *
+ * A data-only load, such as loading from a URL, has no associated local file.
  */
 export function loadMapFromData(
     map,
@@ -118,8 +281,16 @@ export function loadMapFromData(
     console.log("Map loaded", map);
 }
 
+
+// ============================================================
+// LOAD FROM URL
+// ============================================================
+
 /**
  * Loads a map JSON object from a URL.
+ *
+ * URL-loaded maps intentionally have no associated local file, so Save will
+ * use Save As behavior.
  */
 export async function loadMapFromUrl(
     map,
@@ -136,6 +307,8 @@ export async function loadMapFromUrl(
 
     const data = await response.json();
 
+    currentFileHandle = null;
+
     loadMapFromData(
         map,
         data,
@@ -143,45 +316,123 @@ export async function loadMapFromUrl(
     );
 }
 
+
+// ============================================================
+// LOAD FROM FILE
+// ============================================================
+
 /**
  * Opens a file picker and loads a JSON map.
+ *
+ * The File System Access API is used when available so the selected file can
+ * become the map's associated file for future Save operations.
  */
-export function loadMap(
+export async function loadMap(
     map,
     updateZoom
 ) {
+    if (window.showOpenFilePicker) {
+        try {
+            const [fileHandle] =
+                await window.showOpenFilePicker({
+                    types: [
+                        {
+                            description: "Roombound Map",
+                            accept: {
+                                "application/json": [".json"]
+                            }
+                        }
+                    ],
+                    multiple: false
+                });
+
+            const file =
+                await fileHandle.getFile();
+
+            const text =
+                await file.text();
+
+            const data =
+                JSON.parse(text);
+
+            if (!isValidMapData(data)) {
+                alert("Invalid Roombound map file.");
+                return;
+            }
+
+            currentFileHandle = fileHandle;
+
+            loadMapFromData(
+                map,
+                data,
+                updateZoom
+            );
+
+            console.log(
+                `Map loaded from ${fileHandle.name}`
+            );
+
+            return;
+        } catch (error) {
+            // Cancelling the picker is normal.
+            if (error.name === "AbortError") {
+                return;
+            }
+
+            alert(
+                "Could not read the map file.\n" +
+                error.message
+            );
+
+            return;
+        }
+    }
+
+    // Fallback for browsers without the File System Access API.
     const input = document.createElement("input");
 
     input.type = "file";
     input.accept = ".json,application/json";
 
-    input.addEventListener("change", (event) => {
-        const file = event.target.files[0];
-        const reader = new FileReader();
+    input.addEventListener(
+        "change",
+        (event) => {
+            const file =
+                event.target.files[0];
 
-        if (!file) {
-            return;
-        }
-
-        reader.onload = (e) => {
-            try {
-                const data = JSON.parse(e.target.result);
-
-                loadMapFromData(
-                    map,
-                    data,
-                    updateZoom
-                );
-            } catch (err) {
-                alert(
-                    "Could not read the map file.\n" +
-                    err.message
-                );
+            if (!file) {
+                return;
             }
-        };
 
-        reader.readAsText(file);
-    });
+            const reader =
+                new FileReader();
+
+            reader.onload =
+                (event) => {
+                    try {
+                        const data =
+                            JSON.parse(event.target.result);
+
+                        // The selected file cannot be associated with the map
+                        // without File System Access API support.
+                        currentFileHandle = null;
+
+                        loadMapFromData(
+                            map,
+                            data,
+                            updateZoom
+                        );
+                    } catch (error) {
+                        alert(
+                            "Could not read the map file.\n" +
+                            error.message
+                        );
+                    }
+                };
+
+            reader.readAsText(file);
+        }
+    );
 
     input.click();
 }

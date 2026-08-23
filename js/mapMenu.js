@@ -24,6 +24,7 @@
 // Creates and initializes the hamburger menu and its associated dialogs.
 export function initializeMapMenu({
     saveMap,
+    saveMapAs,
     loadMap,
     loadMapFromUrl,
     refreshForNewMap,
@@ -47,6 +48,9 @@ export function initializeMapMenu({
 
     // Save Map button.
     const saveMapMenuButton = document.createElement("button");
+
+    // Save As button.
+    const saveMapAsMenuButton = document.createElement("button");
 
     // Load Map menu item that reveals the Load submenu on hover.
     const loadMapMenuButton = document.createElement("div");
@@ -141,6 +145,9 @@ export function initializeMapMenu({
     saveMapMenuButton.classList.add("menu-item");
     saveMapMenuButton.textContent = "Save Map";
 
+    saveMapAsMenuButton.classList.add("menu-item");
+    saveMapAsMenuButton.textContent = "Save As";
+
     loadMapMenuButton.classList.add("menu-item-with-submenu");
     loadMapMenuButton.textContent = "Load Map";
 
@@ -176,6 +183,7 @@ export function initializeMapMenu({
 
     menuPanel.appendChild(newMapMenuButton);
     menuPanel.appendChild(saveMapMenuButton);
+    menuPanel.appendChild(saveMapAsMenuButton);
     menuPanel.appendChild(loadMapMenuButton);
     menuPanel.appendChild(optionsMenuButton);
 
@@ -371,6 +379,14 @@ export function initializeMapMenu({
         () => {
             closeMenu();
             saveMap();
+        }
+    );
+
+    saveMapAsMenuButton.addEventListener(
+        "click",
+        () => {
+            closeMenu();
+            saveMapAs();
         }
     );
 
