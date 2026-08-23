@@ -6,6 +6,15 @@ import {
     getSelectedRoom
 } from "./roomEditor.js";
 
+// Room creation context.
+// CURRENT: openNewRoomContext()
+// If working on the new-room creation UI or its temporary room state,
+// inspect:
+//   ./newRoomContext.js
+import {
+    openNewRoomContext
+} from "./newRoomContext.js";
+
 // Map file saving and loading.
 // CURRENT: saveMap(), loadMap(), loadMapFromUrl(), loadMapFromData()
 // If working on the Roombound JSON file format or file persistence, inspect:
@@ -68,8 +77,7 @@ import {
 // tooltips, or the room editor, inspect:
 //   ./roomRenderer.js
 import {
-    renderRooms,
-    createRoom
+    renderRooms
 } from "./roomRenderer.js";
 
 // Connection rendering and connection geometry.
@@ -226,7 +234,7 @@ newRoomButton.setAttribute("aria-label", "New Room");
 newRoomButton.addEventListener(
     "click",
     () => {
-        createRoom(
+        openNewRoomContext(
             map,
             mapElement,
             connectionLayer,
@@ -354,7 +362,9 @@ initializeMapInteractions({
             newZoom
         ),
     zoomStep: getZoomStep(),
-    openConnectionEditorForConnections
+    openConnectionEditorForConnections,
+    openNewRoomContext,
+    createConnection
 });
 
 // ============================================================

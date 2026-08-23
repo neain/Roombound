@@ -788,7 +788,7 @@ The development progression was:
 
 Steps 1–26 are currently working in prototype form.
 Started the polish list.
-Current Step: 17
+Current Step: 23
 
 
 ### Polish List
@@ -813,9 +813,9 @@ Current Step: 17
 15. Add NONE connection visuals.
 16. Add NE/NW/SE/SW attachment points. ask gpt if there is a good convention, but put them below the current list unless it has a good idea. maybe with a line break?
 17. Add a context window for new connection creation.
-18. Add the main-map right-click context menu. same as the hamburger menu? maybe exactly the same, just wherever the right click happens? (or context sensitive. empty map > new room line break > normal menu)
-19. Improve how new rooms are created. Add context menu asking for its name and how many connections to add to it. maybe set its color? might need to add color to the room data...
-20. Allow Connections from the room, back to itself and make the line visible.
+18. Improve how new rooms are created. Add context menu asking for its name and how many connections to add to it. maybe set its color? might need to add color to the room data...
+19. Add the main-map right-click context menu. empty map > new room. right click a room > new connection with that room as the 'selected room'
+20. 
 21. Double-click blank map space to create a room there.
 22. Allow rooms to be recolored. maybe just an extra small rainbow button to the right? of the rest of the buttons.
 23. Allow room size changes, including resizing via a corner drag.
@@ -829,6 +829,8 @@ Current Step: 17
 32. Multi-select rooms and move them together.
 33. Show looping connections with a looping arrow.
 34. add support for floors between whole numbers. (ex. floor 2.5, floor 2.25, floor 2.125, etc.) maybe just ensure that all floors are visible when selecting the floor dropdown?
+35. add auto-contrast to the room text when the room color changes
+36. Allow Connections from the room, back to itself and make the line visible.
 
 
 45. add options menu. ideas are below

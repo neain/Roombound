@@ -25,10 +25,15 @@ import { renderConnections } from "./connectionRenderer.js";
 
 // Room editor.
 // CURRENT: selectRoom()
-// If changing room editor behavior, inspect:
+// If changing how room rendering/selection affects the room editor, inspect:
 //   ./roomEditor.js
 import { getSelectedRoom, selectRoom } from "./roomEditor.js";
 
+// New room creation context.
+// CURRENT: openNewRoomContext()
+// If changing the new-room creation workflow, inspect:
+//   ./newRoomContext.js
+import { openNewRoomContext } from "./newRoomContext.js";
 
 // ============================================================
 // ROOM STATE
@@ -84,6 +89,11 @@ export function renderRooms(
 
         roomElement.classList.add("room");
         roomElement.dataset.roomId = room.roomID;
+
+        if (room.color) {
+            roomElement.style.backgroundColor =
+                room.color;
+        }
 
         if (room === getSelectedRoom()) {
            roomElement.classList.add("room-selected");
@@ -193,8 +203,8 @@ export function renderRooms(
 
 // Creates a new room centered on the currently visible portion of the map.
 //
-// The new room is added to the map immediately, then selected so the room
-// editor can be used to finish configuring it.
+// The room is created as temporary data and passed to the new-room context.
+// It is not added to the map until the user presses Create.
 export function createRoom(
     map,
     mapElement,
@@ -245,8 +255,8 @@ export function createRoom(
         (centerY - MAP_ORIGIN * zoom) /
         (GRID_SIZE * zoom);
 
-    // Rooms are currently created at a fixed 5x5 grid size and positioned so
-    // their center is approximately at the center of the visible map.
+    // Create the room as temporary data. The new-room context decides whether
+    // this room is eventually added to the map.
     room = {
         roomID: `room_${roomNumber}`,
         name: "New Room",
@@ -264,34 +274,14 @@ export function createRoom(
         textSize: 16
     };
 
-    map.rooms.push(room);
-
-    // Redraw both rooms and connections so the new room appears immediately.
-    renderRooms(
+    openNewRoomContext({
         map,
+        room,
         mapElement,
-        connectionLayer,
-        zoom,
-        currentFloor
-    );
-
-    renderConnections({
-        map,
         connectionLayer,
         zoom,
         currentFloor
     });
-
-    // Select the new room and tell the editor that it is a new-room session.
-    selectRoom(
-        room,
-        map,
-        mapElement,
-        connectionLayer,
-        zoom,
-        currentFloor,
-        true
-    );
 }
 
 // Deletes a room from the map by ID and removes any connections that

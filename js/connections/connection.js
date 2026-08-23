@@ -23,8 +23,8 @@ export function createConnection(
     currentFloor
 ) {
     const connection = {
-        roomA: roomA.roomID,
-        roomB: roomB.roomID,
+        roomA: roomA?.roomID ?? null,
+        roomB: roomB?.roomID ?? null,
         roomAConnectionSide: "NONE",
         roomBConnectionSide: "NONE",
         directionTo,
@@ -43,7 +43,8 @@ export function createConnection(
     });
 
     console.log(
-        `Created connection from ${roomA.name} to ${roomB.name}`,
+        `Created connection from ` +
+        `${roomA?.name ?? "None"} to ${roomB?.name ?? "None"}`,
         connection
     );
 

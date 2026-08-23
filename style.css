@@ -224,6 +224,81 @@ body {
     border: 1px solid black;
 }
 
+.new-room-context {
+    position: fixed;
+
+    top: 20px;
+    right: 20px;
+
+    width: 300px;
+    min-width: 200px;
+    min-height: 300px;
+
+    padding: 10px;
+
+    resize: both;
+    overflow: auto;
+
+    display: flex;
+    flex-direction: column;
+
+    z-index: 1001;
+
+    color: black;
+    background: white;
+    border: 1px solid black;
+}
+
+.new-room-context-header {
+    color: white;
+    background: #2f5f8f;
+    border: 1px solid black;
+
+    cursor: move;
+    user-select: none;
+
+    padding: 6px;
+
+    text-align: center;
+}
+
+.new-room-context-preview {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.new-room-context-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    padding-top: 10px;
+
+    flex: 1;
+    min-height: 0;
+}
+
+.new-room-context-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.new-room-context-color {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.new-room-context-color input[type="text"] {
+    width: 80px;
+}
+
+.new-room-context-color input[type="color"] {
+    margin-left: auto;
+}
+
 .new-connection-context {
     position: fixed;
 
@@ -727,6 +802,14 @@ body {
 /* ============================================================
    HAMBURGER MENU
    ============================================================ */
+.map-context-menu {
+    position: fixed;
+
+    min-width: 140px;
+
+    z-index: 1002;
+}
+
 
 .menu-control {
     position: fixed;

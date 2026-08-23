@@ -277,7 +277,7 @@ export function openNewConnectionContext(
     createButton.addEventListener(
         "click",
         () => {
-            if (!firstRoom || !secondRoom) {
+            if (!firstRoom && !secondRoom) {
                 return;
             }
 
@@ -517,7 +517,7 @@ function updateContext() {
         `${roomAName} ${getDirectionSymbol(direction)} ${roomBName}`;
 
     createButton.disabled =
-        !firstRoom ||
+        !firstRoom &&
         !secondRoom;
 
     updateContextPreviewSize(

@@ -63,6 +63,15 @@ export function getSelectedRoom() {
     return selectedRoom;
 }
 
+// Selects a room without opening the room editor.
+//
+// This is used by map interactions such as the right-click context menu,
+// where the room needs to become the active source room without starting
+// an editing session.
+export function selectRoomWithoutEditor(room) {
+    selectedRoom = room;
+}
+
 // Selects a room and opens or updates the room editor for it.
 //
 // The editor keeps a reference to the selected room rather than creating a
@@ -336,16 +345,37 @@ function setEditorChanged(changed) {
 function saveRoomEditor() {
     const inputs = editorContent.querySelectorAll("input");
     const textarea = editorContent.querySelector("textarea");
+    let colorText;
+    let colorValue;
 
     for (const input of inputs) {
         const key =
-            input.previousElementSibling.textContent
+            input.previousElementSibling?.textContent
                 .replace(": ", "");
 
         if (key === "floor") {
             selectedRoom.floor = Number(input.value) || 1;
-        } else {
-            selectedRoom[key] = input.value;
+        } else if (key === "name") {
+            selectedRoom.name = input.value;
+        }
+    }
+
+    colorText =
+        [...inputs].find(
+            (input) =>
+                input.type === "text" &&
+                input.parentElement?.querySelector(
+                    'input[type="color"]'
+                )
+        );
+
+    if (colorText) {
+        colorValue = colorText.value.trim();
+
+        if (colorValue === "") {
+            delete selectedRoom.color;
+        } else if (/^#[0-9a-fA-F]{6}$/.test(colorValue)) {
+            selectedRoom.color = colorValue;
         }
     }
 
@@ -426,7 +456,7 @@ function closeRoomEditor() {
 
 // Rebuilds the contents of the room editor from the currently selected room.
 //
-// Editable fields such as name, floor, and notes receive form controls.
+// Editable fields such as name, floor, color, and notes receive form controls.
 // Structural properties remain visible as read-only information when they
 // are not listed in hoverExceptions.
 function updateRoomEditor() {
@@ -436,7 +466,8 @@ function updateRoomEditor() {
         "position",
         "size",
         "editorSize",
-        "textSize"
+        "textSize",
+        "color"
     ];
 
     editorContent.innerHTML = "";
@@ -468,20 +499,6 @@ function updateRoomEditor() {
 
         // Notes use a textarea so multiple lines can be entered.
         if (key === "notes") {
-            const fieldContainer = document.createElement("div");
-            const label = document.createElement("label");
-            const textarea = document.createElement("textarea");
-
-            fieldContainer.classList.add("room-editor-notes");
-
-            label.textContent = "notes: ";
-
-            textarea.value = value;
-
-            fieldContainer.appendChild(label);
-            fieldContainer.appendChild(textarea);
-            editorContent.appendChild(fieldContainer);
-
             continue;
         }
 
@@ -492,6 +509,240 @@ function updateRoomEditor() {
 
         editorContent.appendChild(field);
     }
+
+    // Color is always displayed between floor and notes, regardless of whether
+    // the room currently has a custom color.
+    const colorFieldContainer = document.createElement("div");
+    const colorLabel = document.createElement("label");
+    const colorInput = document.createElement("input");
+    const colorText = document.createElement("input");
+
+    colorFieldContainer.classList.add("room-editor-field");
+
+    colorLabel.textContent = "color: ";
+
+    colorText.type = "text";
+    colorText.value = selectedRoom.color || "";
+
+    colorInput.type = "color";
+    colorInput.value = selectedRoom.color || "#333333";
+
+    colorText.addEventListener(
+        "input",
+        () => {
+            if (/^#[0-9a-fA-F]{6}$/.test(colorText.value)) {
+                colorInput.value = colorText.value;
+            }
+        }
+    );
+
+    colorInput.addEventListener(
+        "input",
+        () => {
+            colorText.value = colorInput.value;
+        }
+    );
+
+    colorFieldContainer.appendChild(colorLabel);
+    colorFieldContainer.appendChild(colorText);
+    colorFieldContainer.appendChild(colorInput);
+
+    const notesFieldContainer = document.createElement("div");
+    const notesLabel = document.createElement("label");
+    const notesTextarea = document.createElement("textarea");
+
+    notesFieldContainer.classList.add("room-editor-notes");
+
+    notesLabel.textContent = "notes: ";
+
+    notesTextarea.value = selectedRoom.notes;
+
+    notesFieldContainer.appendChild(notesLabel);
+    notesFieldContainer.appendChild(notesTextarea);
+
+    editorContent.appendChild(colorFieldContainer);
+    editorContent.appendChild(notesFieldContainer);
+}
+
+
+// Adds a standard editable room field.
+function addRoomEditorTextField(
+    key,
+    value
+) {
+    const fieldContainer =
+        document.createElement("div");
+
+    const label =
+        document.createElement("label");
+
+    const input =
+        document.createElement("input");
+
+    fieldContainer.classList.add(
+        "room-editor-field"
+    );
+
+    label.textContent =
+        `${key}: `;
+
+    input.type = "text";
+    input.value = value;
+
+    fieldContainer.appendChild(label);
+    fieldContainer.appendChild(input);
+
+    editorContent.appendChild(
+        fieldContainer
+    );
+}
+
+
+// Adds the room color control. Rooms without a color property use the
+// default CSS color until the user explicitly chooses a custom color.
+function addRoomEditorColorField() {
+    const fieldContainer =
+        document.createElement("div");
+
+    const label =
+        document.createElement("label");
+
+    const colorButton =
+        document.createElement("button");
+
+    fieldContainer.classList.add(
+        "room-editor-field"
+    );
+
+    label.textContent =
+        "color: ";
+
+    colorButton.type = "button";
+    colorButton.textContent =
+        selectedRoom.color || "Default";
+
+    colorButton.classList.add(
+        "room-editor-color"
+    );
+
+    if (selectedRoom.color) {
+        colorButton.style.backgroundColor =
+            selectedRoom.color;
+
+        colorButton.style.color =
+            getContrastColor(selectedRoom.color);
+    }
+
+    colorButton.addEventListener(
+        "click",
+        () => {
+            openRoomColorEditor(
+                fieldContainer,
+                colorButton
+            );
+        }
+    );
+
+    fieldContainer.appendChild(label);
+    fieldContainer.appendChild(colorButton);
+
+    editorContent.appendChild(fieldContainer);
+}
+
+
+// Replaces the default color button with a color picker and editable color
+// value once the user chooses to customize the room color.
+function openRoomColorEditor(
+    fieldContainer,
+    colorButton
+) {
+    if (
+        fieldContainer.querySelector(
+            ".room-editor-color-picker"
+        )
+    ) {
+        return;
+    }
+
+    const currentColor =
+        selectedRoom.color || "#333333";
+
+    colorButton.remove();
+
+    const colorInput =
+        document.createElement("input");
+
+    const colorText =
+        document.createElement("input");
+
+    colorInput.type = "color";
+    colorInput.value = currentColor;
+
+    colorText.type = "text";
+    colorText.value = currentColor;
+
+    colorInput.classList.add(
+        "room-editor-color-picker"
+    );
+
+    colorText.classList.add(
+        "room-editor-color-text"
+    );
+
+    colorInput.addEventListener(
+        "input",
+        () => {
+            colorText.value =
+                colorInput.value;
+
+            setEditorChanged(true);
+        }
+    );
+
+    colorText.addEventListener(
+        "input",
+        () => {
+            if (
+                /^#[0-9a-fA-F]{6}$/.test(
+                    colorText.value
+                )
+            ) {
+                colorInput.value =
+                    colorText.value;
+
+                setEditorChanged(true);
+            }
+        }
+    );
+
+    fieldContainer.appendChild(
+        colorInput
+    );
+
+    fieldContainer.appendChild(
+        colorText
+    );
+}
+
+
+// Determines whether black or white text has better contrast against the
+// selected room color.
+function getContrastColor(color) {
+    const red =
+        parseInt(color.slice(1, 3), 16);
+
+    const green =
+        parseInt(color.slice(3, 5), 16);
+
+    const blue =
+        parseInt(color.slice(5, 7), 16);
+
+    const brightness =
+        (red * 299 + green * 587 + blue * 114) / 1000;
+
+    return brightness > 128
+        ? "#000000"
+        : "#ffffff";
 }
 
 
