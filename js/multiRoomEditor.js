@@ -9,6 +9,7 @@
 import {
     renderRooms,
     deleteRoom,
+    duplicateRooms,
     getSelectedRooms
 } from "./roomRenderer.js";
 
@@ -673,7 +674,6 @@ function addActionControls(
         "Duplicate";
 
     groupButton.disabled = true;
-    duplicateButton.disabled = true;
 
     deleteButton.classList.add(
         "room-editor-delete"
@@ -683,6 +683,11 @@ function addActionControls(
         "click",
         deleteSelectedRooms
     );
+
+duplicateButton.addEventListener(
+    "click",
+    duplicateSelectedRooms
+);
 
     section.appendChild(
         deleteButton
@@ -733,6 +738,21 @@ function deleteSelectedRooms() {
     }
 
     closeMultiRoomEditor();
+}
+
+// Duplicates every room currently in the selection.
+//
+// The duplicate operation creates new room data, offsets the duplicated
+// rooms, selects them, and refreshes the visible map.
+function duplicateSelectedRooms() {
+    duplicateRooms(
+        getSelectedRooms(),
+        editorContext.map,
+        editorContext.mapElement,
+        editorContext.connectionLayer,
+        editorContext.zoom,
+        editorContext.currentFloor
+    );
 }
 
 

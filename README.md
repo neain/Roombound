@@ -790,7 +790,7 @@ Steps 1–26 are currently working in prototype form.
 Current Step: Polish List (see header)
 
 
-### Polish List - Current Step 32
+### Polish List - Current Step 35
 1. Zoom bar + visible zoom level + possibly keyboard shortcuts.
 2. Hamburger menu with New Map, Save/Load, Options, etc.
 3. Swap the floor-selection arrows.
@@ -832,7 +832,7 @@ Current Step: Polish List (see header)
 * add right click context menu -> open the room editor
 * change the right click context menu to have a line IF and only IF multi rooms are selected (no change to double clicking, I currently want that to be single room)
 * explode the temp file with multi-functions, roomRenderer,js
-33. Show looping connections with a looping arrow.
+33. 
 34. Add ability to copy and paste rooms with normal shortcuts (ctrl + c, ctrl + v)
 *. add the same functionality in one step in the muti-room editor duplicate button
 35. add auto-contrast to the room text when the room color changes

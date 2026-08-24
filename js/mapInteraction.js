@@ -44,7 +44,10 @@ import {
 import {
     clearRoomSelection,
     startBoxSelection,
-    getSelectedRooms
+    getSelectedRooms,
+    setRoomClipboard,
+    getRoomClipboard,
+    duplicateRooms
 } from "./roomRenderer.js";
 
 // ============================================================
@@ -705,6 +708,71 @@ export function initializeMapInteractions({
     // ========================================================
     // DOCUMENT EVENTS
     // ========================================================
+
+    // Handles standard room copy and paste shortcuts.
+    //
+    // Copy stores the current room selection in the room clipboard. Paste creates
+    // new rooms from that clipboard data using the normal room duplication path.
+    document.addEventListener(
+        "keydown",
+        (event) => {
+            if (!event.ctrlKey) {
+                return;
+            }
+
+            const target =
+                event.target;
+
+            if (
+                target instanceof HTMLInputElement ||
+                target instanceof HTMLTextAreaElement ||
+                target instanceof HTMLSelectElement ||
+                target.isContentEditable
+            ) {
+                return;
+            }
+
+            if (event.key.toLowerCase() === "c") {
+                const selectedRooms =
+                    getSelectedRooms();
+
+                if (selectedRooms.length === 0) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                setRoomClipboard(
+                    selectedRooms
+                );
+
+                return;
+            }
+
+            if (event.key.toLowerCase() === "v") {
+                const roomClipboard =
+                    getRoomClipboard();
+
+                if (
+                    !roomClipboard ||
+                    roomClipboard.length === 0
+                ) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                duplicateRooms(
+                    roomClipboard,
+                    map,
+                    mapElement,
+                    mapView.connectionLayer,
+                    mapView.zoom,
+                    mapView.currentFloor
+                );
+            }
+        }
+    );
 
     // Clicking elsewhere closes the custom context menu.
     document.addEventListener(

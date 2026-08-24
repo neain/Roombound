@@ -65,6 +65,13 @@ import {
     renderGhostRooms as renderGhostRoomsImpl
 } from "./roomRendering/renderGhostRooms.js";
 
+// Duplicates every currently selected room.
+//
+// Creates independent room data with new IDs and offsets their positions.
+// Connections are intentionally not duplicated.
+import {
+    duplicateRooms as duplicateRoomsImpl
+} from "./roomRendering/duplicateRooms.js";
 
 // ============================================================
 // ROOM SELECTION FUNCTIONS
@@ -114,6 +121,8 @@ export const hoverExceptions = [
 // Rooms that should remain visible while the connection editor is open,
 // even when they are on another floor.
 export let ghostRooms = null;
+
+let roomClipboard = null;
 
 // The rooms currently selected by the user.
 //
@@ -213,6 +222,11 @@ export function deleteRoom(...args) {
     return deleteRoomImpl(...args);
 }
 
+// Routes requests to duplicate the currently selected rooms.
+export function duplicateRooms(...args) {
+    return duplicateRoomsImpl(...args);
+}
+
 // Routes requests to begin dragging a room.
 export function startDragging(...args) {
     return startDraggingImpl(...args);
@@ -256,4 +270,20 @@ export function selectIntersectingRooms(...args) {
 // Routes requests to build the information displayed in a room tooltip.
 export function getRoomHoverInfo(...args) {
     return getRoomHoverInfoImpl(...args);
+}
+
+// ============================================================
+// ROOM DUPLICATION HELPERS
+// ============================================================
+
+export function setRoomClipboard(rooms) {
+    roomClipboard = structuredClone(rooms);
+}
+
+export function getRoomClipboard() {
+    return roomClipboard;
+}
+
+export function clearRoomClipboard() {
+    roomClipboard = null;
 }
