@@ -1,10 +1,3 @@
-// Shared map/grid utilities used to convert stored room coordinates and sizes
-// into the pixel values used by the visible room element.
-import {
-    gridToPixels,
-    gridToWorldPixels
-} from "../mapUtils.js";
-
 // Room-rendering router. Room-rendering functions, helpers, and semi-global
 // rendering state are accessed through the router rather than directly from
 // their implementation files.
@@ -19,6 +12,10 @@ import {
     removeRoomFromSelection,
     getSelectedRooms
 } from "../roomRenderer.js";
+
+// Shared map/grid utilities used to convert stored room coordinates and sizes 
+// // into the pixel values used by the visible room element. 
+import { gridToPixels, gridToWorldPixels } from "../mapUtils.js";
 
 // Creates the visible map element for a room.
 //
@@ -36,6 +33,50 @@ export function createRoomElement(
     const roomShape = document.createElement("div");
     const resizeHandle = document.createElement("div");
 
+    // BEGIN EDIT: AUTO-CONTRAST ROOM TEXT
+    //
+    // Determines whether black or white text provides better contrast against
+    // the supplied six-digit hexadecimal room color.
+    const getContrastingTextColor = (color) => {
+        if (!/^#[0-9a-fA-F]{6}$/.test(color)) {
+            return null;
+        }
+
+        const red =
+            parseInt(color.slice(1, 3), 16) / 255;
+
+        const green =
+            parseInt(color.slice(3, 5), 16) / 255;
+
+        const blue =
+            parseInt(color.slice(5, 7), 16) / 255;
+
+        const redLinear =
+            red <= 0.03928
+                ? red / 12.92
+                : ((red + 0.055) / 1.055) ** 2.4;
+
+        const greenLinear =
+            green <= 0.03928
+                ? green / 12.92
+                : ((green + 0.055) / 1.055) ** 2.4;
+
+        const blueLinear =
+            blue <= 0.03928
+                ? blue / 12.92
+                : ((blue + 0.055) / 1.055) ** 2.4;
+
+        const luminance =
+            0.2126 * redLinear +
+            0.7152 * greenLinear +
+            0.0722 * blueLinear;
+
+        return luminance > 0.179
+            ? "#000000"
+            : "#ffffff";
+    };
+    // END EDIT: AUTO-CONTRAST ROOM TEXT
+
     roomElement.classList.add("room");
     roomElement.dataset.roomId = room.roomID;
 
@@ -47,6 +88,16 @@ export function createRoomElement(
     if (room.color) {
         roomShape.style.backgroundColor =
             room.color;
+
+        // BEGIN EDIT: APPLY AUTO-CONTRAST
+        const textColor =
+            getContrastingTextColor(room.color);
+
+        if (textColor) {
+            roomShape.style.color =
+                textColor;
+        }
+        // END EDIT: APPLY AUTO-CONTRAST
     }
 
     if (isRoomSelected(room)) {
@@ -186,24 +237,23 @@ export function createRoomElement(
                 "room-selected"
             );
         }
-
     );
 
     roomElement.addEventListener(
-    "dblclick",
-    (event) => {
-        event.preventDefault();
+        "dblclick",
+        (event) => {
+            event.preventDefault();
 
-        selectRoom(
-            room,
-            map,
-            mapElement,
-            connectionLayer,
-            zoom,
-            currentFloor
-        );
-    }
-);
+            selectRoom(
+                room,
+                map,
+                mapElement,
+                connectionLayer,
+                zoom,
+                currentFloor
+            );
+        }
+    );
 
     return roomElement;
 }
