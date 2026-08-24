@@ -188,8 +188,8 @@
       "floor": 2,
       "notes": "",
       "position": {
-        "x": -5,
-        "y": 4
+        "x": -6,
+        "y": -7
       },
       "size": {
         "width": 5,
@@ -205,7 +205,7 @@
       "notes": "",
       "position": {
         "x": -19,
-        "y": -2
+        "y": -10
       },
       "size": {
         "width": 5,
@@ -213,6 +213,22 @@
       },
       "color": "#a0b148",
       "shape": "circle"
+    },
+    {
+      "roomID": "room_014",
+      "name": "Guard Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": -11,
+        "y": -10
+      },
+      "size": {
+        "width": 5,
+        "height": 5
+      },
+      "textSize": 16
     }
   ],
   "connections": [
@@ -322,7 +338,7 @@
     },
     {
       "roomA": "room_011",
-      "roomB": "room_013",
+      "roomB": "room_014",
       "roomAConnectionSide": "NONE",
       "roomBConnectionSide": "NONE",
       "directionTo": "A",
@@ -350,6 +366,14 @@
       "roomAConnectionSide": "NONE",
       "roomBConnectionSide": "NONE",
       "directionTo": "A",
+      "name": "New Connection"
+    },
+    {
+      "roomA": "room_014",
+      "roomB": "room_013",
+      "roomAConnectionSide": "NONE",
+      "roomBConnectionSide": "NONE",
+      "directionTo": "both",
       "name": "New Connection"
     }
   ]
