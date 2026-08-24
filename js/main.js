@@ -379,15 +379,57 @@ initializeMapInteractions({
 });
 
 // ============================================================
-// INITIAL MAP RENDER
+// INITIAL MAP LOAD
 // ============================================================
 
-// Perform the first render using the default zoom level.
-updateZoom();
+// Loads the map specified by the URL, or renders the default map when no
+// URL map has been supplied.
+async function initializeMap() {
+    const urlParams =
+        new URLSearchParams(window.location.search);
 
-// Start with the map centered in the viewport.
-mapElement.scrollLeft =
-    (MAP_SIZE * mapView.zoom - mapElement.clientWidth) / 2;
+    const mapUrl =
+        urlParams.get("map");
 
-mapElement.scrollTop =
-    (MAP_SIZE * mapView.zoom - mapElement.clientHeight) / 2;
+    if (!mapUrl) {
+        updateZoom();
+        return;
+    }
+
+    try {
+        await loadMapFromUrl(
+            map,
+            mapUrl,
+            updateZoom
+        );
+    } catch (error) {
+        console.error(
+            "Could not load the map from the URL.",
+            error
+        );
+
+        alert(
+            "Could not load the map from the URL.\n\n" +
+            error.message
+        );
+
+        updateZoom();
+    }
+}
+
+// ============================================================
+// INITIAL MAP LOAD
+// ============================================================
+
+// Load the map specified by the URL, or render the default map when no URL
+// map was supplied.
+initializeMap().then(
+    () => {
+        // Start with the map centered in the viewport.
+        mapElement.scrollLeft =
+            (MAP_SIZE * mapView.zoom - mapElement.clientWidth) / 2;
+
+        mapElement.scrollTop =
+            (MAP_SIZE * mapView.zoom - mapElement.clientHeight) / 2;
+    }
+);

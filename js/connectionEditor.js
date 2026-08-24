@@ -133,6 +133,9 @@ import {
     clearGhostRooms
 } from "./roomRenderer.js";
 
+import {
+    bringEditorWindowToFront
+} from "./editorWindowStack.js";
 
 // ============================================================
 // CONNECTION EDITOR STATE
@@ -477,6 +480,13 @@ function openConnectionEditorWithConnections(
 
     document.body.appendChild(connectionEditor);
 
+    connectionEditor.addEventListener(
+        "mousedown",
+        () => {
+            bringEditorWindowToFront(connectionEditor);
+        }
+    );
+
     // Install the map-click listener after the opening click has finished.
     // Otherwise the click that opened the editor would immediately close it.
     //
@@ -527,6 +537,8 @@ function openConnectionEditorWithConnections(
         );
     }
 
+    bringEditorWindowToFront(connectionEditor);
+    
     startConnectionEditorDragging(
         editorHeader,
         connectionEditor

@@ -13,6 +13,10 @@ import {
     getSelectedRooms
 } from "./roomRenderer.js";
 
+import {
+    bringEditorWindowToFront
+} from "./editorWindowStack.js";
+
 // Connection rendering router.
 // CURRENT: renderConnections()
 // If changing how room changes affect connections, inspect:
@@ -154,6 +158,13 @@ export function openMultiRoomEditor(
     document.body.appendChild(
         multiRoomEditor
     );
+
+    multiRoomEditor.addEventListener(
+    "mousedown",
+    () => {
+        bringEditorWindowToFront(multiRoomEditor);
+    }
+);
 
     document.addEventListener(
         "keydown",

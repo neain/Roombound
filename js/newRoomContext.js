@@ -19,6 +19,10 @@ import {
 } from "./mapUtils.js";
 
 import {
+    bringEditorWindowToFront
+} from "./editorWindowStack.js";
+
+import {
     renderRooms
 } from "./roomRenderer.js";
 
@@ -43,7 +47,6 @@ let newRoom = null;
 
 // Map/rendering information needed when the room is created.
 let creationContext = null;
-
 
 // ============================================================
 // PUBLIC ENTRY POINT
@@ -83,6 +86,11 @@ export function openNewRoomContext(
 
     newRoomContext.classList.add(
         "new-room-context"
+    );
+
+    newRoomContext.addEventListener(
+        "mousedown",
+        bringEditorWindowToFront
     );
 
     // --------------------------------------------------------

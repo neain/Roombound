@@ -11,6 +11,11 @@ import {
     deleteRoom
 } from "./roomRenderer.js";
 
+import {
+    bringEditorWindowToFront
+} from "./editorWindowStack.js";
+
+
 // Connection rendering.
 // CURRENT: renderConnections()
 // If changing how room editor actions affect connections, inspect:
@@ -243,6 +248,13 @@ export function openRoomEditor(
         roomEditor.appendChild(editorButtons);
 
         document.body.appendChild(roomEditor);
+
+        roomEditor.addEventListener(
+            "mousedown",
+            () => {
+                bringEditorWindowToFront(roomEditor);
+            }
+        );
 
         // Restore the editor's last saved screen position when possible.
         if (editorPosition) {

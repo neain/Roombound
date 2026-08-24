@@ -790,7 +790,7 @@ Steps 1–26 are currently working in prototype form.
 Current Step: Polish List (see header)
 
 
-### Polish List - Current Step 35
+### Polish List - Current Step 38?
 1. Zoom bar + visible zoom level + possibly keyboard shortcuts.
 2. Hamburger menu with New Map, Save/Load, Options, etc.
 3. Swap the floor-selection arrows.
@@ -836,9 +836,11 @@ Current Step: Polish List (see header)
 34. Add ability to copy and paste rooms with normal shortcuts (ctrl + c, ctrl + v)
 *. add the same functionality in one step in the muti-room editor duplicate button
 35. add auto-contrast to the room text when the room color changes
-36. Allow Connections from the room, back to itself and make the line visible.
+36. add ability to load a 'default' file based on the URL
 37. change the 'height' of the context windows. bring the clicked one to the front.
 * change the 'height' of clicked shapes, bring the clicked one to the front.
+
+
 38. add ability to group overlapping rooms into a single shaped room. underlying data will still be a rectangle, but the draw part will just keep the previous shapes and draw them in the area.
 38. Synchronize the selection visual/animation across simultaneously selected rooms.
 39. Double-click interaction refinement: prevent the initial click of a double-click from unnecessarily changing/clearing the existing multi-selection. Revisit once the selection/interaction system is otherwise complete.
@@ -854,7 +856,12 @@ Change the color of the selected connection / room / endpoint as well as its ass
 Give the user the ability to have a floor 0. default is floor 1, floor 2, and floor -1 with nothing in between.
 
 * add tutorial to web page: GitHub sharing walkthrough
-
+Loading a Map from a URL
+Roombound can load a map directly from a URL:
+?map=https://example.com/path/to/map.json
+The map must be accessible using an HTTP request from your browser. The server hosting the map must allow cross-origin requests (CORS).
+If the browser reports a CORS error, Roombound cannot bypass it. Configure the server hosting the map to allow requests from the Roombound site.
+GitHub/GitHub Pages can be used to host maps for sharing.
 
 
 * Nail down bugs
