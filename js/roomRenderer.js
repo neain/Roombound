@@ -65,6 +65,10 @@ import {
     renderGhostRooms as renderGhostRoomsImpl
 } from "./roomRendering/renderGhostRooms.js";
 
+import {
+    createGroupElement as createGroupElementImpl
+} from "./roomRendering/groupElement.js";
+
 // Duplicates every currently selected room.
 //
 // Creates independent room data with new IDs and offsets their positions.
@@ -247,6 +251,10 @@ export function createRoomElement(...args) {
 // Routes requests to render ghost rooms supplied by the connection editor.
 export function renderGhostRooms(...args) {
     return renderGhostRoomsImpl(...args);
+}
+
+export function createGroupElement(...args) {
+    return createGroupElementImpl(...args);
 }
 
 

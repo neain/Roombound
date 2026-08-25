@@ -26,7 +26,8 @@ import {
 } from "./connectionRenderer.js";
 
 import {
-    createGroup
+    createGroup,
+    isGroup
 } from "./group.js";
 
 // ============================================================
@@ -727,16 +728,17 @@ function addActionControls(
 }
 
 
-// Deletes every room currently in the selection.
+// Deletes every room or group currently in the selection.
 //
-// The current selection is captured before deletion because deleting rooms
-// changes the selection itself.
+// Groups ask whether the group itself should be deleted and then whether its
+// member rooms should also be deleted. Normal rooms continue through the
+// standard room deletion path so their connections are cleaned up.
 function deleteSelectedRooms() {
     const selectedRooms =
         getSelectedRooms();
 
     const confirmed = confirm(
-        `Delete ${selectedRooms.length} selected rooms?\n\nThis will also remove any connections attached to them.`
+        `Delete ${selectedRooms.length} selected rooms?`
     );
 
     if (!confirmed) {
@@ -747,6 +749,53 @@ function deleteSelectedRooms() {
         [...selectedRooms];
 
     for (const room of roomsToDelete) {
+        if (isGroup(room)) {
+            const deleteGroup =
+                confirm(
+                    `Delete "${room.name}"?`
+                );
+
+            if (!deleteGroup) {
+                continue;
+            }
+
+            const deleteRooms =
+                confirm(
+                    `Delete all rooms that make up "${room.name}"?`
+                );
+
+            if (deleteRooms) {
+                const memberRoomIDs =
+                    [...room.roomIDs];
+
+                for (const roomID of memberRoomIDs) {
+                    deleteRoom(
+                        editorContext.map,
+                        roomID,
+                        editorContext.mapElement,
+                        editorContext.connectionLayer,
+                        editorContext.zoom,
+                        editorContext.currentFloor
+                    );
+                }
+            }
+
+            const groupIndex =
+                editorContext.map.groups.findIndex(
+                    (group) =>
+                        group.groupID === room.groupID
+                );
+
+            if (groupIndex !== -1) {
+                editorContext.map.groups.splice(
+                    groupIndex,
+                    1
+                );
+            }
+
+            continue;
+        }
+
         deleteRoom(
             editorContext.map,
             room.roomID,
@@ -760,26 +809,27 @@ function deleteSelectedRooms() {
     closeMultiRoomEditor();
 }
 
-// Groups every currently selected room on the current floor into a single
-// group. Rooms selected from other floors are ignored because groups exist
-// on exactly one floor.
+ // Combines every selected room or group on the current floor.
+//
+// All selected objects are combined into a new group. Existing groups are
+// absorbed into the new group rather than being modified in place.
 function groupSelectedRooms() {
     const selectedRooms =
         getSelectedRooms();
 
-    const roomsOnCurrentFloor =
+    const objectsOnCurrentFloor =
         selectedRooms.filter(
-            (room) =>
-                room.floor === editorContext.currentFloor
+            (object) =>
+                object.floor === editorContext.currentFloor
         );
 
-    if (roomsOnCurrentFloor.length < 2) {
+    if (objectsOnCurrentFloor.length < 2) {
         return;
     }
 
     createGroup(
         editorContext.map,
-        roomsOnCurrentFloor,
+        objectsOnCurrentFloor,
         editorContext.currentFloor
     );
 
@@ -934,4 +984,31 @@ function startMultiRoomEditorDragging(
         "mousedown",
         startDrag
     );
+}
+
+// Returns the top-left position that contains every supplied room.
+export function getGroupPosition(
+    rooms
+) {
+    let minX = Infinity;
+    let minY = Infinity;
+
+    for (const room of rooms) {
+        minX =
+            Math.min(
+                minX,
+                room.position.x
+            );
+
+        minY =
+            Math.min(
+                minY,
+                room.position.y
+            );
+    }
+
+    return {
+        x: minX,
+        y: minY
+    };
 }

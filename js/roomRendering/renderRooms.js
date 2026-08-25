@@ -5,12 +5,9 @@ import {
     createRoomElement,
     renderGhostRooms,
     roomTooltip,
-    ghostRooms
-} from "../roomRenderer.js";
-
-import {
+    ghostRooms,
     createGroupElement
-} from "./groupElement.js";
+} from "../roomRenderer.js";
 
 // Removes the current room elements and redraws every room in the map.
 //

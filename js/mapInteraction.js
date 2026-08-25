@@ -42,6 +42,10 @@ import {
 } from "./roomEditor.js";
 
 import {
+    openConnectionEditor
+} from "./connectionEditor.js";
+
+import {
     clearRoomSelection,
     startBoxSelection,
     getSelectedRooms,
@@ -51,7 +55,8 @@ import {
 } from "./roomRenderer.js";
 
 import {
-    createGroup
+    createGroup,
+    isGroup
 } from "./group.js";
 
 // ============================================================
@@ -128,7 +133,12 @@ export function initializeMapInteractions({
     }
 
     // Creates the custom right-click context menu.
-    function openContextMenu(event, room, mapPosition = null) {
+    function openContextMenu(
+        event,
+        room,
+        mapPosition = null,
+        connections = []
+    ) {
         closeContextMenu();
 
         contextMenu = document.createElement("div");
@@ -145,6 +155,9 @@ export function initializeMapInteractions({
 
         if (room) {
             const openRoomEditorMenuButton =
+                document.createElement("button");
+
+            const editConnectionsMenuButton =
                 document.createElement("button");
 
             const newConnectionMenuButton =
@@ -175,6 +188,33 @@ export function initializeMapInteractions({
 
             contextMenu.appendChild(
                 openRoomEditorMenuButton
+            );
+
+            editConnectionsMenuButton.classList.add(
+                "menu-item"
+            );
+
+            editConnectionsMenuButton.textContent =
+                "Edit Connections";
+
+            editConnectionsMenuButton.addEventListener(
+                "click",
+                () => {
+                    closeContextMenu();
+
+                    openConnectionEditor(
+                        map,
+                        room,
+                        mapElement,
+                        mapView.connectionLayer,
+                        mapView.zoom,
+                        mapView.currentFloor
+                    );
+                }
+            );
+
+            contextMenu.appendChild(
+                editConnectionsMenuButton
             );
 
             const selectedRooms =
@@ -221,20 +261,20 @@ export function initializeMapInteractions({
                     () => {
                         closeContextMenu();
 
-                        const roomsOnCurrentFloor =
+                        const objectsOnCurrentFloor =
                             getSelectedRooms().filter(
-                                (selectedRoom) =>
-                                    selectedRoom.floor ===
+                                (selectedObject) =>
+                                    selectedObject.floor ===
                                     mapView.currentFloor
                             );
 
-                        if (roomsOnCurrentFloor.length < 2) {
+                        if (objectsOnCurrentFloor.length < 2) {
                             return;
                         }
 
                         createGroup(
                             map,
-                            roomsOnCurrentFloor,
+                            objectsOnCurrentFloor,
                             mapView.currentFloor
                         );
 
@@ -274,7 +314,9 @@ export function initializeMapInteractions({
                 newConnectionMenuButton
             );
         } else {
-
+            // BEGIN EDIT
+            // New Room remains the primary context-menu action. When connections
+            // are nearby, editing them is added as a secondary action.
             newRoomMenuButton.classList.add(
                 "menu-item"
             );
@@ -301,6 +343,39 @@ export function initializeMapInteractions({
             contextMenu.appendChild(
                 newRoomMenuButton
             );
+
+            if (connections.length > 0) {
+                const editConnectionsMenuButton =
+                    document.createElement("button");
+
+                editConnectionsMenuButton.classList.add(
+                    "menu-item"
+                );
+
+                editConnectionsMenuButton.textContent =
+                    "Edit Connections";
+
+                editConnectionsMenuButton.addEventListener(
+                    "click",
+                    () => {
+                        closeContextMenu();
+
+                        openConnectionEditorForConnections(
+                            map,
+                            connections,
+                            mapElement,
+                            mapView.connectionLayer,
+                            mapView.zoom,
+                            mapView.currentFloor
+                        );
+                    }
+                );
+
+                contextMenu.appendChild(
+                    editConnectionsMenuButton
+                );
+            }
+            // END EDIT
         }
 
         contextMenu.style.position = "fixed";
@@ -395,14 +470,30 @@ export function initializeMapInteractions({
                 mapRect.top +
                 mapElement.scrollTop;
 
+            // BEGIN EDIT
+            // Use the same hit detection as the normal left-click connection
+            // editor path. This deliberately checks all nearby connections.
+            const connections =
+                getConnectionsNearPoint(
+                    mapView,
+                    clickX,
+                    clickY,
+                    gridToPixels(
+                        CONNECTION_CLICK_RANGE,
+                        mapView.zoom
+                    )
+                );
+
             openContextMenu(
                 event,
                 null,
                 {
                     x: clickX,
                     y: clickY
-                }
+                },
+                connections
             );
+            // END EDIT
         }
     );
 
@@ -510,13 +601,11 @@ export function initializeMapInteractions({
     // MAP CLICK
     // ========================================================
 
-    // Clicking near a connection opens the connection editor with every
-    // nearby connection. Room clicks take priority so connections cannot
-    // be selected through a room.
+    // Handles normal left-click behavior on the map.
+    // Room clicks take priority over empty-map interaction.
     mapElement.addEventListener(
         "click",
         (event) => {
-
             if (boxSelectionState.dragged) {
                 boxSelectionState.dragged = false;
                 return;
@@ -577,109 +666,82 @@ export function initializeMapInteractions({
                 return;
             }
 
-            const connections =
-                getConnectionsNearPoint(
-                    mapView,
-                    clickX,
-                    clickY,
-                    gridToPixels(
-                        CONNECTION_CLICK_RANGE,
-                        mapView.zoom
-                    )
-                );
+            // Normal empty-map clicks clear the room selection.
+            // Shift-click preserves the current selection.
+            if (!event.shiftKey) {
+                clearRoomSelection();
 
-            if (connections.length === 0) {
-                // Normal empty-map clicks clear the room selection.
-                // Shift-click preserves the current selection.
-                if (!event.shiftKey) {
-                    clearRoomSelection();
-
-                    mapElement
-                        .querySelectorAll(".room-selected")
-                        .forEach(
-                            (element) => {
-                                element.classList.remove(
-                                    "room-selected"
-                                );
-                            }
-                        );
-                }
-
-                const editor =
-                    document.querySelector(".room-editor");
-
-                if (
-                    event.target === mapElement ||
-                    event.target === mapWorld
-                ) {
-                    const roomEditor =
-                        document.querySelector(".room-editor");
-
-                    const multiRoomEditor =
-                        document.querySelector(".multi-room-editor");
-
-                    const connectionEditor =
-                        document.querySelector(".connection-editor");
-
-                    const newConnectionContext =
-                        document.querySelector(".new-connection-context");
-
-                    if (roomEditor) {
-                        const cancelButton =
-                            roomEditor.querySelector(
-                                ".room-editor-cancel"
+                mapElement
+                    .querySelectorAll(".room-selected")
+                    .forEach(
+                        (element) => {
+                            element.classList.remove(
+                                "room-selected"
                             );
-
-                        if (cancelButton) {
-                            cancelButton.click();
                         }
-                    }
-
-                    if (multiRoomEditor) {
-                        const cancelButton =
-                            multiRoomEditor.querySelector(
-                                ".multi-room-editor-cancel"
-                            );
-
-                        if (cancelButton) {
-                            cancelButton.click();
-                        }
-                    }
-
-                    if (connectionEditor) {
-                        const closeButton =
-                            connectionEditor.querySelector(
-                                ".connection-editor-close"
-                            );
-
-                        if (closeButton) {
-                            closeButton.click();
-                        }
-                    }
-
-                    if (newConnectionContext) {
-                        const cancelButton =
-                            newConnectionContext.querySelector(
-                                ".new-connection-context-buttons button:first-child"
-                            );
-
-                        if (cancelButton) {
-                            cancelButton.click();
-                        }
-                    }
-                }
-
-                return;
+                    );
             }
 
-            openConnectionEditorForConnections(
-                map,
-                connections,
-                mapElement,
-                mapView.connectionLayer,
-                mapView.zoom,
-                mapView.currentFloor
-            );
+            if (
+                event.target === mapElement ||
+                event.target === mapWorld
+            ) {
+                const roomEditor =
+                    document.querySelector(".room-editor");
+
+                const multiRoomEditor =
+                    document.querySelector(".multi-room-editor");
+
+                const connectionEditor =
+                    document.querySelector(".connection-editor");
+
+                const newConnectionContext =
+                    document.querySelector(".new-connection-context");
+
+                if (roomEditor) {
+                    const cancelButton =
+                        roomEditor.querySelector(
+                            ".room-editor-cancel"
+                        );
+
+                    if (cancelButton) {
+                        cancelButton.click();
+                    }
+                }
+
+                if (multiRoomEditor) {
+                    const cancelButton =
+                        multiRoomEditor.querySelector(
+                            ".multi-room-editor-cancel"
+                        );
+
+                    if (cancelButton) {
+                        cancelButton.click();
+                    }
+                }
+
+                if (connectionEditor) {
+                    const closeButton =
+                        connectionEditor.querySelector(
+                            ".connection-editor-close"
+                        );
+
+                    if (closeButton) {
+                        closeButton.click();
+                    }
+                }
+
+                if (newConnectionContext) {
+                    const cancelButton =
+                        newConnectionContext.querySelector(
+                            ".new-connection-context-buttons button:first-child"
+                        );
+
+                    if (cancelButton) {
+                        cancelButton.click();
+                    }
+                }
+            }
         }
     );
 
@@ -835,7 +897,7 @@ export function initializeMapInteractions({
                 return;
             }
 
-            if (event.key.toLowerCase() === "c") {
+                        if (event.key.toLowerCase() === "c") {
                 const selectedRooms =
                     getSelectedRooms();
 
@@ -845,8 +907,33 @@ export function initializeMapInteractions({
 
                 event.preventDefault();
 
+                const copySelection = [
+                    ...selectedRooms
+                ];
+
+                for (const selectedObject of selectedRooms) {
+                    if (!isGroup(selectedObject)) {
+                        continue;
+                    }
+
+                    for (const roomID of selectedObject.roomIDs) {
+                        const room =
+                            map.rooms.find(
+                                (candidate) =>
+                                    candidate.roomID === roomID
+                            );
+
+                        if (
+                            room &&
+                            !copySelection.includes(room)
+                        ) {
+                            copySelection.push(room);
+                        }
+                    }
+                }
+
                 setRoomClipboard(
-                    selectedRooms
+                    copySelection
                 );
 
                 return;

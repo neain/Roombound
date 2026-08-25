@@ -222,13 +222,66 @@ export function openRoomEditor(
         deleteButton.addEventListener(
             "click",
             () => {
-                const confirmed = confirm(
-                    `Delete room "${selectedRoom.name}"?\n\nThis will also remove any connections attached to it.`
-                );
-
                 if (!selectedRoom) {
                     return;
                 }
+
+                if (isSelectedGroup()) {
+                    const deleteGroup =
+                        confirm(
+                            `Delete "${selectedRoom.name}"?`
+                        );
+
+                    if (!deleteGroup) {
+                        return;
+                    }
+
+                    const deleteRooms =
+                        confirm(
+                            `Delete all rooms that make up "${selectedRoom.name}"?`
+                        );
+
+                    if (deleteRooms) {
+                        const memberRoomIDs =
+                            [...selectedRoom.roomIDs];
+
+                        for (const roomID of memberRoomIDs) {
+                            deleteRoom(
+                                editorContext.map,
+                                roomID,
+                                editorContext.mapElement,
+                                editorContext.connectionLayer,
+                                editorContext.zoom,
+                                editorContext.currentFloor
+                            );
+                        }
+                    }
+
+                    const groupIndex =
+                        editorContext.map.groups.findIndex(
+                            (group) =>
+                                group.groupID ===
+                                selectedRoom.groupID
+                        );
+
+                    if (groupIndex !== -1) {
+                        editorContext.map.groups.splice(
+                            groupIndex,
+                            1
+                        );
+                    }
+
+                    isNewRoom = false;
+                    closeRoomEditor();
+
+                    return;
+                }
+
+                const confirmed =
+                    confirm(
+                        `Delete room "${selectedRoom.name}"?\n\n` +
+                        "This will also remove any connections attached to it."
+                    );
 
                 if (!confirmed) {
                     return;
@@ -463,7 +516,8 @@ function saveRoomEditor() {
 
     // Recalculate the displayed-name font size using the newly saved object.
     //
-    // Groups use their derived bounding rectangle for this calculation.
+    // Rooms and groups both store their own size, so the same calculation applies
+    // to either object.
     selectedRoom.textSize =
         calculateRoomTextSize(selectedRoom);
 
@@ -608,7 +662,7 @@ function closeRoomEditor() {
 //
 // Groups expose the same user-facing fields as rooms where applicable.
 // Structural group properties remain hidden, and shape remains visible but
-// disabled because a group's shape is always its bounding rectangle.
+// disabled because groups always render as rectangles.
 function updateRoomEditor() {
     const hoverExceptions = [
         "roomID",
@@ -1076,10 +1130,10 @@ function getContrastColor(color) {
 const DEFAULT_ROOM_TEXT_SIZE = 16;
 
 // Determines the largest font size that allows a room or group name to fit
-// inside its visible bounds without overflowing.
+// inside its stored bounds without overflowing.
 //
-// Groups do not store a size of their own, so their bounds are calculated from
-// their member rooms before the measurement is performed.
+// Rooms and groups both provide their own size, so the same calculation can
+// be used for either object.
 function calculateRoomTextSize(room) {
     const roomElement =
         document.createElement("div");

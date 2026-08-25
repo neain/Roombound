@@ -790,7 +790,7 @@ Steps 1–26 are currently working in prototype form.
 Current Step: Polish List (see header)
 
 
-### Polish List - Current Step 38?
+### Polish List - Current Step 42
 1. Zoom bar + visible zoom level + possibly keyboard shortcuts.
 2. Hamburger menu with New Map, Save/Load, Options, etc.
 3. Swap the floor-selection arrows.
@@ -843,42 +843,23 @@ Current Step: Polish List (see header)
 * add double click and right click context menu to groups.
 * once the group is made, link it to the rooms it 'contains' and when the group gets moved, move thoes rooms and refresh the map. this includes changing the groups floor. all rooms need to change floors with it.
 * add right click context menu when multiple rooms are selected -> convert to group
-
 * make a deal with notes (tired norman isnt thinking right. deal with notes so they are all in the new 'room')
 * add additional rooms to a group
 * Allow copy pasting of group + rooms
 * make the delete button work on the group.
-* figure out what to do with connections. maybe this is a good place to make a room 'glow' a different color when hovered in the connection menu? or... leave until V1.2 when the connections are 'smarter'.
 * make sure that two groups can be combined into a group
-* function explode groupElement.js in /roomRendering/
 * startDragging.js in /roomRendering/ keeps getting the currentFloor and the map object. but since currentFloor is part of the map object, remove that imported variable and refactor? (start checking for things like this in other files)
-
-Notes
-When the group operation involves any rooms containing notes:
-
-If there are no notes anywhere, don't ask anything.
-If there are notes, ask:
-"Preserve notes?"
-If No, grouping proceeds normally and the notes aren't carried into the group.
-If Yes:
-Gather the notes from every room being grouped.
-Put them into the group's owner room's notes field.
-Separate multiple note blocks with an empty line.
-Clear the notes from the other rooms.
-Then finish grouping.
-
-And for adding another room to an existing group, exactly the same rule applies:
-
-
-
-39. Synchronize the selection visual/animation across simultaneously selected rooms.
-40. Double-click interaction refinement: prevent the initial click of a double-click from unnecessarily changing/clearing the existing multi-selection. Revisit once the selection/interaction system is otherwise complete.
+39. 
+40. 
 41. right click context menu. when right clicking a room or? connection? have an option to open the connection editor.
+* connection between rooms
+* room context menu
 42. move help button from load URL to hamburger menu
-43. check feasability of a ctrl + z... I feel this is going to be FAR larger than it feels like it should be. maybe even V1.4 worthy
+43. when grouping, replace all the questioning alert style boxes with a single context window with all the options
+44. add delete button (keyboard) performing the same action as delete buttons in the editors
 
-45. add options menu. ideas are below
-50. add ability to save a map/url combination so you can hand it to a friend and they just load it without any extra work. should just be an export button in the main file list?
+55. add options menu. ideas are below
+60. add ability to save a map/url combination so you can hand it to a friend and they just load it without any extra work. should just be an export button in the main file list?
 
 * options menu items: 
 Change the default color of rooms and room text. 
@@ -1048,6 +1029,8 @@ room references and attachment sides directly.
    - Once Roombound has been released with maps created by other users, future
      breaking data-model changes should consider backward compatibility or migration
      support.
+
+* figure out what to do with connections and groups. maybe this is a good place to make a room 'glow' a different color when hovered in the connection menu? or... (this was moved from the polish list. it may be woefully out of date and ignored by the time I get done with the main V1.3)
 
 #### Undo V1.4
 Add undo/redo (Ctrl+Z / Ctrl+Y). This may be as simple as tracking map-level changes: any edit or operation that changes the map is saved as a history step, and undo restores the previous state. Redo restores the state that was undone. The exact history approach and what constitutes a single change will need to be determined when this feature is implemented.

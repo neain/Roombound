@@ -4,9 +4,10 @@
 
 // Creates the visible DOM element representing a group.
 //
-// A group's position and size are stored directly on the group object. They
-// are established when the group is created and remain unchanged until the
-// group's membership changes.
+// A group's position and size are stored directly on the group object.
+// Position represents the top-left corner of the group's bounding rectangle,
+// while size represents that rectangle's dimensions. Both are updated when
+// the group's membership changes.
 import {
     gridToPixels,
     gridToWorldPixels
