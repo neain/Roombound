@@ -151,10 +151,6 @@ export function renderConnections(...args) {
     return renderConnectionsImpl(...args);
 }
 
-export function createFloorTransitionIndicator(...args) {
-    return createFloorTransitionIndicatorImpl(...args);
-}
-
 export function getConnectionsNearPoint(...args) {
     return getConnectionsNearPointImpl(...args);
 }

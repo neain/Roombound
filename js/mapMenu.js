@@ -319,11 +319,6 @@ export function initializeMapMenu({
         newMapOverlay.style.display = "none";
     }
 
-    // Refreshes the application to create a new map.
-    function refreshForNewMap() {
-        window.location.reload();
-    }
-
     // Opens the New Map confirmation dialog or immediately creates a
     // new map when the current map is empty.
     function openNewMapDialog() {
@@ -419,20 +414,24 @@ export function initializeMapMenu({
     saveAndNewButton.addEventListener(
         "click",
         () => {
+            closeNewMapDialog();
             saveMap();
 
             // Give the browser a moment to begin the file download before
-            // refreshing the page.
+            // creating the new map.
             setTimeout(() => {
                 refreshForNewMap();
             }, 100);
         }
     );
 
-    newWithoutSavingButton.addEventListener(
-        "click",
-        refreshForNewMap
-    );
+newWithoutSavingButton.addEventListener(
+    "click",
+    () => {
+        closeNewMapDialog();
+        refreshForNewMap();
+    }
+);
 
     cancelNewMapButton.addEventListener(
         "click",

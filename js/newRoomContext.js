@@ -30,11 +30,6 @@ import {
     renderConnections
 } from "./connectionRenderer.js";
 
-import {
-    selectRoom
-} from "./roomEditor.js";
-
-
 // ============================================================
 // CONTEXT STATE
 // ============================================================
@@ -90,9 +85,10 @@ export function openNewRoomContext(
 
     newRoomContext.addEventListener(
         "mousedown",
-        bringEditorWindowToFront
+        () => {
+            bringEditorWindowToFront(newRoomContext);
+        }
     );
-
     // --------------------------------------------------------
     // Context header / preview
     // --------------------------------------------------------
@@ -604,7 +600,7 @@ function updateContextMinimumWidth(
 // ROOM CREATION
 // ============================================================
 
-// Commits the temporary room to the map and opens its normal room editor.
+// Commits the temporary room to the map
 function createRoomFromContext() {
     if (!newRoom || !creationContext) {
         return;
@@ -639,16 +635,6 @@ function createRoomFromContext() {
     });
 
     closeNewRoomContext();
-
-    selectRoom(
-        room,
-        map,
-        mapElement,
-        connectionLayer,
-        zoom,
-        currentFloor
-    );
-
 }
 // ============================================================
 // CONTEXT DRAGGING

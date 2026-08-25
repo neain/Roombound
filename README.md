@@ -839,11 +839,36 @@ Current Step: Polish List (see header)
 36. add ability to load a 'default' file based on the URL
 37. change the 'height' of the context windows. bring the clicked one to the front.
 * change the 'height' of clicked shapes, bring the clicked one to the front.
-
-
 38. add ability to group overlapping rooms into a single shaped room. underlying data will still be a rectangle, but the draw part will just keep the previous shapes and draw them in the area.
+* add double click and right click context menu to groups.
+* once the group is made, link it to the rooms it 'contains' and when the group gets moved, move thoes rooms and refresh the map. this includes changing the groups floor. all rooms need to change floors with it.
+* add right click context menu when multiple rooms are selected -> add to group
+* function explode groupElement.js
+* need to explode createRoomElement.js inside roomRendering - GPT added a 'helper' function to it (maybe, this is an old note. but im out of time)
+
+Notes
+
+When the group operation involves any rooms containing notes:
+
+If there are no notes anywhere, don't ask anything.
+If there are notes, ask:
+"Preserve notes?"
+If No, grouping proceeds normally and the notes aren't carried into the group.
+If Yes:
+Gather the notes from every room being grouped.
+Put them into the group's owner room's notes field.
+Separate multiple note blocks with an empty line.
+Clear the notes from the other rooms.
+Then finish grouping.
+
+And for adding another room to an existing group, exactly the same rule applies:
+
+
+
 38. Synchronize the selection visual/animation across simultaneously selected rooms.
 39. Double-click interaction refinement: prevent the initial click of a double-click from unnecessarily changing/clearing the existing multi-selection. Revisit once the selection/interaction system is otherwise complete.
+40. right click context menu. when right clicking a room or? connection? have an option to open the connection editor.
+41. move help button from load URL to hamburger menu
 
 45. add options menu. ideas are below
 50. add ability to save a map/url combination so you can hand it to a friend and they just load it without any extra work. should just be an export button in the main file list?
@@ -863,6 +888,8 @@ The map must be accessible using an HTTP request from your browser. The server h
 If the browser reports a CORS error, Roombound cannot bypass it. Configure the server hosting the map to allow requests from the Roombound site.
 GitHub/GitHub Pages can be used to host maps for sharing.
 
+add a new users explanation box on an empty map refresh - a getting started section
+
 
 * Nail down bugs
 * The URL for the github pages that is hosting the webpage based in github is https://neain.github.io/Roombound/ technicly at index.html, but thats implied.
@@ -871,7 +898,9 @@ GitHub/GitHub Pages can be used to host maps for sharing.
 * HoverExceptions in roomRenderer.js ... best to leave it as is? or invert it because we have FAR more fields that are not user facing than are. factor in how complex the refactor is going to be.
 
 ### Possible Bugs
-* when opening a connection to be edited, its not closing the other connections in the same list (this may end up not being a bug as other polish steps are modifying this list)
+* createFloorTransitionIndicator() is unused now. should probably delete it. (REMOVED THE EXPORTS TO CHECK FOR CODE EXPLOSIONS. IF LATER AFTER POLISH, STILL NOTHING CALLED IT, REMOVE THE EXPLODED FILE)
+* getSelectedRoom() function in roomRenderer.js may now be unused. 
+* get GPT to check mapStorage.js (core js folder) for things that are trying to 'sanitize' the map data. all I care about is that if an old map is missing a property, that it has a default. if it fails because the actual data is bad, then it fails.
 
 ### Next Version Ideas
 #### Function Explosion  V1.1

@@ -7,8 +7,8 @@ import {
     getRoomHoverInfo,
     roomTooltip,
     isRoomSelected,
-    selectRoom,
     addRoomToSelection,
+    selectRoom,
     removeRoomFromSelection,
     getSelectedRooms
 } from "../roomRenderer.js";
@@ -33,8 +33,6 @@ export function createRoomElement(
     const roomShape = document.createElement("div");
     const resizeHandle = document.createElement("div");
 
-    // BEGIN EDIT: AUTO-CONTRAST ROOM TEXT
-    //
     // Determines whether black or white text provides better contrast against
     // the supplied six-digit hexadecimal room color.
     const getContrastingTextColor = (color) => {
@@ -75,10 +73,13 @@ export function createRoomElement(
             ? "#000000"
             : "#ffffff";
     };
-    // END EDIT: AUTO-CONTRAST ROOM TEXT
 
     roomElement.classList.add("room");
     roomElement.dataset.roomId = room.roomID;
+
+    if (isRoomSelected(room)) {
+        roomElement.classList.add("room-selected");
+    }
 
     roomShape.classList.add(
         "room-shape",
@@ -89,32 +90,26 @@ export function createRoomElement(
         roomShape.style.backgroundColor =
             room.color;
 
-        // BEGIN EDIT: APPLY AUTO-CONTRAST
         const textColor =
-            getContrastingTextColor(room.color);
+            getContrastingTextColor(
+                room.color
+            );
 
         if (textColor) {
             roomShape.style.color =
                 textColor;
         }
-        // END EDIT: APPLY AUTO-CONTRAST
     }
 
-    if (isRoomSelected(room)) {
-        roomElement.classList.add("room-selected");
-    }
+    roomShape.textContent =
+        room.name;
 
-    roomShape.textContent = room.name;
-
-    roomElement.appendChild(roomShape);
-
-    resizeHandle.classList.add(
-        "room-resize-handle"
+    roomElement.appendChild(
+        roomShape
     );
 
-    resizeHandle.addEventListener(
-        "mousedown",
-        (event) => {
+    resizeHandle.classList.add("room-resize-handle");
+    resizeHandle.addEventListener("mousedown", (event) => {
             event.stopPropagation();
 
             startResizing(
@@ -194,6 +189,13 @@ export function createRoomElement(
                 delete roomElement.dataset.dragged;
                 return;
             }
+
+            // Move the clicked room to the end of the map world's room elements
+            // so it appears above other overlapping rooms. This is purely visual;
+            // room data and persistent ordering are unchanged.
+            roomElement.parentElement.appendChild(
+                roomElement
+            );
 
             if (event.shiftKey) {
                 if (isRoomSelected(room)) {

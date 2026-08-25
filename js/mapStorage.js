@@ -39,6 +39,7 @@ function getSerializableMap(map) {
 
             return savedRoom;
         }),
+        groups: map.groups,
         connections: map.connections.map(conn => ({
             roomA: conn.roomA,
             roomB: conn.roomB,
@@ -76,6 +77,13 @@ async function writeMapToFileHandle(
     );
 }
 
+// Clears the local file associated with the current map.
+//
+// A newly created map must not retain the file association of the map that
+// was previously being edited, otherwise Save could overwrite the old map.
+export function clearCurrentFileHandle() {
+    currentFileHandle = null;
+}
 
 // ============================================================
 // LEGACY SAVE FALLBACK
@@ -230,10 +238,10 @@ function isValidMapData(data) {
         return false;
     }
 
-    // Optional: check version later if we evolve the schema.
+    // Groups were added after the original map format. Older maps simply
+    // load without any groups.
     return true;
 }
-
 
 // ============================================================
 // MAP LOADING
@@ -251,7 +259,7 @@ export function loadMapFromData(
 ) {
     const editors =
         document.querySelectorAll(
-            ".room-editor, .connection-editor"
+            ".room-editor, .multi-room-editor, .connection-editor"
         );
 
     if (!isValidMapData(data)) {
@@ -261,9 +269,16 @@ export function loadMapFromData(
 
     // Replace the data in place.
     map.rooms.length = 0;
+    map.groups.length = 0;
     map.connections.length = 0;
 
     data.rooms.forEach(room => map.rooms.push(room));
+
+    // Older maps do not contain groups.
+    if (Array.isArray(data.groups)) {
+        data.groups.forEach(group => map.groups.push(group));
+    }
+
     data.connections.forEach(conn => map.connections.push(conn));
 
     // Restore the shared room-editor size, or use the default for older maps.
@@ -271,7 +286,7 @@ export function loadMapFromData(
         ? { ...data.editorSize }
         : { width: 400, height: 500 };
 
-    // Close any open editors (simple approach for now).
+    // Close any open editors before displaying the newly loaded map.
     editors.forEach(el => el.remove());
 
     // Re-render.

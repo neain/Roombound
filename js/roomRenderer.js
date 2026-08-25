@@ -163,7 +163,9 @@ export function getSelectedRooms() {
 //
 // This preserves the existing single-room selection interface while supporting
 // multi-room selection.
-export function getSelectedRoom() {
+
+// export removed to check for obvious code explosions...
+function getSelectedRoom() {
     return selectedRooms.length > 0
         ? selectedRooms[0]
         : null;

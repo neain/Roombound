@@ -25,7 +25,6 @@ import {
     renderConnections
 } from "./connectionRenderer.js";
 
-
 // ============================================================
 // MULTI-ROOM EDITOR STATE
 // ============================================================
@@ -684,8 +683,6 @@ function addActionControls(
     duplicateButton.textContent =
         "Duplicate";
 
-    groupButton.disabled = true;
-
     deleteButton.classList.add(
         "room-editor-delete"
     );
@@ -695,10 +692,15 @@ function addActionControls(
         deleteSelectedRooms
     );
 
-duplicateButton.addEventListener(
-    "click",
-    duplicateSelectedRooms
-);
+    duplicateButton.addEventListener(
+        "click",
+        duplicateSelectedRooms
+    );
+
+    groupButton.addEventListener(
+        "click",
+        groupSelectedRooms
+    );
 
     section.appendChild(
         deleteButton
@@ -749,6 +751,82 @@ function deleteSelectedRooms() {
     }
 
     closeMultiRoomEditor();
+}
+
+// Groups every currently selected room on the current floor into a single
+// group. Rooms selected from other floors are ignored because groups exist
+// on exactly one floor.
+function groupSelectedRooms() {
+    const selectedRooms =
+        getSelectedRooms();
+
+    const roomsOnCurrentFloor =
+        selectedRooms.filter(
+            (room) =>
+                room.floor === editorContext.currentFloor
+        );
+
+    if (roomsOnCurrentFloor.length < 2) {
+        return;
+    }
+
+    const selectedRoomIDs =
+        roomsOnCurrentFloor.map(
+            (room) => room.roomID
+        );
+
+    const roomElements =
+        [...editorContext.mapElement.querySelectorAll(".room")];
+
+    const roomIDs =
+        roomElements
+            .filter(
+                (roomElement) =>
+                    selectedRoomIDs.includes(
+                        roomElement.dataset.roomId
+                    )
+            )
+            .map(
+                (roomElement) =>
+                    roomElement.dataset.roomId
+            );
+
+    const group = {
+        groupID: createGroupID(editorContext.map),
+        roomIDs,
+        name: "New Group",
+        floor: editorContext.currentFloor,
+        notes: ""
+    };
+
+    editorContext.map.groups.push(group);
+
+    refreshMultiRoomMap();
+}
+
+
+// Creates the next available group ID using the same numbered format as rooms.
+function createGroupID(map) {
+    let highestGroupNumber = 0;
+
+    for (const group of map.groups) {
+        const match =
+            group.groupID?.match(/^group_(\d+)$/);
+
+        if (!match) {
+            continue;
+        }
+
+        highestGroupNumber =
+            Math.max(
+                highestGroupNumber,
+                Number(match[1])
+            );
+    }
+
+    return `group_${String(
+        highestGroupNumber + 1
+    ).padStart(3, "0")}`;
 }
 
 // Duplicates every room currently in the selection.

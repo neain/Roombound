@@ -54,6 +54,7 @@ import {
 // MAP INTERACTION
 // ============================================================
 
+
 // Initializes all direct mouse interactions with the map.
 export function initializeMapInteractions({
     map,
@@ -77,6 +78,35 @@ export function initializeMapInteractions({
 
     let boxSelectionState = {dragged: false};
 
+    // Returns the map object represented by a room or group DOM element.
+    //
+    // Groups are intentionally treated like rooms for map interaction so the
+    // same editor and context-menu behavior can operate on either object.
+    function getRoomLikeObject(element) {
+        if (!element) {
+            return null;
+        }
+
+        if (element.classList.contains("room")) {
+            const roomID =
+                element.dataset.roomId;
+
+            return map.rooms.find(
+                (room) => room.roomID === roomID
+            ) || null;
+        }
+
+        if (element.classList.contains("group")) {
+            const groupID =
+                element.dataset.groupId;
+
+            return map.groups.find(
+                (group) => group.groupID === groupID
+            ) || null;
+        }
+
+        return null;
+    }
 
     // ========================================================
     // CONTEXT MENU
@@ -254,17 +284,11 @@ export function initializeMapInteractions({
             }
 
             const roomElement =
-                event.target.closest?.(".room");
+                event.target.closest?.(".room, .group");
 
             if (roomElement) {
-                const roomID =
-                    roomElement.dataset.roomId;
-
                 const room =
-                    map.rooms.find(
-                        (candidate) =>
-                            candidate.roomID === roomID
-                    );
+                    getRoomLikeObject(roomElement);
 
                 if (!room) {
                     return;
@@ -342,18 +366,24 @@ export function initializeMapInteractions({
     mapElement.addEventListener(
         "dblclick",
         (event) => {
+            console.log(
+                "DOUBLE CLICK:",
+                event.target,
+                event.target.closest?.(".room"),
+                event.target.closest?.(".group")
+            );
+
             const roomElement =
-                event.target.closest?.(".room");
+                event.target.closest?.(".room, .group");
 
             if (roomElement) {
-                const roomID =
-                    roomElement.dataset.roomId;
-
                 const room =
-                    map.rooms.find(
-                        (candidate) =>
-                            candidate.roomID === roomID
-                    );
+                    getRoomLikeObject(roomElement);
+
+                console.log(
+                    "DOUBLE CLICK OBJECT:",
+                    room
+                );
 
                 if (!room) {
                     return;
@@ -413,7 +443,7 @@ export function initializeMapInteractions({
 
             if (
                 event.target.closest &&
-                event.target.closest(".room")
+                event.target.closest(".room, .group")
             ) {
                 return;
             }
@@ -497,7 +527,7 @@ export function initializeMapInteractions({
 
             if (
                 event.target.closest &&
-                event.target.closest(".room")
+                event.target.closest(".room, .group")
             ) {
                 return;
             }
@@ -543,6 +573,12 @@ export function initializeMapInteractions({
                     const multiRoomEditor =
                         document.querySelector(".multi-room-editor");
 
+                    const connectionEditor =
+                        document.querySelector(".connection-editor");
+
+                    const newConnectionContext =
+                        document.querySelector(".new-connection-context");
+
                     if (roomEditor) {
                         const cancelButton =
                             roomEditor.querySelector(
@@ -558,6 +594,28 @@ export function initializeMapInteractions({
                         const cancelButton =
                             multiRoomEditor.querySelector(
                                 ".multi-room-editor-cancel"
+                            );
+
+                        if (cancelButton) {
+                            cancelButton.click();
+                        }
+                    }
+
+                    if (connectionEditor) {
+                        const closeButton =
+                            connectionEditor.querySelector(
+                                ".connection-editor-close"
+                            );
+
+                        if (closeButton) {
+                            closeButton.click();
+                        }
+                    }
+
+                    if (newConnectionContext) {
+                        const cancelButton =
+                            newConnectionContext.querySelector(
+                                ".new-connection-context-buttons button:first-child"
                             );
 
                         if (cancelButton) {
@@ -621,7 +679,7 @@ export function initializeMapInteractions({
 
             if (
                 event.target.closest &&
-                event.target.closest(".room")
+                event.target.closest(".room, .group")
             ) {
                 return;
             }

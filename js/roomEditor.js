@@ -31,7 +31,7 @@ import { openConnectionEditor } from "./connectionEditor.js";
 // ROOM EDITOR STATE
 // ============================================================
 
-// The room currently selected by the user.
+// The room or group currently selected by the user.
 let selectedRoom = null;
 
 // The single room editor instance currently displayed, if any.
@@ -62,8 +62,8 @@ let isNewRoom = false;
 // ROOM SELECTION
 // ============================================================
 
-// Returns the room currently selected by the user, or null when no room is
-// selected.
+// Returns the room or group currently selected by the user, or null when no
+// room or group is selected.
 export function getSelectedRoom() {
     return selectedRoom;
 }
@@ -77,10 +77,18 @@ export function selectRoomWithoutEditor(room) {
     selectedRoom = room;
 }
 
-// Opens the room editor for a specific room.
+// Returns whether the currently selected object is a group.
+function isSelectedGroup() {
+    return Boolean(
+        selectedRoom &&
+        selectedRoom.groupID
+    );
+}
+
+// Opens the room editor for a specific room or group.
 //
-// This is intentionally separate from room selection so selecting a room does
-// not implicitly open its editor.
+// Groups use the same editor as rooms. Fields that do not apply to groups are
+// handled specially by updateRoomEditor() and saveRoomEditor().
 export function openRoomEditor(
     room,
     map,
@@ -90,6 +98,11 @@ export function openRoomEditor(
     currentFloor,
     newRoom = false
 ) {
+    console.log(
+        "openRoomEditor called:",
+        room
+    );
+
     selectedRoom = room;
     isNewRoom = newRoom;
 
@@ -305,6 +318,7 @@ export function openRoomEditor(
 
                 event.preventDefault();
                 saveRoomEditor();
+                closeRoomEditor();
             }
         );
 
@@ -332,9 +346,10 @@ export function openRoomEditor(
     updateRoomEditor();
 }
 
+
 // Selects a room and opens or updates the room editor for it.
 //
-// This remains as a compatibility wrapper for existing room-creation code.
+// This remains a compatibility wrapper for existing room-creation code.
 // Normal room selection remains separate from opening the editor.
 export function selectRoom(
     room,
@@ -373,14 +388,23 @@ function setEditorChanged(changed) {
         changed ? "inline" : "none";
 }
 
-// Saves the current contents of the room editor back into the selected room.
+
+// Saves the current contents of the room editor back into the selected room
+// or group.
 //
-// The room name's font size is recalculated from the room's current name and
-// dimensions so the saved value always reflects the latest room state.
+// Groups use the same user-facing fields as rooms. Their color is propagated
+// to every member room, while their own name, floor, notes, and textSize remain
+// stored directly on the group.
 function saveRoomEditor() {
-    const shapeSelect = editorContent.querySelector(".room-editor-shape");
-    const inputs = editorContent.querySelectorAll("input");
-    const textarea = editorContent.querySelector("textarea");
+    const shapeSelect =
+        editorContent.querySelector(".room-editor-shape");
+
+    const inputs =
+        editorContent.querySelectorAll("input");
+
+    const textarea =
+        editorContent.querySelector("textarea");
+
     let colorText;
     let colorValue;
 
@@ -396,7 +420,12 @@ function saveRoomEditor() {
         }
     }
 
-    if (shapeSelect) {
+    // Groups have no user-editable shape, but retain the same field in the
+    // editor so the interface remains consistent with rooms.
+    if (
+        shapeSelect &&
+        !isSelectedGroup()
+    ) {
         selectedRoom.shape = shapeSelect.value;
     }
 
@@ -412,16 +441,22 @@ function saveRoomEditor() {
     if (colorText) {
         colorValue = colorText.value.trim();
 
-        if (colorValue === "") {
+        if (isSelectedGroup()) {
+            applyGroupColor(colorValue);
+        } else if (colorValue === "") {
             delete selectedRoom.color;
         } else if (/^#[0-9a-fA-F]{6}$/.test(colorValue)) {
             selectedRoom.color = colorValue;
         }
     }
 
-    selectedRoom.notes = textarea.value;
+    if (textarea) {
+        selectedRoom.notes = textarea.value;
+    }
 
-    // Recalculate the room-name font size using the newly saved room data.
+    // Recalculate the displayed-name font size using the newly saved object.
+    //
+    // Groups use their derived bounding rectangle for this calculation.
     selectedRoom.textSize =
         calculateRoomTextSize(selectedRoom);
 
@@ -437,7 +472,7 @@ function saveRoomEditor() {
         y: roomEditor.offsetTop
     };
 
-    // Re-apply floor filter so a room moved to another floor disappears.
+    // Re-apply floor filter so an object moved to another floor disappears.
     renderRooms(
         editorContext.map,
         editorContext.mapElement,
@@ -456,10 +491,110 @@ function saveRoomEditor() {
     setEditorChanged(false);
 }
 
+
+// Applies a group's selected color to every room belonging to the group.
+//
+// The group itself also receives the color so the value remains part of the
+// group's persistent data and can be used directly by future group rendering.
+function applyGroupColor(colorValue) {
+    if (colorValue === "") {
+        delete selectedRoom.color;
+
+        for (const room of getGroupRooms(selectedRoom)) {
+            delete room.color;
+        }
+
+        return;
+    }
+
+    if (!/^#[0-9a-fA-F]{6}$/.test(colorValue)) {
+        return;
+    }
+
+    selectedRoom.color = colorValue;
+
+    for (const room of getGroupRooms(selectedRoom)) {
+        room.color = colorValue;
+    }
+}
+
+
+// Returns the actual room objects belonging to a group.
+function getGroupRooms(group) {
+    if (
+        !group ||
+        !Array.isArray(group.roomIDs) ||
+        !editorContext?.map
+    ) {
+        return [];
+    }
+
+    const rooms = [];
+
+    for (const roomID of group.roomIDs) {
+        const room =
+            editorContext.map.rooms.find(
+                (mapRoom) => mapRoom.roomID === roomID
+            );
+
+        if (room) {
+            rooms.push(room);
+        }
+    }
+
+    return rooms;
+}
+
+
+// Returns the group's derived bounding rectangle in room-grid coordinates.
+function getGroupBounds(group) {
+    const rooms = getGroupRooms(group);
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (const room of rooms) {
+        minX = Math.min(
+            minX,
+            room.position.x
+        );
+
+        minY = Math.min(
+            minY,
+            room.position.y
+        );
+
+        maxX = Math.max(
+            maxX,
+            room.position.x + room.size.width
+        );
+
+        maxY = Math.max(
+            maxY,
+            room.position.y + room.size.height
+        );
+    }
+
+    if (rooms.length === 0) {
+        return {
+            width: 1,
+            height: 1
+        };
+    }
+
+    return {
+        width: maxX - minX,
+        height: maxY - minY
+    };
+}
+
+
 // Cancels the current room editing session.
 //
 // Newly created rooms are removed entirely when their initial editor session
-// is canceled. Existing rooms are simply left unchanged.
+// is canceled. Existing rooms and groups are simply left unchanged.
 function cancelRoomEditor() {
     if (isNewRoom) {
         deleteRoom(
@@ -476,6 +611,7 @@ function cancelRoomEditor() {
 
     closeRoomEditor();
 }
+
 
 // Removes the current room editor and clears its associated state.
 function closeRoomEditor() {
@@ -494,14 +630,18 @@ function closeRoomEditor() {
     );
 }
 
-// Rebuilds the contents of the room editor from the currently selected room.
+
+// Rebuilds the contents of the room editor from the currently selected room
+// or group.
 //
-// Editable fields such as name, floor, color, and notes receive form controls.
-// Structural properties remain visible as read-only information when they
-// are not listed in hoverExceptions.
+// Groups expose the same user-facing fields as rooms where applicable.
+// Structural group properties remain hidden, and shape remains visible but
+// disabled because a group's shape is always its bounding rectangle.
 function updateRoomEditor() {
     const hoverExceptions = [
         "roomID",
+        "groupID",
+        "roomIDs",
         "connections",
         "position",
         "size",
@@ -510,6 +650,9 @@ function updateRoomEditor() {
         "color"
     ];
 
+    const isGroup =
+        isSelectedGroup();
+
     editorContent.innerHTML = "";
 
     for (const [key, value] of Object.entries(selectedRoom)) {
@@ -517,42 +660,56 @@ function updateRoomEditor() {
             continue;
         }
 
-    // Standard editable single-value fields.
-    if (key === "name" || key === "floor") {
-        const fieldContainer = document.createElement("div");
-        const label = document.createElement("label");
-        const input = document.createElement("input");
+        // Standard editable single-value fields.
+        if (key === "name" || key === "floor") {
+            const fieldContainer =
+                document.createElement("div");
 
-        fieldContainer.classList.add("room-editor-field");
+            const label =
+                document.createElement("label");
 
-        label.textContent = `${key}: `;
+            const input =
+                document.createElement("input");
 
-        input.type =
-            key === "floor"
-                ? "number"
-                : "text";
+            fieldContainer.classList.add(
+                "room-editor-field"
+            );
 
-        input.value = value;
+            label.textContent =
+                `${key}: `;
 
-        fieldContainer.appendChild(label);
-        fieldContainer.appendChild(input);
-        editorContent.appendChild(fieldContainer);
+            input.type =
+                key === "floor"
+                    ? "number"
+                    : "text";
 
-        continue;
-    }
+            input.value = value;
+
+            fieldContainer.appendChild(label);
+            fieldContainer.appendChild(input);
+            editorContent.appendChild(fieldContainer);
+
+            continue;
+        }
 
         // Notes use a textarea so multiple lines can be entered.
         if (key === "notes") {
             continue;
         }
 
-        // Remaining non-editable room properties are displayed as plain text.
-        const field = document.createElement("div");
+        // Remaining non-editable properties are displayed as plain text.
+        const field =
+            document.createElement("div");
 
-        field.textContent = `${key}: ${value}`;
+        field.textContent =
+            `${key}: ${value}`;
 
         editorContent.appendChild(field);
     }
+
+    // --------------------------------------------------------
+    // Shape
+    // --------------------------------------------------------
 
     const shapeFieldContainer =
         document.createElement("div");
@@ -597,6 +754,12 @@ function updateRoomEditor() {
     shapeSelect.value =
         selectedRoom.shape || "rectangle";
 
+    if (isGroup) {
+        shapeSelect.disabled = true;
+        shapeSelect.title =
+            "Groups always use a rectangle based on their member rooms.";
+    }
+
     shapeFieldContainer.appendChild(
         shapeLabel
     );
@@ -609,28 +772,53 @@ function updateRoomEditor() {
         shapeFieldContainer
     );
 
-    // Color is always displayed between floor and notes, regardless of whether
-    // the room currently has a custom color.
-    const colorFieldContainer = document.createElement("div");
-    const colorLabel = document.createElement("label");
-    const colorInput = document.createElement("input");
-    const colorText = document.createElement("input");
+    // --------------------------------------------------------
+    // Color
+    // --------------------------------------------------------
 
-    colorFieldContainer.classList.add("room-editor-field");
+    const colorFieldContainer =
+        document.createElement("div");
 
-    colorLabel.textContent = "color: ";
+    const colorLabel =
+        document.createElement("label");
+
+    const colorInput =
+        document.createElement("input");
+
+    const colorText =
+        document.createElement("input");
+
+    colorFieldContainer.classList.add(
+        "room-editor-field"
+    );
+
+    colorLabel.textContent =
+        "color: ";
 
     colorText.type = "text";
-    colorText.value = selectedRoom.color || "";
+
+    colorText.value =
+        isGroup
+            ? getGroupColor(selectedRoom)
+            : selectedRoom.color || "";
 
     colorInput.type = "color";
-    colorInput.value = selectedRoom.color || "#333333";
+
+    colorInput.value =
+        isGroup
+            ? getGroupColor(selectedRoom) || "#333333"
+            : selectedRoom.color || "#333333";
 
     colorText.addEventListener(
         "input",
         () => {
-            if (/^#[0-9a-fA-F]{6}$/.test(colorText.value)) {
-                colorInput.value = colorText.value;
+            if (
+                /^#[0-9a-fA-F]{6}$/.test(
+                    colorText.value
+                )
+            ) {
+                colorInput.value =
+                    colorText.value;
             }
         }
     );
@@ -638,7 +826,8 @@ function updateRoomEditor() {
     colorInput.addEventListener(
         "input",
         () => {
-            colorText.value = colorInput.value;
+            colorText.value =
+                colorInput.value;
         }
     );
 
@@ -646,22 +835,83 @@ function updateRoomEditor() {
     colorFieldContainer.appendChild(colorText);
     colorFieldContainer.appendChild(colorInput);
 
-    const notesFieldContainer = document.createElement("div");
-    const notesLabel = document.createElement("label");
-    const notesTextarea = document.createElement("textarea");
+    // --------------------------------------------------------
+    // Notes
+    // --------------------------------------------------------
 
-    notesFieldContainer.classList.add("room-editor-notes");
+    const notesFieldContainer =
+        document.createElement("div");
 
-    notesLabel.textContent = "notes: ";
+    const notesLabel =
+        document.createElement("label");
 
-    notesTextarea.value = selectedRoom.notes;
+    const notesTextarea =
+        document.createElement("textarea");
 
-    notesFieldContainer.appendChild(notesLabel);
-    notesFieldContainer.appendChild(notesTextarea);
+    notesFieldContainer.classList.add(
+        "room-editor-notes"
+    );
 
-    editorContent.appendChild(shapeFieldContainer);
-    editorContent.appendChild(colorFieldContainer);
-    editorContent.appendChild(notesFieldContainer);
+    notesLabel.textContent =
+        "notes: ";
+
+    notesTextarea.value =
+        selectedRoom.notes || "";
+
+    notesFieldContainer.appendChild(
+        notesLabel
+    );
+
+    notesFieldContainer.appendChild(
+        notesTextarea
+    );
+
+    editorContent.appendChild(
+        colorFieldContainer
+    );
+
+    editorContent.appendChild(
+        notesFieldContainer
+    );
+}
+
+
+// Returns the color shared by all rooms in a group.
+//
+// When the rooms do not share one color, the group's own color is used as the
+// starting value. If neither provides a color, the normal default is used.
+function getGroupColor(group) {
+    const rooms =
+        getGroupRooms(group);
+
+    if (
+        group.color &&
+        rooms.every(
+            (room) =>
+                room.color === group.color
+        )
+    ) {
+        return group.color;
+    }
+
+    if (rooms.length === 0) {
+        return group.color || "";
+    }
+
+    const firstColor =
+        rooms[0].color;
+
+    if (
+        firstColor &&
+        rooms.every(
+            (room) =>
+                room.color === firstColor
+        )
+    ) {
+        return firstColor;
+    }
+
+    return group.color || "";
 }
 
 
@@ -853,26 +1103,49 @@ function getContrastColor(color) {
 // Default room-name font size before any room-specific adjustment.
 const DEFAULT_ROOM_TEXT_SIZE = 16;
 
-// Determines the largest font size that allows a room's name to fit inside
-// the room without overflowing. The browser's normal word wrapping is used,
-// so individual words are never manually split.
+// Determines the largest font size that allows a room or group name to fit
+// inside its visible bounds without overflowing.
+//
+// Groups do not store a size of their own, so their bounds are calculated from
+// their member rooms before the measurement is performed.
 function calculateRoomTextSize(room) {
-    const roomElement = document.createElement("div");
+    const roomElement =
+        document.createElement("div");
+
     let textSize;
     let roomWidth;
     let roomHeight;
     let fits;
     let fitsAtDefaultSize;
 
-    roomWidth = room.size.width * 15;
-    roomHeight = room.size.height * 15;
+    if (room.groupID) {
+        const groupBounds =
+            getGroupBounds(room);
+
+        roomWidth =
+            groupBounds.width * 15;
+
+        roomHeight =
+            groupBounds.height * 15;
+    } else {
+        roomWidth =
+            room.size.width * 15;
+
+        roomHeight =
+            room.size.height * 15;
+    }
 
     roomElement.classList.add("room");
 
-    roomElement.textContent = room.name;
+    roomElement.textContent =
+        room.name;
 
-    roomElement.style.width = `${roomWidth}px`;
-    roomElement.style.height = `${roomHeight}px`;
+    roomElement.style.width =
+        `${roomWidth}px`;
+
+    roomElement.style.height =
+        `${roomHeight}px`;
+
     roomElement.style.position = "absolute";
     roomElement.style.visibility = "hidden";
     roomElement.style.pointerEvents = "none";
@@ -898,7 +1171,8 @@ function calculateRoomTextSize(room) {
         textSize > 1;
         textSize--
     ) {
-        roomElement.style.fontSize = `${textSize}px`;
+        roomElement.style.fontSize =
+            `${textSize}px`;
 
         fits =
             roomElement.scrollWidth <= roomElement.clientWidth &&
@@ -936,8 +1210,11 @@ function startEditorDragging(editorHeader) {
         startMouseX = event.clientX;
         startMouseY = event.clientY;
 
-        startEditorX = roomEditor.offsetLeft;
-        startEditorY = roomEditor.offsetTop;
+        startEditorX =
+            roomEditor.offsetLeft;
+
+        startEditorY =
+            roomEditor.offsetTop;
 
         document.addEventListener(
             "mousemove",

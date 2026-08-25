@@ -2,10 +2,6 @@
 // IMPORTS
 // ============================================================
 
-import {
-    getSelectedRoom
-} from "./roomEditor.js";
-
 // Room creation context.
 // CURRENT: openNewRoomContext()
 // If working on the new-room creation UI or its temporary room state,
@@ -23,7 +19,9 @@ import {
     saveMap,
     saveMapAs,
     loadMap,
-    loadMapFromUrl
+    loadMapFromUrl,
+    loadMapFromData,
+    clearCurrentFileHandle
 } from "./mapStorage.js";
 
 // Map zoom controls.
@@ -86,7 +84,9 @@ import {
 // tooltips, or the room editor, inspect:
 //   ./roomRenderer.js
 import {
-    renderRooms
+    renderRooms,
+    clearRoomSelection,
+    getSelectedRooms
 } from "./roomRenderer.js";
 
 // Connection rendering and connection geometry.
@@ -206,6 +206,42 @@ function updateZoom() {
     console.log("Zoom Level:", mapView.zoom);
 }
 
+// Creates a fresh map using the default map template.
+//
+// The existing map object is preserved so every module that received a
+// reference to it continues to operate on the current map.
+function createNewMap() {
+    // Reset map-specific view state before rendering the new map.
+    mapView.currentFloor = 1;
+    clearRoomSelection();
+
+    // Replace the current map contents using the same loading path used by
+    // file and URL loads.
+    loadMapFromData(
+        map,
+        defaultMap,
+        updateZoom
+    );
+
+    // A new map has no associated saved file.
+    clearCurrentFileHandle();
+
+    // A new map is a new browser-history state rather than a replacement
+    // for the map URL that created the previous state.
+    window.history.pushState(
+        {},
+        "",
+        window.location.pathname
+    );
+
+    // Return the viewport to the center of the new map.
+    mapElement.scrollLeft =
+        (MAP_SIZE * mapView.zoom - mapElement.clientWidth) / 2;
+
+    mapElement.scrollTop =
+        (MAP_SIZE * mapView.zoom - mapElement.clientHeight) / 2;
+}
+
 initializeMapZoom({
     mapElement,
     mapView,
@@ -258,19 +294,21 @@ newRoomButton.addEventListener(
 newConnectionButton.addEventListener(
     "click",
     () => {
-        const room = getSelectedRoom();
+        const selectedRooms =
+            getSelectedRooms();
 
-        // A connection cannot be started without a source room.
-        if (!room) {
+        // A new connection requires exactly one selected room as its starting
+        // endpoint. Multiple selected rooms are intentionally ambiguous.
+        if (selectedRooms.length !== 1) {
             alert(
-                "Please select a room before creating a new connection."
+                "Please select exactly one room before creating a new connection."
             );
             return;
         }
 
         createConnection(
             mapView,
-            room
+            selectedRooms[0]
         );
     }
 );
@@ -349,6 +387,7 @@ initializeMapMenu({
     loadMap: () => loadMap(map, updateZoom),
     loadMapFromUrl: (url) =>
         loadMapFromUrl(map, url, updateZoom),
+    refreshForNewMap: createNewMap,
     hasMapContent: () =>
         map.rooms.length > 0 ||
         map.connections.length > 0
