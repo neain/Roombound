@@ -682,7 +682,10 @@ function addActionControls(
         "Delete All";
 
     groupButton.textContent =
-        "Group";
+        "Combine";
+
+    groupButton.title =
+        "Combine selected rooms into a single room";
 
     duplicateButton.textContent =
         "Duplicate";

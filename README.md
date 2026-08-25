@@ -842,15 +842,15 @@ Current Step: Polish List (see header)
 38. add ability to group overlapping rooms into a single shaped room. underlying data will still be a rectangle, but the draw part will just keep the previous shapes and draw them in the area.
 * add double click and right click context menu to groups.
 * once the group is made, link it to the rooms it 'contains' and when the group gets moved, move thoes rooms and refresh the map. this includes changing the groups floor. all rooms need to change floors with it.
-* add right click context menu when multiple rooms are selected -> add to group
-* function explode groupElement.js
-* need to explode createRoomElement.js inside roomRendering - GPT added a 'helper' function to it (maybe, this is an old note. but im out of time)
-* consider changing the button from group to something along the lines of... turn selection into a single room. or... grr... group is short and sweet. maybe add that as a tooltip on hover?
+* add right click context menu when multiple rooms are selected -> convert to group
 
+* make a deal with notes (tired norman isnt thinking right. deal with notes so they are all in the new 'room')
+* add additional rooms to a group
+* make sure that two groups can be combined into a group
+* function explode groupElement.js in /roomRendering/
 * startDragging.js in /roomRendering/ keeps getting the currentFloor and the map object. but since currentFloor is part of the map object, remove that imported variable and refactor? (start checking for things like this in other files)
 
 Notes
-
 When the group operation involves any rooms containing notes:
 
 If there are no notes anywhere, don't ask anything.

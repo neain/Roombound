@@ -214,7 +214,7 @@ export function initializeMapInteractions({
                 );
 
                 convertToGroupMenuButton.textContent =
-                    "Convert to Group";
+                    "Combine Rooms";
 
                 convertToGroupMenuButton.addEventListener(
                     "click",

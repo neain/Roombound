@@ -34,7 +34,7 @@ export function createGroup(
 
     const clearLabels =
         confirm(
-            "Clear the room labels for this group?"
+            "Clear the room labels from the combined room?"
         );
 
     const group = {
@@ -143,3 +143,4 @@ export function createGroupID(
         highestGroupNumber + 1
     ).padStart(3, "0")}`;
 }
+
