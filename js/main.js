@@ -414,7 +414,8 @@ initializeMapInteractions({
     openConnectionEditorForConnections,
     openNewRoomContext,
     openMultiRoomEditor,
-    createConnection
+    createConnection,
+    refreshMap: updateZoom
 });
 
 // ============================================================

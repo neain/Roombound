@@ -50,6 +50,10 @@ import {
     duplicateRooms
 } from "./roomRenderer.js";
 
+import {
+    createGroup
+} from "./group.js";
+
 // ============================================================
 // MAP INTERACTION
 // ============================================================
@@ -66,7 +70,8 @@ export function initializeMapInteractions({
     openConnectionEditorForConnections,
     openNewRoomContext,
     openMultiRoomEditor,
-    createConnection
+    createConnection,
+    refreshMap
 }) {
     let isPanning = false;
     let hasPanned = false;
@@ -179,6 +184,9 @@ export function initializeMapInteractions({
                 const editSelectedRoomsMenuButton =
                     document.createElement("button");
 
+                const convertToGroupMenuButton =
+                    document.createElement("button");
+
                 editSelectedRoomsMenuButton.classList.add(
                     "menu-item"
                 );
@@ -201,8 +209,45 @@ export function initializeMapInteractions({
                     }
                 );
 
+                convertToGroupMenuButton.classList.add(
+                    "menu-item"
+                );
+
+                convertToGroupMenuButton.textContent =
+                    "Convert to Group";
+
+                convertToGroupMenuButton.addEventListener(
+                    "click",
+                    () => {
+                        closeContextMenu();
+
+                        const roomsOnCurrentFloor =
+                            getSelectedRooms().filter(
+                                (selectedRoom) =>
+                                    selectedRoom.floor ===
+                                    mapView.currentFloor
+                            );
+
+                        if (roomsOnCurrentFloor.length < 2) {
+                            return;
+                        }
+
+                        createGroup(
+                            map,
+                            roomsOnCurrentFloor,
+                            mapView.currentFloor
+                        );
+
+                        refreshMap();
+                    }
+                );
+
                 contextMenu.appendChild(
                     editSelectedRoomsMenuButton
+                );
+
+                contextMenu.appendChild(
+                    convertToGroupMenuButton
                 );
             }
 
