@@ -99,7 +99,9 @@ export function renderRooms(
             group,
             map,
             mapElement,
-            zoom
+            connectionLayer,
+            zoom,
+            currentFloor
         );
 
         if (!groupElement) {

@@ -4,9 +4,9 @@
 
 // Creates the visible DOM element representing a group.
 //
-// The group's position and size are derived from the bounding rectangle of
-// its member rooms. Group data stores only the information that cannot be
-// derived from those rooms.
+// A group's position and size are stored directly on the group object. They
+// are established when the group is created and remain unchanged until the
+// group's membership changes.
 import {
     gridToPixels,
     gridToWorldPixels
@@ -16,7 +16,8 @@ import {
     isRoomSelected,
     addRoomToSelection,
     selectRoom,
-    removeRoomFromSelection
+    removeRoomFromSelection,
+    startDragging
 } from "../roomRenderer.js";
 
 
@@ -29,7 +30,9 @@ export function createGroupElement(
     group,
     map,
     mapElement,
-    zoom
+    connectionLayer,
+    zoom,
+    currentFloor
 ) {
     const groupElement = document.createElement("div");
     const groupRooms = [];
@@ -48,37 +51,31 @@ export function createGroupElement(
         return null;
     }
 
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
+    // Hide controls that no longer apply to rooms represented by this group.
+    // Room data remains unchanged so the original room representation can be
+    // restored automatically if the group is later removed.
     for (const room of groupRooms) {
-        const roomRight =
-            room.position.x + room.size.width;
+        const roomElement =
+            mapElement.querySelector(
+                `.room[data-room-id="${room.roomID}"]`
+            );
 
-        const roomBottom =
-            room.position.y + room.size.height;
+        if (!roomElement) {
+            continue;
+        }
 
-        minX = Math.min(
-            minX,
-            room.position.x
-        );
+        roomElement.querySelector(
+            ".room-resize-handle"
+        )?.remove();
 
-        minY = Math.min(
-            minY,
-            room.position.y
-        );
+        if (group.clearLabels) {
+            const roomShape =
+                roomElement.querySelector(".room-shape");
 
-        maxX = Math.max(
-            maxX,
-            roomRight
-        );
-
-        maxY = Math.max(
-            maxY,
-            roomBottom
-        );
+            if (roomShape) {
+                roomShape.textContent = "";
+            }
+        }
     }
 
     groupElement.classList.add("group");
@@ -91,22 +88,48 @@ export function createGroupElement(
     groupElement.style.position = "absolute";
 
     groupElement.style.left =
-        `${gridToWorldPixels(minX, zoom)}px`;
+        `${gridToWorldPixels(
+            group.position.x,
+            zoom
+        )}px`;
 
     groupElement.style.top =
-        `${gridToWorldPixels(minY, zoom)}px`;
+        `${gridToWorldPixels(
+            group.position.y,
+            zoom
+        )}px`;
 
     groupElement.style.width =
-        `${gridToPixels(maxX - minX, zoom)}px`;
+        `${gridToPixels(
+            group.size.width,
+            zoom
+        )}px`;
 
     groupElement.style.height =
-        `${gridToPixels(maxY - minY, zoom)}px`;
+        `${gridToPixels(
+            group.size.height,
+            zoom
+        )}px`;
 
     // --------------------------------------------------------
     // Map interaction
     // --------------------------------------------------------
 
-
+    groupElement.addEventListener(
+        "mousedown",
+        (event) => {
+            startDragging(
+                event,
+                group,
+                groupElement,
+                map,
+                mapElement,
+                connectionLayer,
+                zoom,
+                currentFloor
+            );
+        }
+    );
 
     groupElement.addEventListener(
         "click",

@@ -3,11 +3,12 @@
 // ============================================================
 
 // Shared map/grid utilities.
-// CURRENT: gridToWorldPixels(), pixelsToGrid()
+// CURRENT: gridToWorldPixels(), gridToPixels(), pixelsToGrid()
 // If working on room coordinates or grid conversion, inspect:
 //   ../mapUtils.js
 import {
     gridToWorldPixels,
+    gridToPixels,
     pixelsToGrid
 } from "../mapUtils.js";
 
@@ -29,21 +30,22 @@ import {
 
 // Room selection state.
 // The dragging system uses the current selection to determine whether the
-// room being dragged should move by itself or with the entire selection.
+// object being dragged should move by itself or with the entire selection.
 import {
     getSelectedRooms
 } from "../roomRenderer.js";
 
 
 // ============================================================
-// ROOM DRAGGING
+// ROOM / GROUP DRAGGING
 // ============================================================
 
-// Moves a room, or the current room selection, while the left mouse button
+// Moves a room, group, or the current selection while the left mouse button
 // is held down.
 //
-// Mouse movement is converted into one grid-space delta. That same delta is
-// applied to every selected room so their relative positions remain intact.
+// Groups store their own position and size. Dragging a group moves its member
+// rooms and its stored position by the same grid-space delta. Group size does
+// not change during movement.
 export function startDragging(
     event,
     room,
@@ -59,6 +61,8 @@ export function startDragging(
     let draggedRooms;
     let startPositions;
     let roomElements;
+    let groupElements;
+    let startGroupPositions;
     let hasDragged = false;
 
     if (event.button !== 0) {
@@ -69,14 +73,44 @@ export function startDragging(
 
     roomTooltip.style.display = "none";
 
-    // BEGIN EDIT — MULTI-ROOM DRAGGING
+    // A group is represented visually by its member rooms. Convert a group
+    // into those rooms before building the actual movement list.
+    function getObjectRooms(object) {
+        if (map.rooms.includes(object)) {
+            return [object];
+        }
 
-    // Only drag the entire selection when the room being grabbed is already
-    // selected. Otherwise the room behaves as a normal single-room drag.
-    draggedRooms =
+        if (map.groups.includes(object)) {
+            return map.rooms.filter(
+                (mapRoom) =>
+                    object.roomIDs.includes(
+                        mapRoom.roomID
+                    )
+            );
+        }
+
+        return [];
+    }
+
+    // Expand the selected room-like objects into the actual rooms that must
+    // move. A Set prevents rooms shared by multiple selected groups from being
+    // moved more than once.
+    const selectedObjects =
         getSelectedRooms().includes(room)
             ? [...getSelectedRooms()]
             : [room];
+
+    const draggedRoomSet =
+        new Set();
+
+    for (const selectedObject of selectedObjects) {
+        for (const draggedRoom of getObjectRooms(selectedObject)) {
+            draggedRoomSet.add(draggedRoom);
+        }
+    }
+
+    draggedRooms =
+        [...draggedRoomSet];
 
     // Store every room's original position before movement begins. The mouse
     // delta is calculated once and applied against these original positions.
@@ -94,15 +128,6 @@ export function startDragging(
     roomElements = new Map();
 
     for (const draggedRoom of draggedRooms) {
-        if (draggedRoom === room) {
-            roomElements.set(
-                draggedRoom,
-                roomElement
-            );
-
-            continue;
-        }
-
         const draggedRoomElement =
             mapElement.querySelector(
                 `.room[data-room-id="${draggedRoom.roomID}"]`
@@ -116,7 +141,39 @@ export function startDragging(
         }
     }
 
-    // Updates every dragged room using the same grid-space delta.
+    // Store the visible element and original position for every selected
+    // group. The group's stored position moves with its member rooms while
+    // its stored size remains unchanged.
+    groupElements = new Map();
+    startGroupPositions = new Map();
+
+    for (const selectedObject of selectedObjects) {
+        if (!map.groups.includes(selectedObject)) {
+            continue;
+        }
+
+        const groupElement =
+            mapElement.querySelector(
+                `.group[data-group-id="${selectedObject.groupID}"]`
+            );
+
+        if (groupElement) {
+            groupElements.set(
+                selectedObject,
+                groupElement
+            );
+
+            startGroupPositions.set(
+                selectedObject,
+                {
+                    x: selectedObject.position.x,
+                    y: selectedObject.position.y
+                }
+            );
+        }
+    }
+
+    // Updates every dragged room and group using the same grid-space delta.
     function drag(event) {
         const mouseDeltaX =
             event.clientX - startMouseX;
@@ -134,7 +191,8 @@ export function startDragging(
         const deltaGridY =
             pixelsToGrid(mouseDeltaY, zoom);
 
-        // Apply the exact same grid delta to every room in the selection.
+        // Apply the exact same grid delta to every room represented by the
+        // dragged room/group selection.
         for (const startPosition of startPositions) {
             startPosition.room.position.x =
                 startPosition.x + deltaGridX;
@@ -168,6 +226,31 @@ export function startDragging(
                 )}px`;
         }
 
+        // Move each selected group's stored position by the same delta as its
+        // member rooms. The group's stored size never changes while dragging.
+        for (const [group, groupElement] of groupElements) {
+            const startGroupPosition =
+                startGroupPositions.get(group);
+
+            group.position.x =
+                startGroupPosition.x + deltaGridX;
+
+            group.position.y =
+                startGroupPosition.y + deltaGridY;
+
+            groupElement.style.left =
+                `${gridToWorldPixels(
+                    group.position.x,
+                    zoom
+                )}px`;
+
+            groupElement.style.top =
+                `${gridToWorldPixels(
+                    group.position.y,
+                    zoom
+                )}px`;
+        }
+
         // Connections depend on room positions, so they need to be redrawn
         // while the selection is being moved.
         renderConnections({
@@ -177,8 +260,6 @@ export function startDragging(
             currentFloor
         });
     }
-
-    // END EDIT — MULTI-ROOM DRAGGING
 
     // Removes the temporary mouse listeners when dragging ends.
     function stopDragging() {
@@ -196,17 +277,23 @@ export function startDragging(
             roomElement.dataset.dragged = "true";
         }
 
-        if (draggedRooms.length === 1) {
-            console.log(
-                `Moved ${room.name} to`,
-                room.position
-            );
+        if (selectedObjects.length === 1) {
+            if (map.groups.includes(selectedObjects[0])) {
+                console.log(
+                    `Moved group ${selectedObjects[0].groupID}`
+                );
+            } else {
+                console.log(
+                    `Moved ${selectedObjects[0].name} to`,
+                    selectedObjects[0].position
+                );
+            }
 
             return;
         }
 
         console.log(
-            `Moved ${draggedRooms.length} rooms`
+            `Moved ${selectedObjects.length} selected objects`
         );
     }
 

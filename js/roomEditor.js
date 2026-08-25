@@ -392,9 +392,9 @@ function setEditorChanged(changed) {
 // Saves the current contents of the room editor back into the selected room
 // or group.
 //
-// Groups use the same user-facing fields as rooms. Their color is propagated
-// to every member room, while their own name, floor, notes, and textSize remain
-// stored directly on the group.
+// Groups use the same user-facing fields as rooms. Their color and floor are
+// propagated to every member room, while their own name, notes, and textSize
+// remain stored directly on the group.
 function saveRoomEditor() {
     const shapeSelect =
         editorContent.querySelector(".room-editor-shape");
@@ -414,7 +414,14 @@ function saveRoomEditor() {
                 .replace(": ", "");
 
         if (key === "floor") {
-            selectedRoom.floor = Number(input.value);
+            const floor =
+                Number(input.value);
+
+            if (isSelectedGroup()) {
+                applyGroupFloor(floor);
+            } else {
+                selectedRoom.floor = floor;
+            }
         } else if (key === "name") {
             selectedRoom.name = input.value;
         }
@@ -491,6 +498,17 @@ function saveRoomEditor() {
     setEditorChanged(false);
 }
 
+// Applies a group's selected floor to every room belonging to the group.
+//
+// The group and all of its member rooms must remain on the same floor so the
+// group continues to behave as a single room-like object when floors change.
+function applyGroupFloor(floor) {
+    selectedRoom.floor = floor;
+
+    for (const room of getGroupRooms(selectedRoom)) {
+        room.floor = floor;
+    }
+}
 
 // Applies a group's selected color to every room belonging to the group.
 //
@@ -544,52 +562,6 @@ function getGroupRooms(group) {
 
     return rooms;
 }
-
-
-// Returns the group's derived bounding rectangle in room-grid coordinates.
-function getGroupBounds(group) {
-    const rooms = getGroupRooms(group);
-
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
-    for (const room of rooms) {
-        minX = Math.min(
-            minX,
-            room.position.x
-        );
-
-        minY = Math.min(
-            minY,
-            room.position.y
-        );
-
-        maxX = Math.max(
-            maxX,
-            room.position.x + room.size.width
-        );
-
-        maxY = Math.max(
-            maxY,
-            room.position.y + room.size.height
-        );
-    }
-
-    if (rooms.length === 0) {
-        return {
-            width: 1,
-            height: 1
-        };
-    }
-
-    return {
-        width: maxX - minX,
-        height: maxY - minY
-    };
-}
-
 
 // Cancels the current room editing session.
 //
@@ -1118,22 +1090,8 @@ function calculateRoomTextSize(room) {
     let fits;
     let fitsAtDefaultSize;
 
-    if (room.groupID) {
-        const groupBounds =
-            getGroupBounds(room);
-
-        roomWidth =
-            groupBounds.width * 15;
-
-        roomHeight =
-            groupBounds.height * 15;
-    } else {
-        roomWidth =
-            room.size.width * 15;
-
-        roomHeight =
-            room.size.height * 15;
-    }
+    roomWidth = room.size.width * 15;
+    roomHeight = room.size.height * 15;
 
     roomElement.classList.add("room");
 

@@ -770,6 +770,11 @@ function groupSelectedRooms() {
         return;
     }
 
+    const clearLabels =
+        confirm(
+            "Clear the room labels for this group?"
+        );
+
     const selectedRoomIDs =
         roomsOnCurrentFloor.map(
             (room) => room.roomID
@@ -791,12 +796,48 @@ function groupSelectedRooms() {
                     roomElement.dataset.roomId
             );
 
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (const room of roomsOnCurrentFloor) {
+        minX = Math.min(
+            minX,
+            room.position.x
+        );
+
+        minY = Math.min(
+            minY,
+            room.position.y
+        );
+
+        maxX = Math.max(
+            maxX,
+            room.position.x + room.size.width
+        );
+
+        maxY = Math.max(
+            maxY,
+            room.position.y + room.size.height
+        );
+    }
+
     const group = {
         groupID: createGroupID(editorContext.map),
         roomIDs,
         name: "New Group",
         floor: editorContext.currentFloor,
-        notes: ""
+        position: {
+            x: minX,
+            y: minY
+        },
+        size: {
+            width: maxX - minX,
+            height: maxY - minY
+        },
+        notes: "",
+        clearLabels
     };
 
     editorContext.map.groups.push(group);
@@ -804,6 +845,44 @@ function groupSelectedRooms() {
     refreshMultiRoomMap();
 }
 
+// Returns the group's bounding size based on its current member rooms.
+//
+// Group size is calculated when the group is created or when rooms are added.
+// Moving the group does not require recalculating this value because every
+// member room moves by the same amount.
+function getGroupSize(rooms) {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxRight = -Infinity;
+    let maxBottom = -Infinity;
+
+    for (const room of rooms) {
+        minX = Math.min(
+            minX,
+            room.position.x
+        );
+
+        minY = Math.min(
+            minY,
+            room.position.y
+        );
+
+        maxRight = Math.max(
+            maxRight,
+            room.position.x + room.size.width
+        );
+
+        maxBottom = Math.max(
+            maxBottom,
+            room.position.y + room.size.height
+        );
+    }
+
+    return {
+        width: maxRight - minX,
+        height: maxBottom - minY
+    };
+}
 
 // Creates the next available group ID using the same numbered format as rooms.
 function createGroupID(map) {

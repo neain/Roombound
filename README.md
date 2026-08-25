@@ -845,6 +845,9 @@ Current Step: Polish List (see header)
 * add right click context menu when multiple rooms are selected -> add to group
 * function explode groupElement.js
 * need to explode createRoomElement.js inside roomRendering - GPT added a 'helper' function to it (maybe, this is an old note. but im out of time)
+* consider changing the button from group to something along the lines of... turn selection into a single room. or... grr... group is short and sweet. maybe add that as a tooltip on hover?
+
+* startDragging.js in /roomRendering/ keeps getting the currentFloor and the map object. but since currentFloor is part of the map object, remove that imported variable and refactor? (start checking for things like this in other files)
 
 Notes
 
