@@ -846,6 +846,9 @@ Current Step: Polish List (see header)
 
 * make a deal with notes (tired norman isnt thinking right. deal with notes so they are all in the new 'room')
 * add additional rooms to a group
+* Allow copy pasting of group + rooms
+* make the delete button work on the group.
+* figure out what to do with connections. maybe this is a good place to make a room 'glow' a different color when hovered in the connection menu? or... leave until V1.2 when the connections are 'smarter'.
 * make sure that two groups can be combined into a group
 * function explode groupElement.js in /roomRendering/
 * startDragging.js in /roomRendering/ keeps getting the currentFloor and the map object. but since currentFloor is part of the map object, remove that imported variable and refactor? (start checking for things like this in other files)
@@ -868,10 +871,11 @@ And for adding another room to an existing group, exactly the same rule applies:
 
 
 
-38. Synchronize the selection visual/animation across simultaneously selected rooms.
-39. Double-click interaction refinement: prevent the initial click of a double-click from unnecessarily changing/clearing the existing multi-selection. Revisit once the selection/interaction system is otherwise complete.
-40. right click context menu. when right clicking a room or? connection? have an option to open the connection editor.
-41. move help button from load URL to hamburger menu
+39. Synchronize the selection visual/animation across simultaneously selected rooms.
+40. Double-click interaction refinement: prevent the initial click of a double-click from unnecessarily changing/clearing the existing multi-selection. Revisit once the selection/interaction system is otherwise complete.
+41. right click context menu. when right clicking a room or? connection? have an option to open the connection editor.
+42. move help button from load URL to hamburger menu
+43. check feasability of a ctrl + z... I feel this is going to be FAR larger than it feels like it should be. maybe even V1.4 worthy
 
 45. add options menu. ideas are below
 50. add ability to save a map/url combination so you can hand it to a friend and they just load it without any extra work. should just be an export button in the main file list?
@@ -906,7 +910,13 @@ add a new users explanation box on an empty map refresh - a getting started sect
 * get GPT to check mapStorage.js (core js folder) for things that are trying to 'sanitize' the map data. all I care about is that if an old map is missing a property, that it has a default. if it fails because the actual data is bad, then it fails.
 
 ### Next Version Ideas
-#### Function Explosion  V1.1
+#### The Great Grouping V1.1
+See 'polish' step 38. That's what started this. What looked like a relatively
+small polish item turned out to require treating groups as first-class,
+room-like objects throughout the application. FAR larger than it pretended to
+be.
+
+#### Function Explosion  V1.2
 Before beginning the next major connection-system rework, completely refactor
 the JavaScript function architecture into a deliberately layered structure.
 
@@ -992,7 +1002,7 @@ planned connection-system rework.
 This refactor should happen after the current polish list is complete and
 before beginning the next-version connection rework.
 
-#### Connection Endpoint Refactor V1.2
+#### Connection Endpoint Refactor V1.3
 
 Refactor connections so that endpoints are independent of rooms rather than storing
 room references and attachment sides directly.
@@ -1038,6 +1048,9 @@ room references and attachment sides directly.
    - Once Roombound has been released with maps created by other users, future
      breaking data-model changes should consider backward compatibility or migration
      support.
+
+#### Undo V1.4
+Add undo/redo (Ctrl+Z / Ctrl+Y). This may be as simple as tracking map-level changes: any edit or operation that changes the map is saved as a history step, and undo restores the previous state. Redo restores the state that was undone. The exact history approach and what constitutes a single change will need to be determined when this feature is implemented.
 
 ## 14. Initial MVP
 
