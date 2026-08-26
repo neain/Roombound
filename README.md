@@ -790,7 +790,7 @@ Steps 1–26 are currently working in prototype form.
 Current Step: Polish List (see header)
 
 
-### Polish List - Current Step 66
+### Polish List - Current Step 67
 1. Zoom bar + visible zoom level + possibly keyboard shortcuts.
 2. Hamburger menu with New Map, Save/Load, Options, etc.
 3. Swap the floor-selection arrows.
@@ -879,8 +879,9 @@ Give the user the ability to have a floor 0. default is floor 1, floor 2, and fl
 Confirm before deleting? (add tooltip that with this checked, you will break apart combined rooms with no check)
 Group sub room option - auto delete sub rooms? (add tooltip with explanation, the var should already exist)
 Snap to Grid - if true then moving a room will snap it to the grid and pressing shift will 'unlock' it from the grid. if false, then nothing snaps UNLESS you hold shift. (this exists already)
-
-   66. add cookies to keep options between sessions. this is both the options window and grouping options window. should be very simple?
+66. add persistance to keep options between sessions. 
+   67. remove obsolete close() from ALL the windows.
+68. Verify window.js is the single place deciding how all open windows get closed.
 
 70. add ability to save a map/url combination so you can hand it to a friend and they just load it without any extra work. should just be an export button in the main file list?
 * make it work like the loadURL in that you give it a URL of a map... and IF it loads without any issues... then we can give the user a link with https://neain.github.io/Roombound/?map= and then the url they just gave us.
