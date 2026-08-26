@@ -3,8 +3,11 @@
 // ============================================================
 
 // Current map file schema version.
-const CURRENT_MAP_VERSION = 1;
+const CURRENT_MAP_VERSION = 1.1;
 
+import {
+    renderMap
+} from "./mapRenderer.js";
 
 // ============================================================
 // MAP FILE STATE
@@ -46,7 +49,7 @@ function getSerializableMap(map) {
             roomAConnectionSide: conn.roomAConnectionSide,
             roomBConnectionSide: conn.roomBConnectionSide,
             directionTo: conn.directionTo,
-            name: conn.name || ""
+            name: "name" in conn ? conn.name : ""
         }))
     };
 }
@@ -254,8 +257,7 @@ function isValidMapData(data) {
  */
 export function loadMapFromData(
     map,
-    data,
-    updateZoom
+    data
 ) {
     const editors =
         document.querySelectorAll(
@@ -290,7 +292,7 @@ export function loadMapFromData(
     editors.forEach(el => el.remove());
 
     // Re-render.
-    updateZoom();
+    renderMap();
 
     console.log("Map loaded", map);
 }
@@ -308,8 +310,7 @@ export function loadMapFromData(
  */
 export async function loadMapFromUrl(
     map,
-    url,
-    updateZoom
+    url
 ) {
     const response = await fetch(url);
 
@@ -325,8 +326,7 @@ export async function loadMapFromUrl(
 
     loadMapFromData(
         map,
-        data,
-        updateZoom
+        data
     );
 }
 
@@ -342,8 +342,7 @@ export async function loadMapFromUrl(
  * become the map's associated file for future Save operations.
  */
 export async function loadMap(
-    map,
-    updateZoom
+    map
 ) {
     if (window.showOpenFilePicker) {
         try {
@@ -378,8 +377,7 @@ export async function loadMap(
 
             loadMapFromData(
                 map,
-                data,
-                updateZoom
+                data
             );
 
             console.log(
@@ -433,8 +431,7 @@ export async function loadMap(
 
                         loadMapFromData(
                             map,
-                            data,
-                            updateZoom
+                            data
                         );
                     } catch (error) {
                         alert(

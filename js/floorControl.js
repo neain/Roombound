@@ -1,9 +1,14 @@
+import {
+    renderMap
+} from "./mapRenderer.js";
+
+
 // ============================================================
 // ROOMBOUND FLOOR CONTROL
 // ============================================================
 //
 // Owns the floor-selection UI and its interaction logic.
-// The application supplies map state and the updateZoom callback so that
+// The application supplies map state and the renderMap callback so that
 // changing floors can trigger the normal map re-render.
 //
 // ============================================================
@@ -93,14 +98,12 @@ function getAdjacentFloor(currentFloor, direction) {
     return floor;
 }
 
-
 /**
  * Returns how many rooms are on a given floor.
  */
 function getRoomCountOnFloor(map, floor) {
     return map.rooms.filter(r => r.floor === floor).length;
 }
-
 
 // ============================================================
 // FLOOR CONTROL INITIALIZATION
@@ -111,8 +114,7 @@ function getRoomCountOnFloor(map, floor) {
  */
 export function initializeFloorControl({
     map,
-    mapView,
-    updateZoom
+    mapView
 }) {
     const floorControl = document.createElement("div");
     const floorUpButton = document.createElement("button");
@@ -144,7 +146,6 @@ export function initializeFloorControl({
 
     document.body.appendChild(floorControl);
 
-
     // --------------------------------------------------------
     // Floor changing
     // --------------------------------------------------------
@@ -162,10 +163,9 @@ export function initializeFloorControl({
         // Close dropdown if open.
         floorDropdown.style.display = "none";
 
-        // Re-render with the new floor.
-        updateZoom();
+        // Re-render the map with the new floor.
+        renderMap();
     }
-
 
     // --------------------------------------------------------
     // Button events
@@ -188,7 +188,6 @@ export function initializeFloorControl({
             )
         );
     });
-
 
     // --------------------------------------------------------
     // Dropdown
@@ -233,7 +232,6 @@ export function initializeFloorControl({
 
         floorDropdown.style.display = "block";
     });
-
 
     // Close dropdown when clicking elsewhere.
     document.addEventListener("click", () => {

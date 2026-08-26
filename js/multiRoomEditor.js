@@ -27,6 +27,7 @@ import {
 
 import {
     createGroup,
+    deleteGroup,
     isGroup
 } from "./group.js";
 
@@ -728,70 +729,28 @@ function addActionControls(
 }
 
 
-// Deletes every room or group currently in the selection.
+/// Deletes every room or group currently in the selection.
 //
-// Groups ask whether the group itself should be deleted and then whether its
-// member rooms should also be deleted. Normal rooms continue through the
-// standard room deletion path so their connections are cleaned up.
+// Groups are passed through the standard group deletion path. Normal rooms
+// continue through the standard room deletion path so their connections are
+// cleaned up.
 function deleteSelectedRooms() {
     const selectedRooms =
         getSelectedRooms();
-
-    const confirmed = confirm(
-        `Delete ${selectedRooms.length} selected rooms?`
-    );
-
-    if (!confirmed) {
-        return;
-    }
 
     const roomsToDelete =
         [...selectedRooms];
 
     for (const room of roomsToDelete) {
         if (isGroup(room)) {
-            const deleteGroup =
-                confirm(
-                    `Delete "${room.name}"?`
-                );
-
-            if (!deleteGroup) {
-                continue;
-            }
-
-            const deleteRooms =
-                confirm(
-                    `Delete all rooms that make up "${room.name}"?`
-                );
-
-            if (deleteRooms) {
-                const memberRoomIDs =
-                    [...room.roomIDs];
-
-                for (const roomID of memberRoomIDs) {
-                    deleteRoom(
-                        editorContext.map,
-                        roomID,
-                        editorContext.mapElement,
-                        editorContext.connectionLayer,
-                        editorContext.zoom,
-                        editorContext.currentFloor
-                    );
-                }
-            }
-
-            const groupIndex =
-                editorContext.map.groups.findIndex(
-                    (group) =>
-                        group.groupID === room.groupID
-                );
-
-            if (groupIndex !== -1) {
-                editorContext.map.groups.splice(
-                    groupIndex,
-                    1
-                );
-            }
+            deleteGroup(
+                editorContext.map,
+                room,
+                editorContext.mapElement,
+                editorContext.connectionLayer,
+                editorContext.zoom,
+                editorContext.currentFloor
+            );
 
             continue;
         }

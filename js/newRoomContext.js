@@ -22,14 +22,6 @@ import {
     bringEditorWindowToFront
 } from "./editorWindowStack.js";
 
-import {
-    renderRooms
-} from "./roomRenderer.js";
-
-import {
-    renderConnections
-} from "./connectionRenderer.js";
-
 // ============================================================
 // CONTEXT STATE
 // ============================================================
@@ -50,29 +42,25 @@ let creationContext = null;
 // Opens the new-room context and creates temporary room data centered on the
 // currently visible portion of the map.
 export function openNewRoomContext(
-    map,
+    mapView,
     mapElement,
-    connectionLayer,
-    zoom,
-    currentFloor,
+    renderMap,
     mapPosition = null
 ) {
     closeNewRoomContext();
 
     creationContext = {
-        map,
+        mapView,
         mapElement,
-        connectionLayer,
-        zoom,
-        currentFloor
+        renderMap
     };
 
     newRoom =
         createTemporaryRoom(
-            map,
+            mapView.map,
             mapElement,
-            zoom,
-            currentFloor,
+            mapView.zoom,
+            mapView.currentFloor,
             mapPosition
         );
 
@@ -610,30 +598,13 @@ function createRoomFromContext() {
         newRoom;
 
     const {
-        map,
-        mapElement,
-        connectionLayer,
-        zoom,
-        currentFloor
+        mapView,
+        renderMap
     } = creationContext;
 
-    map.rooms.push(room);
+    mapView.map.rooms.push(room);
 
-    renderRooms(
-        map,
-        mapElement,
-        connectionLayer,
-        zoom,
-        currentFloor
-    );
-
-    renderConnections({
-        map,
-        connectionLayer,
-        zoom,
-        currentFloor
-    });
-
+    renderMap();
     closeNewRoomContext();
 }
 // ============================================================

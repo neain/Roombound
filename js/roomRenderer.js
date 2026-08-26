@@ -137,7 +137,6 @@ let selectedRooms = [];
 // Shared tooltip used when hovering over rooms.
 export const roomTooltip = document.createElement("div");
 
-
 // ============================================================
 // GHOST ROOM STATE
 // ============================================================
@@ -167,13 +166,6 @@ export function getSelectedRooms() {
 //
 // This preserves the existing single-room selection interface while supporting
 // multi-room selection.
-
-// export removed to check for obvious code explosions...
-function getSelectedRoom() {
-    return selectedRooms.length > 0
-        ? selectedRooms[0]
-        : null;
-}
 
 // Selects exactly one room and clears any previous selection.
 export function selectRoom(room) {

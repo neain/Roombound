@@ -11,6 +11,15 @@ import {
     openNewRoomContext
 } from "./newRoomContext.js";
 
+// Map rendering.
+// CURRENT: initializeMapRenderer()
+// If working on the complete visual redraw of the map, inspect:
+//   ./mapRenderer.js
+import {
+    initializeMapRenderer,
+    renderMap
+} from "./mapRenderer.js";
+
 // Map file saving and loading.
 // CURRENT: saveMap(), loadMap(), loadMapFromUrl(), loadMapFromData()
 // If working on the Roombound JSON file format or file persistence, inspect:
@@ -84,18 +93,9 @@ import {
 // tooltips, or the room editor, inspect:
 //   ./roomRenderer.js
 import {
-    renderRooms,
     clearRoomSelection,
     getSelectedRooms
 } from "./roomRenderer.js";
-
-// Connection rendering and connection geometry.
-// CURRENT: renderConnections()
-// INTERNAL: analyzeConnections(), getConnectionPoints(), getConnectionPoint()
-// If working on how connections are drawn, positioned, spaced along room
-// sides, or represented as SVG, inspect:
-//   ./connectionRenderer.js
-import { renderConnections } from "./connectionRenderer.js";
 
 // Map interaction and mouse behavior.
 // CURRENT: initializeMapInteractions()
@@ -125,9 +125,6 @@ const map = defaultMap;
 // The scrollable map viewport.
 const mapElement = document.getElementById("map");
 
-// The world container holds the map grid, rooms, and connection layer.
-const mapWorld = document.createElement("div");
-
 // SVG layer used to draw connections above the map world.
 const connectionLayer = document.createElementNS(
     "http://www.w3.org/2000/svg",
@@ -141,6 +138,13 @@ const mapView = {
     zoom: 1,
     currentFloor: 1
 };
+
+initializeMapRenderer({
+    map,
+    mapElement,
+    connectionLayer,
+    mapView
+});
 
 // The toolbar displayed in the bottom-right corner of the map.
 const mapTools = document.createElement("div");
@@ -161,51 +165,6 @@ const newConnectionTooltip = document.createElement("div");
 // INITIAL DOM CONFIGURATION
 // ============================================================
 
-mapWorld.classList.add("map-world");
-
-mapWorld.style.width = `${MAP_SIZE}px`;
-mapWorld.style.height = `${MAP_SIZE}px`;
-
-
-// ============================================================
-// ZOOM CONTROLS
-// ============================================================
-
-// Updates the map world's dimensions and redraws rooms/connections for the
-// current zoom level.
-function updateZoom() {
-    // Room elements contain zoom-dependent positioning, so remove the current
-    // rendered rooms before drawing them again at the new scale.
-    mapElement.querySelectorAll(".room").forEach(
-        (roomElement) => roomElement.remove()
-    );
-
-    mapWorld.style.width =
-        `${MAP_SIZE * mapView.zoom}px`;
-
-    mapWorld.style.height =
-        `${MAP_SIZE * mapView.zoom}px`;
-
-    // Scale the CSS grid along with the map.
-    mapWorld.style.setProperty(
-        "--grid-size",
-        `${GRID_SIZE * mapView.zoom}px`
-    );
-
-    // Redraw both rooms and connections using the new view state.
-    renderRooms(
-        map,
-        mapWorld,
-        connectionLayer,
-        mapView.zoom,
-        mapView.currentFloor
-    );
-
-    renderConnections(mapView);
-
-    console.log("Zoom Level:", mapView.zoom);
-}
-
 // Creates a fresh map using the default map template.
 //
 // The existing map object is preserved so every module that received a
@@ -219,8 +178,7 @@ function createNewMap() {
     // file and URL loads.
     loadMapFromData(
         map,
-        defaultMap,
-        updateZoom
+        defaultMap
     );
 
     // A new map has no associated saved file.
@@ -244,17 +202,8 @@ function createNewMap() {
 
 initializeMapZoom({
     mapElement,
-    mapView,
-    updateZoom
+    mapView
 });
-
-// ============================================================
-// MAP WORLD INITIALIZATION
-// ============================================================
-
-// Add the world container to the scrollable map viewport.
-mapElement.appendChild(mapWorld);
-
 
 // ============================================================
 // MAP TOOLS
@@ -280,11 +229,9 @@ newRoomButton.addEventListener(
     "click",
     () => {
         openNewRoomContext(
-            map,
+            mapView,
             mapElement,
-            connectionLayer,
-            mapView.zoom,
-            mapView.currentFloor
+            renderMap
         );
     }
 );
@@ -342,8 +289,7 @@ document.body.appendChild(mapTools);
 // Connect the floor-selection UI to the application's map state.
 initializeFloorControl({
     map,
-    mapView,
-    updateZoom
+    mapView
 });
 
 // ============================================================
@@ -353,7 +299,6 @@ initializeFloorControl({
 // Connections are drawn in their own SVG layer so they can be rendered
 // independently from the HTML room elements.
 connectionLayer.classList.add("connections");
-mapWorld.appendChild(connectionLayer);
 
 // Set the initial grid size before the first render.
 mapElement.style.setProperty(
@@ -384,9 +329,9 @@ console.log(
 initializeMapMenu({
     saveMap: () => saveMap(map),
     saveMapAs: () => saveMapAs(map),
-    loadMap: () => loadMap(map, updateZoom),
+    loadMap: () => loadMap(map),
     loadMapFromUrl: (url) =>
-        loadMapFromUrl(map, url, updateZoom),
+        loadMapFromUrl(map, url),
     refreshForNewMap: createNewMap,
     hasMapContent: () =>
         map.rooms.length > 0 ||
@@ -401,21 +346,11 @@ initializeMapMenu({
 initializeMapInteractions({
     map,
     mapElement,
-    mapWorld,
     mapView,
-    changeZoom: (newZoom) =>
-        requestZoom(
-            mapElement,
-            mapView,
-            updateZoom,
-            newZoom
-        ),
-    zoomStep: getZoomStep(),
     openConnectionEditorForConnections,
     openNewRoomContext,
     openMultiRoomEditor,
-    createConnection,
-    refreshMap: updateZoom
+    createConnection
 });
 
 // ============================================================
@@ -432,15 +367,14 @@ async function initializeMap() {
         urlParams.get("map");
 
     if (!mapUrl) {
-        updateZoom();
+        renderMap();
         return;
     }
 
     try {
         await loadMapFromUrl(
             map,
-            mapUrl,
-            updateZoom
+            mapUrl
         );
     } catch (error) {
         console.error(
@@ -453,7 +387,7 @@ async function initializeMap() {
             error.message
         );
 
-        updateZoom();
+        renderMap();
     }
 }
 

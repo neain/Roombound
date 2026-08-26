@@ -855,8 +855,17 @@ Current Step: Polish List (see header)
 * connection between rooms
 * room context menu
 42. move help button from load URL to hamburger menu
+* right clicking a room should allow you to delete it
+* right clicking groups needs to allow group dissolution
+
+CURRENTLY HERE. DELETING A GROUP IS NOT CALLING A MAP REFRESH. LEAVING TO CHASE THE REFRESH RABBIT.
+
+* right clicking a connection should allow you to delete it (not sure if this exists yet. check the connections menu)
+* fix the router for Delete Room. need to move a state level var.
 43. when grouping, replace all the questioning alert style boxes with a single context window with all the options
+* when selecting a group, re-append all its grouped rooms so that they are 'on top' of any other rooms.
 44. add delete button (keyboard) performing the same action as delete buttons in the editors
+45. add group name to its render and give it smart coloring.
 
 55. add options menu. ideas are below
 60. add ability to save a map/url combination so you can hand it to a friend and they just load it without any extra work. should just be an export button in the main file list?
@@ -867,6 +876,8 @@ change the default size of rooms.
 change the size of the connection endpoint selector square.
 Change the color of the selected connection / room / endpoint as well as its associated editer window
 Give the user the ability to have a floor 0. default is floor 1, floor 2, and floor -1 with nothing in between.
+Confirm before deleting? (add tooltip that with this checked, deleting a combined room will also delete any rooms that were combined... maybe add a 'sub' checkbox that checking that will determine group deletion)
+sub option - auto delete sub rooms? (add tooltip with explanation)
 
 * add tutorial to web page: GitHub sharing walkthrough
 Loading a Map from a URL
@@ -886,9 +897,8 @@ add a new users explanation box on an empty map refresh - a getting started sect
 * HoverExceptions in roomRenderer.js ... best to leave it as is? or invert it because we have FAR more fields that are not user facing than are. factor in how complex the refactor is going to be.
 
 ### Possible Bugs
-* createFloorTransitionIndicator() is unused now. should probably delete it. (REMOVED THE EXPORTS TO CHECK FOR CODE EXPLOSIONS. IF LATER AFTER POLISH, STILL NOTHING CALLED IT, REMOVE THE EXPLODED FILE)
-* getSelectedRoom() function in roomRenderer.js may now be unused. 
-* get GPT to check mapStorage.js (core js folder) for things that are trying to 'sanitize' the map data. all I care about is that if an old map is missing a property, that it has a default. if it fails because the actual data is bad, then it fails.
+* check mapInteraction for code smells - that we have to look for the close/cancel button seems sus. prolly make a close() in each and just call that (see roomEditor.js for the right way to do it)
+
 
 ### Next Version Ideas
 #### The Great Grouping V1.1
@@ -898,6 +908,9 @@ room-like objects throughout the application. FAR larger than it pretended to
 be.
 
 #### Function Explosion  V1.2
+explode newConnectionContext.js from inside /connections/
+explode connectionEditor.js again.
+
 Before beginning the next major connection-system rework, completely refactor
 the JavaScript function architecture into a deliberately layered structure.
 

@@ -1,3 +1,7 @@
+import {
+    renderMap
+} from "./mapRenderer.js";
+
 // ============================================================
 // APPLICATION ZOOM CONTROL
 // ============================================================
@@ -25,8 +29,7 @@ let isDraggingZoom = false;
  */
 export function initializeMapZoom({
     mapElement,
-    mapView,
-    updateZoom
+    mapView
 }) {
     zoomControl.classList.add("zoom-control");
     zoomControl.setAttribute("aria-label", "Map zoom controls");
@@ -57,15 +60,13 @@ export function initializeMapZoom({
 
     createZoomMarks(
         mapElement,
-        mapView,
-        updateZoom
+        mapView
     );
 
     zoomInButton.addEventListener("click", () => {
         changeZoom(
             mapElement,
             mapView,
-            updateZoom,
             mapView.zoom + ZOOM_STEP
         );
     });
@@ -74,7 +75,6 @@ export function initializeMapZoom({
         changeZoom(
             mapElement,
             mapView,
-            updateZoom,
             mapView.zoom - ZOOM_STEP
         );
     });
@@ -102,7 +102,6 @@ export function initializeMapZoom({
         changeZoom(
             mapElement,
             mapView,
-            updateZoom,
             steppedZoom
         );
     });
@@ -141,7 +140,6 @@ export function initializeMapZoom({
         changeZoom(
             mapElement,
             mapView,
-            updateZoom,
             steppedZoom
         );
     });
@@ -170,8 +168,7 @@ function getZoomPercent(zoomValue) {
  */
 function createZoomMarks(
     mapElement,
-    mapView,
-    updateZoom
+    mapView
 ) {
     const zoomRange = MAX_ZOOM - MIN_ZOOM;
     let markZoom;
@@ -209,7 +206,6 @@ function createZoomMarks(
             changeZoom(
                 mapElement,
                 mapView,
-                updateZoom,
                 markZoom
             );
         });
@@ -224,7 +220,6 @@ function createZoomMarks(
 function changeZoom(
     mapElement,
     mapView,
-    updateZoom,
     newZoom
 ) {
     const oldZoom = mapView.zoom;
@@ -247,7 +242,7 @@ function changeZoom(
         return;
     }
 
-    updateZoom();
+    renderMap();
 
     mapElement.scrollLeft =
         worldX * mapView.zoom -
@@ -291,13 +286,11 @@ function updateZoomControl(zoomValue) {
 export function requestZoom(
     mapElement,
     mapView,
-    updateZoom,
     newZoom
 ) {
     changeZoom(
         mapElement,
         mapView,
-        updateZoom,
         newZoom
     );
 }

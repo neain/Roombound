@@ -1,11 +1,17 @@
 import {
     clearRoomSelection,
-    selectRoom
+    selectRoom,
+    deleteRoom
 } from "./roomRenderer.js";
 
 import {
     getRoom
 } from "./mapUtils.js";
+
+import {
+    getConfirmGroupDelete,
+    getConfirmDelete
+} from "./options.js";
 
 // ============================================================
 // GROUP
@@ -113,6 +119,79 @@ export function createGroup(
     selectRoom(group);
 
     return group;
+}
+
+// ============================================================
+// GROUP DELETION
+// ============================================================
+
+// Deletes a group and optionally deletes all rooms that make up the group.
+//
+// Group deletion confirmation is controlled by confirmGroupDelete.
+// Member-room deletion is passed through deleteRoom(), which handles its own
+// room-deletion confirmation.
+export function deleteGroup(
+    map,
+    group,
+    mapElement,
+    connectionLayer,
+    zoom,
+    currentFloor
+) {
+    if (!group || !isGroup(group)) {
+        return;
+    }
+
+    if (getConfirmDelete()) {
+        const confirmed =
+            confirm(
+                `Delete "${group.name}"?`
+            );
+
+        if (!confirmed) {
+            return;
+        }
+    }
+
+    let deleteRooms = true;
+
+    if (getConfirmGroupDelete()) {
+        deleteRooms =
+            confirm(
+                `Delete all rooms that make up "${group.name}"?`
+            );
+    }
+
+    if (deleteRooms) {
+        const memberRoomIDs =
+            [...group.roomIDs];
+
+        for (const roomID of memberRoomIDs) {
+            deleteRoom(
+                map,
+                roomID,
+                mapElement,
+                connectionLayer,
+                zoom,
+                currentFloor
+            );
+        }
+    }
+
+    const groupIndex =
+        map.groups.findIndex(
+            (existingGroup) =>
+                existingGroup.groupID === group.groupID
+        );
+
+    if (groupIndex !== -1) {
+        map.groups.splice(
+            groupIndex,
+            1
+        );
+    }
+
+    clearRoomSelection();
 }
 
 // Returns the group's bounding size based on its current member rooms.

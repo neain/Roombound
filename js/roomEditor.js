@@ -7,20 +7,24 @@
 // If changing how editor actions affect the room map, inspect:
 //   ./roomRenderer.js
 import {
-    renderRooms,
     deleteRoom
 } from "./roomRenderer.js";
+
+import {
+    deleteGroup
+} from "./group.js";
 
 import {
     bringEditorWindowToFront
 } from "./editorWindowStack.js";
 
-
-// Connection rendering.
-// CURRENT: renderConnections()
-// If changing how room editor actions affect connections, inspect:
-//   ./connectionRenderer.js
-import { renderConnections } from "./connectionRenderer.js";
+// Map rendering.
+// CURRENT: initializeMapRenderer()
+// If working on the complete visual redraw of the map, inspect:
+//   ./mapRenderer.js
+import {
+    renderMap
+} from "./mapRenderer.js";
 
 // Connection creation and editing.
 // CURRENT: openConnectionEditor()
@@ -49,14 +53,6 @@ let editorPosition = null;
 
 // Visual indicator showing whether the current editor has unsaved changes.
 let editorChangedIndicator = null;
-
-// Tracks whether the room editor has unsaved changes.
-let editorHasChanges = false;
-
-// Tracks whether the selected room was created specifically for the current
-// editor session. This allows Cancel to remove a newly created room.
-let isNewRoom = false;
-
 
 // ============================================================
 // ROOM SELECTION
@@ -95,8 +91,7 @@ export function openRoomEditor(
     mapElement,
     connectionLayer,
     zoom,
-    currentFloor,
-    newRoom = false
+    currentFloor
 ) {
     console.log(
         "openRoomEditor called:",
@@ -104,11 +99,10 @@ export function openRoomEditor(
     );
 
     selectedRoom = room;
-    isNewRoom = newRoom;
 
-    // Store the map/rendering context so editor actions such as Cancel can
-    // delete a newly created room and redraw the map.
-    editorContext = {
+    // Store the map/rendering context so editor actions can modify the selected
+    // room or group and redraw the map.
+    editorContext = {        
         map,
         mapElement,
         connectionLayer,
@@ -227,76 +221,39 @@ export function openRoomEditor(
                 }
 
                 if (isSelectedGroup()) {
-                    const deleteGroup =
-                        confirm(
-                            `Delete "${selectedRoom.name}"?`
+                    const deleted =
+                        deleteGroup(
+                            editorContext.map,
+                            selectedRoom,
+                            editorContext.mapElement,
+                            editorContext.connectionLayer,
+                            editorContext.zoom,
+                            editorContext.currentFloor
                         );
 
-                    if (!deleteGroup) {
+                    if (!deleted) {
                         return;
                     }
 
-                    const deleteRooms =
-                        confirm(
-                            `Delete all rooms that make up "${selectedRoom.name}"?`
-                        );
-
-                    if (deleteRooms) {
-                        const memberRoomIDs =
-                            [...selectedRoom.roomIDs];
-
-                        for (const roomID of memberRoomIDs) {
-                            deleteRoom(
-                                editorContext.map,
-                                roomID,
-                                editorContext.mapElement,
-                                editorContext.connectionLayer,
-                                editorContext.zoom,
-                                editorContext.currentFloor
-                            );
-                        }
-                    }
-
-                    const groupIndex =
-                        editorContext.map.groups.findIndex(
-                            (group) =>
-                                group.groupID ===
-                                selectedRoom.groupID
-                        );
-
-                    if (groupIndex !== -1) {
-                        editorContext.map.groups.splice(
-                            groupIndex,
-                            1
-                        );
-                    }
-
-                    isNewRoom = false;
                     closeRoomEditor();
 
                     return;
                 }
 
-                const confirmed =
-                    confirm(
-                        `Delete room "${selectedRoom.name}"?\n\n` +
-                        "This will also remove any connections attached to it."
+                const deleted =
+                    deleteRoom(
+                        editorContext.map,
+                        selectedRoom.roomID,
+                        editorContext.mapElement,
+                        editorContext.connectionLayer,
+                        editorContext.zoom,
+                        editorContext.currentFloor
                     );
 
-                if (!confirmed) {
+                if (!deleted) {
                     return;
                 }
 
-                deleteRoom(
-                    editorContext.map,
-                    selectedRoom.roomID,
-                    editorContext.mapElement,
-                    editorContext.connectionLayer,
-                    editorContext.zoom,
-                    editorContext.currentFloor
-                );
-
-                isNewRoom = false;
                 closeRoomEditor();
             }
         );
@@ -399,40 +356,12 @@ export function openRoomEditor(
     updateRoomEditor();
 }
 
-
-// Selects a room and opens or updates the room editor for it.
-//
-// This remains a compatibility wrapper for existing room-creation code.
-// Normal room selection remains separate from opening the editor.
-export function selectRoom(
-    room,
-    map,
-    mapElement,
-    connectionLayer,
-    zoom,
-    currentFloor,
-    newRoom = false
-) {
-    openRoomEditor(
-        room,
-        map,
-        mapElement,
-        connectionLayer,
-        zoom,
-        currentFloor,
-        newRoom
-    );
-}
-
-
 // ============================================================
 // ROOM EDITOR
 // ============================================================
 
 // Updates the editor's visual changed indicator.
 function setEditorChanged(changed) {
-    editorHasChanges = changed;
-
     if (!editorChangedIndicator) {
         return;
     }
@@ -526,28 +455,13 @@ function saveRoomEditor() {
         height: roomEditor.offsetHeight
     };
 
-    isNewRoom = false;
-
     editorPosition = {
         x: roomEditor.offsetLeft,
         y: roomEditor.offsetTop
     };
 
     // Re-apply floor filter so an object moved to another floor disappears.
-    renderRooms(
-        editorContext.map,
-        editorContext.mapElement,
-        editorContext.connectionLayer,
-        editorContext.zoom,
-        editorContext.currentFloor
-    );
-
-    renderConnections({
-        map: editorContext.map,
-        connectionLayer: editorContext.connectionLayer,
-        zoom: editorContext.zoom,
-        currentFloor: editorContext.currentFloor
-    });
+    renderMap();
 
     setEditorChanged(false);
 }
@@ -618,42 +532,24 @@ function getGroupRooms(group) {
 }
 
 // Cancels the current room editing session.
-//
-// Newly created rooms are removed entirely when their initial editor session
-// is canceled. Existing rooms and groups are simply left unchanged.
 function cancelRoomEditor() {
-    if (isNewRoom) {
-        deleteRoom(
-            editorContext.map,
-            selectedRoom.roomID,
-            editorContext.mapElement,
-            editorContext.connectionLayer,
-            editorContext.zoom,
-            editorContext.currentFloor
-        );
-    }
-
-    isNewRoom = false;
-
     closeRoomEditor();
 }
 
 
 // Removes the current room editor and clears its associated state.
-function closeRoomEditor() {
+export function closeRoomEditor() {
+    if (!roomEditor) {
+        return;
+    }
+
     roomEditor.remove();
 
     roomEditor = null;
     editorContent = null;
     selectedRoom = null;
 
-    renderRooms(
-        editorContext.map,
-        editorContext.mapElement,
-        editorContext.connectionLayer,
-        editorContext.zoom,
-        editorContext.currentFloor
-    );
+    renderMap();
 }
 
 

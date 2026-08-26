@@ -89,6 +89,10 @@ import {
     getRoom
 } from "./mapUtils.js";
 
+import {
+    renderMap
+} from "./mapRenderer.js";
+
 // Connection rendering and connection geometry.
 // CURRENT: renderConnections(), setSelectedConnectionEndpoint(),
 //          clearSelectedConnectionEndpoint()
@@ -136,6 +140,10 @@ import {
 import {
     bringEditorWindowToFront
 } from "./editorWindowStack.js";
+
+import {
+    closeNewConnectionContext as closeNewConnectionContextImpl
+} from "./connections/newConnectionContext.js";
 
 // ============================================================
 // CONNECTION EDITOR STATE
@@ -363,13 +371,7 @@ function openConnectionEditorWithConnections(
         [...ghostRoomSet]
     );
 
-    renderRooms(
-        map,
-        mapElement,
-        connectionLayer,
-        zoom,
-        currentFloor
-    );
+    renderMap();
 
     if (connectionEditor) {
         connectionEditor.remove();
@@ -589,13 +591,7 @@ function selectConnection(entry, connectionElement) {
         );
 
     // Redraw so the newly selected connection receives its visual highlight.
-    renderConnections({
-        map: connectionEditorContext.map,
-        connectionLayer: connectionEditorContext.connectionLayer,
-        zoom: connectionEditorContext.zoom,
-        currentFloor: connectionEditorContext.currentFloor
-    });
-
+    renderMap();
     console.log("Selected connection:", entry);
 }
 
@@ -795,7 +791,7 @@ function refreshSelectedConnection() {
 // ============================================================
 
 // Closes the current connection editor and clears its state.
-function closeConnectionEditor() {
+export function closeConnectionEditor() {
     if (!connectionEditor) {
         return;
     }
@@ -856,4 +852,8 @@ export function createConnection(
         mapView,
         room
     );
+}
+
+export function closeNewConnectionContext (...args) {
+    return closeNewConnectionContextImpl(...args);
 }

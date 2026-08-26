@@ -11,15 +11,11 @@
 //   - Load-from-URL dialog.
 //   - Dispatching Save/Load operations through callbacks supplied
 //     by main.js.
+//   - Dispatching map operations through callbacks supplied by main.js.
 //
-// The actual map persistence and rendering logic remains in main.js.
-// This module owns the UI and user interaction surrounding those operations.
-//
+// This module owns the menu UI and user interaction. Map operations remain
+// owned by their respective application modules.//
 
-
-// ============================================================
-// MAP MENU INITIALIZATION
-// ============================================================
 
 // Creates and initializes the hamburger menu and its associated dialogs.
 export function initializeMapMenu({
@@ -63,6 +59,8 @@ export function initializeMapMenu({
     // Options placeholder.
     const optionsMenuButton = document.createElement("button");
 
+    // General Help button.
+    const helpMenuButton = document.createElement("button");
 
     // ========================================================
     // NEW MAP DIALOG ELEMENTS
@@ -151,13 +149,12 @@ export function initializeMapMenu({
     loadMapMenuButton.classList.add("menu-item-with-submenu");
     loadMapMenuButton.textContent = "Load Map";
 
-    optionsMenuButton.classList.add(
-        "menu-item",
-        "menu-item-disabled"
-    );
+    optionsMenuButton.classList.add("menu-item","menu-item-disabled","menu-item-separated");
     optionsMenuButton.textContent = "Options";
     optionsMenuButton.disabled = true;
 
+    helpMenuButton.classList.add("menu-item");
+    helpMenuButton.textContent = "Help";
 
     // ========================================================
     // LOAD SUBMENU CONFIGURATION
@@ -185,13 +182,15 @@ export function initializeMapMenu({
     menuPanel.appendChild(saveMapMenuButton);
     menuPanel.appendChild(saveMapAsMenuButton);
     menuPanel.appendChild(loadMapMenuButton);
+
     menuPanel.appendChild(optionsMenuButton);
+
+    menuPanel.appendChild(helpMenuButton);
 
     menuControl.appendChild(menuButton);
     menuControl.appendChild(menuPanel);
 
     document.body.appendChild(menuControl);
-
 
     // ========================================================
     // NEW MAP DIALOG CONFIGURATION
@@ -401,6 +400,18 @@ export function initializeMapMenu({
         }
     );
 
+    helpMenuButton.addEventListener(
+        "click",
+        () => {
+            closeMenu();
+
+            window.open(
+                "help.html",
+                "_blank",
+                "noopener"
+            );
+        }
+    );
 
     // ========================================================
     // NEW MAP EVENTS
@@ -425,13 +436,13 @@ export function initializeMapMenu({
         }
     );
 
-newWithoutSavingButton.addEventListener(
-    "click",
-    () => {
-        closeNewMapDialog();
-        refreshForNewMap();
-    }
-);
+    newWithoutSavingButton.addEventListener(
+        "click",
+        () => {
+            closeNewMapDialog();
+            refreshForNewMap();
+        }
+    );
 
     cancelNewMapButton.addEventListener(
         "click",
@@ -486,7 +497,7 @@ newWithoutSavingButton.addEventListener(
         "click",
         () => {
             window.open(
-                "load-url-tutorial.html",
+                "help.html#load-from-url",
                 "_blank",
                 "noopener"
             );

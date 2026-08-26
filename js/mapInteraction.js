@@ -35,14 +35,26 @@ import {
     getConnectionsNearPoint
 } from "./connectionRenderer.js";
 
+import {
+    getMapWorld
+} from "./mapRenderer.js";
+
 // Room selection without opening the room editor.
 import {
     selectRoomWithoutEditor,
-    openRoomEditor
+    openRoomEditor,
+    closeRoomEditor
 } from "./roomEditor.js";
 
 import {
-    openConnectionEditor
+    closeMultiRoomEditor
+} from "./multiRoomEditor.js";
+
+import {
+    openConnectionEditor,
+    closeConnectionEditor,
+    closeNewConnectionContext
+
 } from "./connectionEditor.js";
 
 import {
@@ -51,6 +63,7 @@ import {
     getSelectedRooms,
     setRoomClipboard,
     getRoomClipboard,
+    deleteRoom,
     duplicateRooms
 } from "./roomRenderer.js";
 
@@ -58,6 +71,11 @@ import {
     createGroup,
     isGroup
 } from "./group.js";
+
+import {
+    renderMap
+} from "./mapRenderer.js";
+
 
 // ============================================================
 // MAP INTERACTION
@@ -68,15 +86,11 @@ import {
 export function initializeMapInteractions({
     map,
     mapElement,
-    mapWorld,
     mapView,
-    changeZoom,
-    zoomStep,
     openConnectionEditorForConnections,
     openNewRoomContext,
     openMultiRoomEditor,
-    createConnection,
-    refreshMap
+    createConnection
 }) {
     let isPanning = false;
     let hasPanned = false;
@@ -85,6 +99,7 @@ export function initializeMapInteractions({
     let scrollStartX;
     let scrollStartY;
     let contextMenu = null;
+    let mapWorld = getMapWorld();
 
     let boxSelectionState = {dragged: false};
 
@@ -153,14 +168,21 @@ export function initializeMapInteractions({
         const newConnectionMenuButton =
             document.createElement("button");
 
+        // Adds a visual separator between logical groups of menu actions.
+        function addMenuSeparator(menu) {
+            const separator =
+                document.createElement("div");
+
+            separator.classList.add("menu-separator");
+
+            menu.appendChild(separator);
+        }
+
         if (room) {
             const openRoomEditorMenuButton =
                 document.createElement("button");
 
             const editConnectionsMenuButton =
-                document.createElement("button");
-
-            const newConnectionMenuButton =
                 document.createElement("button");
 
             openRoomEditorMenuButton.classList.add(
@@ -227,6 +249,8 @@ export function initializeMapInteractions({
                 const convertToGroupMenuButton =
                     document.createElement("button");
 
+                addMenuSeparator(contextMenu);
+
                 editSelectedRoomsMenuButton.classList.add(
                     "menu-item"
                 );
@@ -278,7 +302,7 @@ export function initializeMapInteractions({
                             mapView.currentFloor
                         );
 
-                        refreshMap();
+                        renderMap();
                     }
                 );
 
@@ -289,6 +313,8 @@ export function initializeMapInteractions({
                 contextMenu.appendChild(
                     convertToGroupMenuButton
                 );
+
+                addMenuSeparator(contextMenu);
             }
 
             newConnectionMenuButton.classList.add(
@@ -313,8 +339,60 @@ export function initializeMapInteractions({
             contextMenu.appendChild(
                 newConnectionMenuButton
             );
+
+            // Delete is separated from the normal room actions because it is
+            // destructive and should not be mistaken for an editing action.
+            if (!isGroup(room)) {
+                const selectedRooms =
+                    getSelectedRooms();
+
+                const deleteRoomMenuButton =
+                    document.createElement("button");
+
+                deleteRoomMenuButton.classList.add(
+                    "menu-item",
+                    "menu-item-danger"
+                );
+
+                deleteRoomMenuButton.textContent =
+                    selectedRooms.length > 1
+                        ? "Delete Selected Rooms"
+                        : "Delete Room";
+
+                deleteRoomMenuButton.addEventListener(
+                    "click",
+                    () => {
+                        closeContextMenu();
+
+                        const roomsToDelete =
+                            selectedRooms.length > 1
+                                ? [...selectedRooms]
+                                : [room];
+
+                        for (const selectedRoom of roomsToDelete) {
+                            if (isGroup(selectedRoom)) {
+                                continue;
+                            }
+
+                            deleteRoom(
+                                map,
+                                selectedRoom.roomID,
+                                mapElement,
+                                mapView.connectionLayer,
+                                mapView.zoom,
+                                mapView.currentFloor
+                            );
+                        }
+                    }
+                );
+
+                addMenuSeparator(contextMenu);
+
+                contextMenu.appendChild(
+                    deleteRoomMenuButton
+                );
+            }
         } else {
-            // BEGIN EDIT
             // New Room remains the primary context-menu action. When connections
             // are nearby, editing them is added as a secondary action.
             newRoomMenuButton.classList.add(
@@ -330,11 +408,9 @@ export function initializeMapInteractions({
                     closeContextMenu();
 
                     openNewRoomContext(
-                        map,
+                        mapView,
                         mapElement,
-                        mapView.connectionLayer,
-                        mapView.zoom,
-                        mapView.currentFloor,
+                        renderMap,
                         mapPosition
                     );
                 }
@@ -371,11 +447,12 @@ export function initializeMapInteractions({
                     }
                 );
 
+                addMenuSeparator(contextMenu);
+
                 contextMenu.appendChild(
                     editConnectionsMenuButton
                 );
             }
-            // END EDIT
         }
 
         contextMenu.style.position = "fixed";
@@ -551,11 +628,9 @@ export function initializeMapInteractions({
                 mapElement.scrollTop;
 
             openNewRoomContext(
-                map,
+                mapView,
                 mapElement,
-                mapView.connectionLayer,
-                mapView.zoom,
-                mapView.currentFloor,
+                renderMap,
                 {
                     x: clickX,
                     y: clickY
@@ -682,65 +757,11 @@ export function initializeMapInteractions({
                     );
             }
 
-            if (
-                event.target === mapElement ||
-                event.target === mapWorld
-            ) {
-                const roomEditor =
-                    document.querySelector(".room-editor");
-
-                const multiRoomEditor =
-                    document.querySelector(".multi-room-editor");
-
-                const connectionEditor =
-                    document.querySelector(".connection-editor");
-
-                const newConnectionContext =
-                    document.querySelector(".new-connection-context");
-
-                if (roomEditor) {
-                    const cancelButton =
-                        roomEditor.querySelector(
-                            ".room-editor-cancel"
-                        );
-
-                    if (cancelButton) {
-                        cancelButton.click();
-                    }
-                }
-
-                if (multiRoomEditor) {
-                    const cancelButton =
-                        multiRoomEditor.querySelector(
-                            ".multi-room-editor-cancel"
-                        );
-
-                    if (cancelButton) {
-                        cancelButton.click();
-                    }
-                }
-
-                if (connectionEditor) {
-                    const closeButton =
-                        connectionEditor.querySelector(
-                            ".connection-editor-close"
-                        );
-
-                    if (closeButton) {
-                        closeButton.click();
-                    }
-                }
-
-                if (newConnectionContext) {
-                    const cancelButton =
-                        newConnectionContext.querySelector(
-                            ".new-connection-context-buttons button:first-child"
-                        );
-
-                    if (cancelButton) {
-                        cancelButton.click();
-                    }
-                }
+            if (event.target === mapElement || event.target === mapWorld) {
+                closeRoomEditor();
+                closeMultiRoomEditor();
+                closeConnectionEditor();
+                closeNewConnectionContext();
             }
         }
     );

@@ -10,6 +10,10 @@ import {
     renderRooms
 } from "../roomRenderer.js";
 
+import {
+    getConfirmDelete
+} from "../options.js";
+
 // Connection rendering.
 // CURRENT: renderConnections()
 // If changing how room deletion affects connection display, inspect:
@@ -22,6 +26,9 @@ import {
 // reference it. Then redraws the affected map elements.
 //
 // If the requested room does not exist, nothing happens.
+//
+// When confirmDelete is true, the user must confirm before the room
+// is removed.
 export function deleteRoom(
     map,
     roomID,
@@ -35,7 +42,22 @@ export function deleteRoom(
     );
 
     if (roomIndex === -1) {
-        return;
+        return false;
+    }
+
+    const room =
+        map.rooms[roomIndex];
+
+    if (getConfirmDelete()) {
+        const confirmed =
+            confirm(
+                `Delete room "${room.name}"?\n\n` +
+                "This will also remove any connections attached to it."
+            );
+
+        if (!confirmed) {
+            return false;
+        }
     }
 
     // Remove the room.
@@ -61,4 +83,6 @@ export function deleteRoom(
         zoom,
         currentFloor
     });
+
+    return true;
 }

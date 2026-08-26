@@ -12,17 +12,6 @@ import {
     renderConnections as renderConnectionsImpl
 } from "./connectionRendering/renderConnections.js";
 
-
-// Creates the reusable SVG visual used to indicate a connection between
-// rooms on different floors.
-//
-// The indicator consists of a directional up/down arrow and a stair icon,
-// positioned and scaled according to the supplied map coordinates and zoom.
-import {
-    createFloorTransitionIndicator as createFloorTransitionIndicatorImpl
-} from "./connectionRendering/createFloorTransitionIndicator.js";
-
-
 // Finds connections whose rendered line passes within the supplied pixel
 // range of a given map/SVG coordinate.
 //
