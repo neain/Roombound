@@ -2,51 +2,44 @@
 // IMPORTS
 // ============================================================
 
-// Room rendering router.
-// CURRENT: renderRooms(), deleteRoom()
-// If changing how multi-room actions redraw the map, inspect:
-//   ../roomRenderer.js
+// Room rendering and room operations.
+// CURRENT: deleteRoom(), duplicateRooms(), getSelectedRooms()
+// If changing how multi-room actions affect rooms, inspect:
+//   ./roomRenderer.js
 import {
-    renderRooms,
     deleteRoom,
     duplicateRooms,
     getSelectedRooms
 } from "./roomRenderer.js";
 
 import {
-    bringEditorWindowToFront
-} from "./editorWindowStack.js";
-
-// Connection rendering router.
-// CURRENT: renderConnections()
-// If changing how room changes affect connections, inspect:
-//   ../connectionRenderer.js
-import {
-    renderConnections
-} from "./connectionRenderer.js";
+    renderMap
+} from "./mapRenderer.js";
 
 import {
     createGroup,
-    deleteGroup,
-    isGroup
+    isGroup,
+    deleteGroup
 } from "./group.js";
 
 import {
-    startEditorDragging
-} from "./editorWindowDragging.js";
+    createWindow
+} from "./window.js";
+
 
 // ============================================================
 // MULTI-ROOM EDITOR STATE
 // ============================================================
 
-// The single multi-room editor instance currently displayed, if any.
-let multiRoomEditor = null;
+// The single multi-room editor window currently displayed, if any.
+let multiRoomEditorWindow = null;
 
 // Map/rendering information used by the multi-room editor.
 let editorContext = null;
 
 // Last saved screen position of the multi-room editor.
 let editorPosition = null;
+
 
 // ============================================================
 // MULTI-ROOM EDITOR
@@ -75,70 +68,36 @@ export function openMultiRoomEditor(
         currentFloor
     };
 
-    if (multiRoomEditor) {
-        multiRoomEditor.remove();
-        multiRoomEditor = null;
+    if (multiRoomEditorWindow) {
+        multiRoomEditorWindow.remove();
+        multiRoomEditorWindow = null;
     }
 
-    const editorHeader = document.createElement("div");
-    const editorTitleGroup = document.createElement("div");
-    const editorTitle = document.createElement("span");
-    const closeButton = document.createElement("button");
-    const editorContent = document.createElement("div");
+    multiRoomEditorWindow =
+        createWindow(
+            "Edit Selected Rooms",
+            closeMultiRoomEditor
+        );
 
-    multiRoomEditor = document.createElement("div");
+    const multiRoomEditor =
+        multiRoomEditorWindow.element;
 
     multiRoomEditor.classList.add(
         "room-editor",
         "multi-room-editor"
     );
 
-    multiRoomEditor.style.width =
-        `${map.editorSize.width}px`;
-
-    multiRoomEditor.style.height =
-        `${map.editorSize.height}px`;
-
-    // --------------------------------------------------------
-    // Editor header
-    // --------------------------------------------------------
-
-    editorHeader.classList.add(
-        "room-editor-header"
-    );
-
-    editorTitleGroup.classList.add(
-        "room-editor-title-group"
-    );
-
-    editorTitle.textContent =
-        "Edit Selected Rooms";
-
-    closeButton.textContent = "×";
-    closeButton.classList.add(
-        "room-editor-close"
-    );
-
-    closeButton.addEventListener(
-        "click",
-        closeMultiRoomEditor
-    );
-
-    editorTitleGroup.appendChild(
-        editorTitle
-    );
-
-    editorHeader.appendChild(
-        editorTitleGroup
-    );
-
-    editorHeader.appendChild(
-        closeButton
+    multiRoomEditorWindow.setSize(
+        map.editorSize.width,
+        map.editorSize.height
     );
 
     // --------------------------------------------------------
     // Editor content
     // --------------------------------------------------------
+
+    const editorContent =
+        document.createElement("div");
 
     editorContent.classList.add(
         "room-editor-content"
@@ -156,43 +115,17 @@ export function openMultiRoomEditor(
         editorContent
     );
 
-    multiRoomEditor.appendChild(
-        editorHeader
-    );
-
-    multiRoomEditor.appendChild(
+    multiRoomEditorWindow.content.appendChild(
         editorContent
-    );
-
-    document.body.appendChild(
-        multiRoomEditor
-    );
-
-    multiRoomEditor.addEventListener(
-    "mousedown",
-    () => {
-        bringEditorWindowToFront(multiRoomEditor);
-    }
-);
-
-    document.addEventListener(
-        "keydown",
-        handleMultiRoomEditorKeydown
     );
 
     // Restore the editor's previous screen position when possible.
     if (editorPosition) {
-        multiRoomEditor.style.left =
-            `${editorPosition.x}px`;
-
-        multiRoomEditor.style.top =
-            `${editorPosition.y}px`;
-
-        multiRoomEditor.style.right = "auto";
+        multiRoomEditorWindow.setPosition(
+            editorPosition.x,
+            editorPosition.y
+        );
     }
-
-    // Allow the editor to be repositioned by dragging its header.
-    startEditorDragging(multiRoomEditor,editorHeader);
 }
 
 
@@ -306,6 +239,7 @@ function addColorControls(
         fieldContainer
     );
 }
+
 
 // Returns the common color of the currently selected rooms.
 //
@@ -664,25 +598,6 @@ function addActionControls(
     const duplicateButton =
         document.createElement("button");
 
-    const cancelButton =
-        document.createElement("button");
-
-    cancelButton.classList.add(
-        "multi-room-editor-cancel"
-    );
-
-    cancelButton.addEventListener(
-        "click",
-        closeMultiRoomEditor
-    );
-
-    section.classList.add(
-        "room-editor-buttons"
-    );
-
-    cancelButton.style.display = "none";
-    multiRoomEditor.appendChild(cancelButton);
-
     deleteButton.textContent =
         "Delete All";
 
@@ -696,7 +611,7 @@ function addActionControls(
         "Duplicate";
 
     deleteButton.classList.add(
-        "room-editor-delete"
+        "delete-button"
     );
 
     deleteButton.addEventListener(
@@ -712,6 +627,10 @@ function addActionControls(
     groupButton.addEventListener(
         "click",
         groupSelectedRooms
+    );
+
+    section.classList.add(
+        "room-editor-buttons"
     );
 
     section.appendChild(
@@ -732,7 +651,7 @@ function addActionControls(
 }
 
 
-/// Deletes every room or group currently in the selection.
+// Deletes every room or group currently in the selection.
 //
 // Groups are passed through the standard group deletion path. Normal rooms
 // continue through the standard room deletion path so their connections are
@@ -763,7 +682,8 @@ function deleteSelectedRooms() {
     closeMultiRoomEditor();
 }
 
- // Combines every selected room or group on the current floor.
+
+// Combines every selected room or group on the current floor.
 //
 // All selected objects are combined into a new group. Existing groups are
 // absorbed into the new group rather than being modified in place.
@@ -790,6 +710,7 @@ function groupSelectedRooms() {
     refreshMultiRoomMap();
 }
 
+
 // Duplicates every room currently in the selection.
 //
 // The duplicate operation creates new room data, offsets the duplicated
@@ -797,11 +718,7 @@ function groupSelectedRooms() {
 function duplicateSelectedRooms() {
     duplicateRooms(
         getSelectedRooms(),
-        editorContext.map,
-        editorContext.mapElement,
-        editorContext.connectionLayer,
-        editorContext.zoom,
-        editorContext.currentFloor
+        editorContext.map
     );
 }
 
@@ -810,22 +727,9 @@ function duplicateSelectedRooms() {
 // RENDERING
 // ============================================================
 
-// Refreshes the visible rooms and connections after a multi-room operation.
+// Refreshes the visible map after a multi-room operation.
 function refreshMultiRoomMap() {
-    renderRooms(
-        editorContext.map,
-        editorContext.mapElement,
-        editorContext.connectionLayer,
-        editorContext.zoom,
-        editorContext.currentFloor
-    );
-
-    renderConnections({
-        map: editorContext.map,
-        connectionLayer: editorContext.connectionLayer,
-        zoom: editorContext.zoom,
-        currentFloor: editorContext.currentFloor
-    });
+    renderMap();
 }
 
 
@@ -833,112 +737,25 @@ function refreshMultiRoomMap() {
 // CLOSE
 // ============================================================
 
-// Closes the multi-room editor when Escape is pressed anywhere in the document.
-function handleMultiRoomEditorKeydown(event) {
-    if (
-        event.key !== "Escape" ||
-        !multiRoomEditor
-    ) {
-        return;
-    }
-
-    event.preventDefault();
-
-    closeMultiRoomEditor();
-}
-
 // Closes the multi-room editor without changing room selection.
 export function closeMultiRoomEditor() {
-    if (!multiRoomEditor) {
+    if (!multiRoomEditorWindow) {
         return;
     }
 
-    editorPosition = {
-        x: multiRoomEditor.offsetLeft,
-        y: multiRoomEditor.offsetTop
-    };
+    editorPosition =
+        multiRoomEditorWindow.getPosition();
 
-    document.removeEventListener(
-        "keydown",
-        handleMultiRoomEditorKeydown
-    );
+    multiRoomEditorWindow.remove();
 
-    multiRoomEditor.remove();
-
-    multiRoomEditor = null;
+    multiRoomEditorWindow = null;
     editorContext = null;
 }
 
 
 // ============================================================
-// EDITOR DRAGGING
+// GROUP POSITION
 // ============================================================
-
-// Adds dragging behavior to the multi-room editor header.
-function startMultiRoomEditorDragging(
-    editorHeader
-) {
-    let startMouseX;
-    let startMouseY;
-    let startEditorX;
-    let startEditorY;
-
-    function startDrag(event) {
-        event.preventDefault();
-
-        startMouseX = event.clientX;
-        startMouseY = event.clientY;
-
-        startEditorX =
-            multiRoomEditor.offsetLeft;
-
-        startEditorY =
-            multiRoomEditor.offsetTop;
-
-        document.addEventListener(
-            "mousemove",
-            drag
-        );
-
-        document.addEventListener(
-            "mouseup",
-            stopDrag
-        );
-    }
-
-    function drag(event) {
-        const mouseDeltaX =
-            event.clientX - startMouseX;
-
-        const mouseDeltaY =
-            event.clientY - startMouseY;
-
-        multiRoomEditor.style.left =
-            `${startEditorX + mouseDeltaX}px`;
-
-        multiRoomEditor.style.top =
-            `${startEditorY + mouseDeltaY}px`;
-
-        multiRoomEditor.style.right = "auto";
-    }
-
-    function stopDrag() {
-        document.removeEventListener(
-            "mousemove",
-            drag
-        );
-
-        document.removeEventListener(
-            "mouseup",
-            stopDrag
-        );
-    }
-
-    editorHeader.addEventListener(
-        "mousedown",
-        startDrag
-    );
-}
 
 // Returns the top-left position that contains every supplied room.
 export function getGroupPosition(

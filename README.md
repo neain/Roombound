@@ -790,7 +790,7 @@ Steps 1–26 are currently working in prototype form.
 Current Step: Polish List (see header)
 
 
-### Polish List - Current Step 45
+### Polish List - Current Step 50
 1. Zoom bar + visible zoom level + possibly keyboard shortcuts.
 2. Hamburger menu with New Map, Save/Load, Options, etc.
 3. Swap the floor-selection arrows.
@@ -868,6 +868,10 @@ Current Step: Polish List (see header)
 48. load file should clear the URL the same way new map does
 49. add a modifier key that allows a room to be not snapped to the grid. I wanted to avoid this but expected I would end up doing it at some point. check with GPT to see how deep into the code we would need to go. this may be a V update (was not a version update. was surprisingly simple)
 50. change the various UI windows to use the same createWindow function so that we can make future windows with far less effort.
+* editorWindowDragging.js and editorWindowStack.js got folded into window.js remove their exports to trace which files use them and re-direct them to window.js
+* hand GPT roomEditor and see what can be refactored to be... reduced in size. after we pulled out the shell code... its line count went UP
+   51. legacy code in roomEditor to save its window size to the map can be pulled out?
+52. when editing connections in the connection editor... the ability to ADD a connection would be great.
 
 
 65. add options menu. ideas are below
@@ -904,6 +908,7 @@ add a new users explanation box on an empty map refresh - a getting started sect
 
 ### Possible Bugs
 * check connectionEditorDragging.js in /connections/ I removed it export, so kill it later if nothing missed it.
+* editorWindowDragging.js and editorWindowStack.js lost their export functions. if something tries to call for them, it needs to be folded into the window.js ecosystem
 
 ### Next Version Ideas
 #### The Great Grouping V1.1

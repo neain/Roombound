@@ -2,17 +2,13 @@
 // CURRENT: renderRooms(), getSelectedRooms(), clearRoomSelection(),
 //          addRoomToSelection()
 import {
-    renderRooms,
     clearRoomSelection,
     addRoomToSelection
 } from "../roomRenderer.js";
 
-// Connection rendering.
-// Connections are only redrawn after the room duplication.
-// No connections are duplicated.
 import {
-    renderConnections
-} from "../connectionRenderer.js";
+    renderMap
+} from "../mapRenderer.js";
 
 // ============================================================
 // ROOM DUPLICATION
@@ -25,11 +21,7 @@ import {
 // Connections are intentionally not duplicated.
 export function duplicateRooms(
     rooms,
-    map,
-    mapElement,
-    connectionLayer,
-    zoom,
-    currentFloor
+    map
 ) {
     if (!rooms || rooms.length === 0) {
         return;
@@ -75,18 +67,5 @@ export function duplicateRooms(
         addRoomToSelection(room);
     }
 
-    renderRooms(
-        map,
-        mapElement,
-        connectionLayer,
-        zoom,
-        currentFloor
-    );
-
-    renderConnections({
-        map,
-        connectionLayer,
-        zoom,
-        currentFloor
-    });
+    renderMap();
 }

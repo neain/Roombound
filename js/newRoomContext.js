@@ -19,8 +19,9 @@ import {
 } from "./mapUtils.js";
 
 import {
-    bringEditorWindowToFront
-} from "./editorWindowStack.js";
+    createWindow
+} from "./window.js";
+
 
 // ============================================================
 // CONTEXT STATE
@@ -34,6 +35,7 @@ let newRoom = null;
 
 // Map/rendering information needed when the room is created.
 let creationContext = null;
+
 
 // ============================================================
 // PUBLIC ENTRY POINT
@@ -64,29 +66,26 @@ export function openNewRoomContext(
             mapPosition
         );
 
+    const windowShell =
+        createWindow(
+            "New Room",
+            closeNewRoomContext
+        );
+
     newRoomContext =
-        document.createElement("div");
+        windowShell.element;
 
     newRoomContext.classList.add(
         "new-room-context"
     );
 
-    newRoomContext.addEventListener(
-        "mousedown",
-        () => {
-            bringEditorWindowToFront(newRoomContext);
-        }
+    windowShell.header.classList.add(
+        "new-room-context-header"
     );
+
     // --------------------------------------------------------
     // Context header / preview
     // --------------------------------------------------------
-
-    const contextHeader =
-        document.createElement("div");
-
-    contextHeader.classList.add(
-        "new-room-context-header"
-    );
 
     const preview =
         document.createElement("div");
@@ -95,7 +94,9 @@ export function openNewRoomContext(
         "new-room-context-preview"
     );
 
-    contextHeader.appendChild(preview);
+    windowShell.addHeaderElement(
+        preview
+    );
 
     // --------------------------------------------------------
     // Context content
@@ -403,20 +404,12 @@ export function openNewRoomContext(
         colorSection
     );
 
-    newRoomContext.appendChild(
-        contextHeader
-    );
-
-    newRoomContext.appendChild(
-        contextContent
-    );
-
-    newRoomContext.appendChild(
+    contextContent.appendChild(
         contextButtons
     );
 
-    document.body.appendChild(
-        newRoomContext
+    windowShell.content.appendChild(
+        contextContent
     );
 
     document.addEventListener(
@@ -427,10 +420,6 @@ export function openNewRoomContext(
     document.addEventListener(
         "mousedown",
         handleNewRoomContextOutsideClick
-    );    
-
-    startNewRoomContextDragging(
-        contextHeader
     );
 
     updateContext();
@@ -477,35 +466,35 @@ function createTemporaryRoom(
     roomNumber =
         String(highestRoomNumber + 1).padStart(3, "0");
 
-if (mapPosition) {
-    worldX =
-        (mapPosition.x - MAP_ORIGIN * zoom) /
-        (GRID_SIZE * zoom);
+    if (mapPosition) {
+        worldX =
+            (mapPosition.x - MAP_ORIGIN * zoom) /
+            (GRID_SIZE * zoom);
 
-    worldY =
-        (mapPosition.y - MAP_ORIGIN * zoom) /
-        (GRID_SIZE * zoom);
-} else {
-    centerX =
-        mapElement.scrollLeft +
-        mapElement.clientWidth / 2;
+        worldY =
+            (mapPosition.y - MAP_ORIGIN * zoom) /
+            (GRID_SIZE * zoom);
+    } else {
+        centerX =
+            mapElement.scrollLeft +
+            mapElement.clientWidth / 2;
 
-    centerY =
-        mapElement.scrollTop +
-        mapElement.clientHeight / 2;
+        centerY =
+            mapElement.scrollTop +
+            mapElement.clientHeight / 2;
 
-    worldX =
-        (centerX - MAP_ORIGIN * zoom) /
-        (GRID_SIZE * zoom);
+        worldX =
+            (centerX - MAP_ORIGIN * zoom) /
+            (GRID_SIZE * zoom);
 
-    worldY =
-        (centerY - MAP_ORIGIN * zoom) /
-        (GRID_SIZE * zoom);
-}
+        worldY =
+            (centerY - MAP_ORIGIN * zoom) /
+            (GRID_SIZE * zoom);
+    }
 
     return {
         roomID: `room_${roomNumber}`,
-        name: "New Room",
+        name: "",
         floor: currentFloor,
         notes: "",
         connections: [],
@@ -588,7 +577,7 @@ function updateContextMinimumWidth(
 // ROOM CREATION
 // ============================================================
 
-// Commits the temporary room to the map
+// Commits the temporary room to the map.
 function createRoomFromContext() {
     if (!newRoom || !creationContext) {
         return;
@@ -607,78 +596,7 @@ function createRoomFromContext() {
     renderMap();
     closeNewRoomContext();
 }
-// ============================================================
-// CONTEXT DRAGGING
-// ============================================================
 
-// Adds screen-space dragging behavior to the new-room context header.
-function startNewRoomContextDragging(
-    contextHeader
-) {
-    let startMouseX;
-    let startMouseY;
-    let startContextX;
-    let startContextY;
-
-    function startDrag(event) {
-        event.preventDefault();
-
-        startMouseX = event.clientX;
-        startMouseY = event.clientY;
-
-        startContextX =
-            newRoomContext.offsetLeft;
-
-        startContextY =
-            newRoomContext.offsetTop;
-
-        document.addEventListener(
-            "mousemove",
-            drag
-        );
-
-        document.addEventListener(
-            "mouseup",
-            stopDrag
-        );
-    }
-
-    function drag(event) {
-        const mouseDeltaX =
-            event.clientX -
-            startMouseX;
-
-        const mouseDeltaY =
-            event.clientY -
-            startMouseY;
-
-        newRoomContext.style.left =
-            `${startContextX + mouseDeltaX}px`;
-
-        newRoomContext.style.top =
-            `${startContextY + mouseDeltaY}px`;
-
-        newRoomContext.style.right =
-            "auto";
-    }
-
-    function stopDrag() {
-        document.removeEventListener(
-            "mousemove",
-            drag
-        );
-
-        document.removeEventListener(
-            "mouseup",
-            stopDrag
-        );
-    }
-
-    contextHeader.addEventListener(
-        "mousedown",
-        startDrag
-    );
-}
 
 // ============================================================
 // CONTEXT INPUT
@@ -690,11 +608,8 @@ function handleNewRoomContextKeydown(event) {
         return;
     }
 
-    if (event.key === "Escape") {
-        closeNewRoomContext();
-        return;
-    }
-
+    // Escape is handled by createWindow().
+    // Enter remains specific to room creation.
     if (
         event.key === "Enter" &&
         !(event.target instanceof HTMLTextAreaElement)
@@ -703,6 +618,7 @@ function handleNewRoomContextKeydown(event) {
         createRoomFromContext();
     }
 }
+
 
 // Cancels the context when the user clicks outside its window.
 function handleNewRoomContextOutsideClick(event) {
@@ -713,6 +629,7 @@ function handleNewRoomContextOutsideClick(event) {
         closeNewRoomContext();
     }
 }
+
 
 // ============================================================
 // CONTEXT CLOSING

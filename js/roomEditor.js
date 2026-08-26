@@ -14,10 +14,6 @@ import {
     deleteGroup
 } from "./group.js";
 
-import {
-    bringEditorWindowToFront
-} from "./editorWindowStack.js";
-
 // Map rendering.
 // CURRENT: initializeMapRenderer()
 // If working on the complete visual redraw of the map, inspect:
@@ -28,11 +24,13 @@ import {
 
 // Connection creation and editing.
 // CURRENT: openConnectionEditor()
-import { openConnectionEditor } from "./connectionEditor.js";
+import {
+    openConnectionEditor
+} from "./connectionEditor.js";
 
 import {
-    startEditorDragging
-} from "./editorWindowDragging.js";
+    createWindow
+} from "./window.js";
 
 
 // ============================================================
@@ -43,10 +41,11 @@ import {
 let selectedRoom = null;
 
 // The single room editor instance currently displayed, if any.
-let roomEditor = null;
+let windowShell = null;
 
 // Container holding the fields inside the room editor.
 let editorContent = null;
+let editorButtons = null;
 
 // Map/rendering information needed by the editor when it needs to modify the
 // selected room or redraw the map.
@@ -57,6 +56,7 @@ let editorPosition = null;
 
 // Visual indicator showing whether the current editor has unsaved changes.
 let editorChangedIndicator = null;
+let editorShapeSelect = null;
 
 // Tracks which individual editor fields were actually changed.
 // The generic editorChanged state remains responsible for the visual
@@ -126,86 +126,104 @@ export function openRoomEditor(
     };
 
     // Create the editor the first time a room is opened.
-    if (!roomEditor) {
-        const editorHeader = document.createElement("div");
-        const editorTitleGroup = document.createElement("div");
-        const editorTitle = document.createElement("span");
-        const editorChanged = document.createElement("span");
-        const closeButton = document.createElement("button");
-        const editorButtons = document.createElement("div");
-        const saveButton = document.createElement("button");
-        const editConnectionsButton = document.createElement("button");
-        const deleteButton = document.createElement("button");
-        const cancelButton = document.createElement("button");
+    if (!windowShell) {
+        windowShell =
+            createWindow(
+                "Room Editor",
+                cancelRoomEditor
+            );
 
-        roomEditor = document.createElement("div");
-        roomEditor.classList.add("room-editor");
-
-        roomEditor.style.width =
-            `${map.editorSize.width}px`;
-
-        roomEditor.style.height =
-            `${map.editorSize.height}px`;
+        windowShell.setSize(
+            map.editorSize.width,
+            map.editorSize.height
+        );
 
         // --------------------------------------------------------
         // Editor header
         // --------------------------------------------------------
 
-        editorHeader.classList.add("room-editor-header");
+        const editorTitleGroup =
+            document.createElement("div");
 
-        editorTitleGroup.classList.add("room-editor-title-group");
+        const editorChanged =
+            document.createElement("span");
 
-        editorTitle.textContent = "Room Editor";
+        editorChanged.textContent =
+            "Changed";
 
-        editorChanged.textContent = "Changed";
-        editorChanged.classList.add("room-editor-changed");
-        editorChanged.style.display = "none";
+        editorChanged.hidden = true;
 
-        editorChangedIndicator = editorChanged;
+        editorChangedIndicator =
+            editorChanged;
 
-        editorTitleGroup.appendChild(editorTitle);
-        editorTitleGroup.appendChild(editorChanged);
+        // The generic window shell owns the title and close button.
+        // The room editor only adds its changed indicator.
+        editorTitleGroup.appendChild(
+            windowShell.title
+        );
 
-        editorHeader.appendChild(editorTitleGroup);
-        editorHeader.appendChild(closeButton);
+        editorTitleGroup.appendChild(
+            editorChanged
+        );
 
-        closeButton.textContent = "×";
-        closeButton.classList.add("room-editor-close");
-
-        closeButton.addEventListener(
-            "click",
-            cancelRoomEditor
+        windowShell.addHeaderElement(
+            editorTitleGroup
         );
 
         // --------------------------------------------------------
         // Editor content
         // --------------------------------------------------------
 
-        editorContent = document.createElement("div");
-        editorContent.classList.add("room-editor-content");
+        const editorFields =
+            document.createElement("div");
 
-        roomEditor.appendChild(editorHeader);
-        roomEditor.appendChild(editorContent);
+        editorFields.classList.add(
+            "room-editor-fields"
+        );
+
+        windowShell.content.appendChild(
+            editorFields
+        );
+
+        editorContent =
+            editorFields;
 
         // --------------------------------------------------------
         // Editor buttons
         // --------------------------------------------------------
 
-        editorButtons.classList.add("room-editor-buttons");
-
-        saveButton.textContent = "Save";
-        saveButton.classList.add("room-editor-save");
-
-        editConnectionsButton.textContent = "Edit Connections";
-        editConnectionsButton.classList.add(
-            "room-editor-edit-connections"
+        editorButtons = document.createElement("div");
+        editorButtons.classList.add(
+            "room-editor-buttons"
         );
 
-        deleteButton.textContent = "Delete";
-        deleteButton.classList.add("room-editor-delete");
+        const saveButton =
+            document.createElement("button");
 
-        cancelButton.textContent = "Cancel";
-        cancelButton.classList.add("room-editor-cancel");
+        const editConnectionsButton =
+            document.createElement("button");
+
+        const deleteButton =
+            document.createElement("button");
+
+        deleteButton.classList.add(
+            "delete-button"
+        );
+
+        const cancelButton =
+            document.createElement("button");
+
+        saveButton.textContent =
+            "Save";
+
+        editConnectionsButton.textContent =
+            "Edit Connections";
+
+        deleteButton.textContent =
+            "Delete";
+
+        cancelButton.textContent =
+            "Cancel";
 
         saveButton.addEventListener(
             "click",
@@ -270,36 +288,33 @@ export function openRoomEditor(
             cancelRoomEditor
         );
 
-        editorButtons.appendChild(saveButton);
-        editorButtons.appendChild(editConnectionsButton);
-        editorButtons.appendChild(deleteButton);
-        editorButtons.appendChild(cancelButton);
+        editorButtons.appendChild(
+            saveButton
+        );
 
-        roomEditor.appendChild(editorButtons);
+        editorButtons.appendChild(
+            editConnectionsButton
+        );
 
-        document.body.appendChild(roomEditor);
+        editorButtons.appendChild(
+            deleteButton
+        );
 
-        roomEditor.addEventListener(
-            "mousedown",
-            () => {
-                bringEditorWindowToFront(roomEditor);
-            }
+        editorButtons.appendChild(
+            cancelButton
+        );
+
+        windowShell.content.appendChild(
+            editorButtons
         );
 
         // Restore the editor's last saved screen position when possible.
         if (editorPosition) {
-            roomEditor.style.left =
-                `${editorPosition.x}px`;
-
-            roomEditor.style.top =
-                `${editorPosition.y}px`;
-
-            roomEditor.style.right = "auto";
+            windowShell.setPosition(
+                editorPosition.x,
+                editorPosition.y
+            );
         }
-
-        // Allow the editor to be repositioned by dragging its header.
-        startEditorDragging(roomEditor, editorHeader);
-
         editorContent.addEventListener(
             "input",
             () => {
@@ -314,22 +329,13 @@ export function openRoomEditor(
             }
         );
 
-        // Provide keyboard shortcuts for saving/canceling the editor.
         editorContent.addEventListener(
             "keydown",
             (event) => {
-                if (event.key === "Escape") {
-                    event.preventDefault();
-                    cancelRoomEditor();
-                    return;
-                }
-
-                if (event.key !== "Enter") {
-                    return;
-                }
-
-                // Enter should still create a newline inside the notes field.
-                if (event.target.tagName === "TEXTAREA") {
+                if (
+                    event.key !== "Enter" ||
+                    event.target.tagName === "TEXTAREA"
+                ) {
                     return;
                 }
 
@@ -339,26 +345,19 @@ export function openRoomEditor(
             }
         );
 
-        roomEditor.addEventListener(
-            "mouseup",
+        windowShell.onResize(
             () => {
-                if (
-                    roomEditor.offsetWidth !== map.editorSize.width ||
-                    roomEditor.offsetHeight !== map.editorSize.height
-                ) {
-                    editorFieldChanged.editorSize = true;
-                    setEditorChanged(true);
-                }
+                editorFieldChanged.editorSize = true;
+                setEditorChanged(true);
             }
         );
     }
 
     // Every room can remember its preferred editor dimensions.
-    roomEditor.style.width =
-        `${map.editorSize.width}px`;
-
-    roomEditor.style.height =
-        `${map.editorSize.height}px`;
+    windowShell.setSize(
+        map.editorSize.width,
+        map.editorSize.height
+    );
 
     // Opening an object starts a fresh editing session. No field is considered
     // changed until the user actually modifies it.
@@ -398,9 +397,6 @@ function setEditorChanged(changed) {
 // written back to the selected object. This prevents unrelated saves from
 // overwriting existing data such as a group's color.
 function saveRoomEditor() {
-    const shapeSelect =
-        editorContent.querySelector(".room-editor-shape");
-
     const inputs =
         editorContent.querySelectorAll("input");
 
@@ -445,10 +441,10 @@ function saveRoomEditor() {
 
     if (
         editorFieldChanged.shape &&
-        shapeSelect &&
+        editorShapeSelect &&
         !isSelectedGroup()
     ) {
-        selectedRoom.shape = shapeSelect.value;
+        selectedRoom.shape = editorShapeSelect.value;
     }
 
     if (editorFieldChanged.color) {
@@ -492,17 +488,12 @@ function saveRoomEditor() {
             calculateRoomTextSize(selectedRoom);
     }
 
-    if (editorFieldChanged.editorSize) {
-        editorContext.map.editorSize = {
-            width: roomEditor.offsetWidth,
-            height: roomEditor.offsetHeight
-        };
-    }
+if (editorFieldChanged.editorSize) {
+    editorContext.map.editorSize =
+        windowShell.getSize();
+}
 
-    editorPosition = {
-        x: roomEditor.offsetLeft,
-        y: roomEditor.offsetTop
-    };
+editorPosition = windowShell.getPosition();
 
     // Re-apply floor filter so an object moved to another floor disappears.
     renderMap();
@@ -523,6 +514,7 @@ function applyGroupFloor(floor) {
     }
 }
 
+
 // Applies a color directly to a room.
 function applyRoomColor(room, colorValue) {
     if (colorValue === "") {
@@ -536,6 +528,7 @@ function applyRoomColor(room, colorValue) {
 
     room.color = colorValue;
 }
+
 
 // Applies a color to a group and every room belonging to that group.
 function applyGroupColor(colorValue) {
@@ -593,15 +586,17 @@ function cancelRoomEditor() {
 
 // Removes the current room editor and clears its associated state.
 export function closeRoomEditor() {
-    if (!roomEditor) {
+    if (!windowShell) {
         return;
     }
 
-    roomEditor.remove();
+    windowShell.remove();
 
-    roomEditor = null;
+    windowShell = null;
     editorContent = null;
     selectedRoom = null;
+    editorChangedIndicator = null;
+    editorShapeSelect = null;
 
     renderMap();
 }
@@ -727,10 +722,6 @@ function updateRoomEditor() {
     shapeLabel.textContent =
         "shape: ";
 
-    shapeSelect.classList.add(
-        "room-editor-shape"
-    );
-
     for (const [value, label] of shapes) {
         const option =
             document.createElement("option");
@@ -743,6 +734,9 @@ function updateRoomEditor() {
 
     shapeSelect.value =
         selectedRoom.shape || "rectangle";
+
+    editorShapeSelect =
+        shapeSelect;
 
     if (isGroup) {
         shapeSelect.disabled = true;
@@ -1032,7 +1026,7 @@ function openRoomColorEditor(
 ) {
     if (
         fieldContainer.querySelector(
-            ".room-editor-color-picker"
+            'input[type="color"]'
         )
     ) {
         return;
@@ -1054,14 +1048,6 @@ function openRoomColorEditor(
 
     colorText.type = "text";
     colorText.value = currentColor;
-
-    colorInput.classList.add(
-        "room-editor-color-picker"
-    );
-
-    colorText.classList.add(
-        "room-editor-color-text"
-    );
 
     colorInput.addEventListener(
         "input",

@@ -13,7 +13,7 @@ let editorWindowZIndex = 1001;
 // ============================================================
 
 // Brings an editor window above all other editor windows.
-export function bringEditorWindowToFront(
+function bringEditorWindowToFront(
     editorWindow
 ) {
     editorWindowZIndex++;

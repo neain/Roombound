@@ -10,61 +10,54 @@
 //
 // ============================================================
 
+
+// ============================================================
+// IMPORTS
+// ============================================================
+
 import {
-    startEditorDragging
-} from "./editorWindowDragging.js";
+    createWindow
+} from "./window.js";
+
 
 // ============================================================
 // GROUP OPTIONS WINDOW
 // ============================================================
 
 // Opens the grouping-options window and resolves with the selected options
-// when the user confirms.
+// when the user confirms. Closing the window resolves with null.
 export function openCreateGroupOptionsWindow() {
     return new Promise(
         (resolve) => {
-            const windowElement =
-                document.createElement("div");
+            let groupOptionsWindow = null;
 
-            windowElement.classList.add(
+            function closeWindow() {
+                if (!groupOptionsWindow) {
+                    return;
+                }
+
+                groupOptionsWindow.remove();
+                groupOptionsWindow = null;
+
+                resolve(null);
+            }
+
+            groupOptionsWindow =
+                createWindow(
+                    "Create Group",
+                    closeWindow
+                );
+
+            groupOptionsWindow.element.classList.add(
                 "room-editor"
             );
 
-            // ------------------------------------------------
-            // Window header
-            // ------------------------------------------------
-
-            const header =
-                document.createElement("div");
-
-            header.classList.add(
-                "room-editor-header"
-            );
-
-            const title =
-                document.createElement("span");
-
-            title.textContent =
-                "Create Group";
-
-            header.appendChild(
-                title
-            );
-
-            windowElement.appendChild(
-                header
-            );
+            const content =
+                groupOptionsWindow.content;
 
             // ------------------------------------------------
             // Window content
             // ------------------------------------------------
-
-            const content =
-                document.createElement("div");
-
-            content.classList.add(
-                "room-editor-content"
-            );
 
             const hideLabelsLabel =
                 document.createElement("label");
@@ -118,11 +111,6 @@ export function openCreateGroupOptionsWindow() {
                 moveNotesLabel
             );
 
-            startEditorDragging(
-                windowElement,
-                header
-            );
-
             // ------------------------------------------------
             // OK button
             // ------------------------------------------------
@@ -140,7 +128,8 @@ export function openCreateGroupOptionsWindow() {
             okButton.addEventListener(
                 "click",
                 () => {
-                    windowElement.remove();
+                    groupOptionsWindow.remove();
+                    groupOptionsWindow = null;
 
                     resolve({
                         hideRoomLabels:
@@ -154,14 +143,6 @@ export function openCreateGroupOptionsWindow() {
 
             content.appendChild(
                 okButton
-            );
-
-            windowElement.appendChild(
-                content
-            );
-
-            document.body.appendChild(
-                windowElement
             );
 
             // Give the OK button focus so pressing Enter immediately accepts

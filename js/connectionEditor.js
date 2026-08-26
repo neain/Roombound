@@ -53,10 +53,6 @@
 //       CURRENT: updateConnectionElement()
 //       CURRENT: getDirectionSymbol()
 //
-//   ./connectionEditorDragging.js
-//       Connection editor dragging behavior.
-//       CURRENT: startConnectionEditorDragging()
-//
 // RELATED MODULES:
 //   ./connectionRenderer.js
 //       Connection rendering and map-side connection geometry.
@@ -67,6 +63,10 @@
 //   ./mapUtils.js
 //       Shared map/grid utilities.
 //       CURRENT: getRoom()
+//
+//   ./window.js
+//       Shared floating editor-window behavior.
+//       CURRENT: createWindow()
 //
 // ARCHITECTURE NOTE:
 //   connectionEditor.js intentionally remains the stable public doorway
@@ -95,8 +95,8 @@ import {
 } from "./mapRenderer.js";
 
 import {
-    startEditorDragging as startConnectionEditorDragging
-} from "./editorWindowDragging.js";
+    createWindow
+} from "./window.js";
 
 // Connection rendering and connection geometry.
 // CURRENT: setSelectedConnection(), clearSelectedConnection(),
@@ -143,10 +143,6 @@ import {
 } from "./roomRenderer.js";
 
 import {
-    bringEditorWindowToFront
-} from "./editorWindowStack.js";
-
-import {
     closeNewConnectionContext as closeNewConnectionContextImpl
 } from "./connections/newConnectionContext.js";
 
@@ -157,6 +153,9 @@ import {
 
 // The connection editor currently being displayed, if any.
 let connectionEditor = null;
+
+// Generic floating-window shell used by the connection editor.
+let connectionEditorWindow = null;
 
 // Map/rendering information needed when a connection is modified.
 let connectionEditorContext = null;
@@ -383,57 +382,62 @@ function openConnectionEditorWithConnections(
         connectionEditor.remove();
     }
 
-    connectionEditor = document.createElement("div");
-    connectionEditor.classList.add("connection-editor");
+    connectionEditorWindow  =
+        createWindow(
+            "Connection Editor",
+            closeConnectionEditor
+        );
 
-    // --------------------------------------------------------
-    // Editor header
-    // --------------------------------------------------------
+    connectionEditor =
+        connectionEditorWindow.element;
 
-    const editorHeader = document.createElement("div");
-    editorHeader.classList.add("connection-editor-header");
-
-    const editorTitle = document.createElement("span");
-    editorTitle.textContent = "Connection Editor";
-
-    const closeButton = document.createElement("button");
-    closeButton.textContent = "×";
-    closeButton.classList.add("connection-editor-close");
-
-    closeButton.addEventListener(
-        "click",
-        closeConnectionEditor
+    connectionEditor.classList.add(
+        "connection-editor"
     );
 
-    editorHeader.appendChild(editorTitle);
-    editorHeader.appendChild(closeButton);
-
-    connectionEditor.appendChild(editorHeader);
+    connectionEditorWindow.header.classList.add(
+        "connection-editor-header"
+    );
 
     // --------------------------------------------------------
     // Editor content
     // --------------------------------------------------------
 
-    const editorContent = document.createElement("div");
-    editorContent.classList.add("connection-editor-content");
+    const editorContent =
+        document.createElement("div");
 
-    const roomLabel = document.createElement("div");
-    roomLabel.textContent = `Room: ${room.name}`;
+    editorContent.classList.add(
+        "connection-editor-content"
+    );
 
-    editorContent.appendChild(roomLabel);
+    const roomLabel =
+        document.createElement("div");
+
+    roomLabel.textContent =
+        `Room: ${room.name}`;
+
+    editorContent.appendChild(
+        roomLabel
+    );
 
     if (connections.length === 0) {
-        const emptyMessage = document.createElement("div");
-        emptyMessage.textContent = "This room has no connections.";
+        const emptyMessage =
+            document.createElement("div");
 
-        editorContent.appendChild(emptyMessage);
+        emptyMessage.textContent =
+            "This room has no connections.";
+
+        editorContent.appendChild(
+            emptyMessage
+        );
     }
 
     // Build every connection with its editing controls already visible.
     // Selecting a connection now highlights the existing row instead of
     // creating a second layer of controls.
     for (const entry of connections) {
-        const connectionElement = document.createElement("div");
+        const connectionElement =
+            document.createElement("div");
 
         connectionElement.classList.add(
             "connection-editor-connection"
@@ -473,7 +477,9 @@ function openConnectionEditorWithConnections(
             }
         );
 
-        editorContent.appendChild(connectionElement);
+        editorContent.appendChild(
+            connectionElement
+        );
 
         if (
             selectedConnectionToOpen &&
@@ -484,15 +490,8 @@ function openConnectionEditorWithConnections(
         }
     }
 
-    connectionEditor.appendChild(editorContent);
-
-    document.body.appendChild(connectionEditor);
-
-    connectionEditor.addEventListener(
-        "mousedown",
-        () => {
-            bringEditorWindowToFront(connectionEditor);
-        }
+    connectionEditorWindow.content.appendChild(
+        editorContent
     );
 
     // Install the map-click listener after the opening click has finished.
@@ -545,13 +544,6 @@ function openConnectionEditorWithConnections(
         );
     }
 
-    bringEditorWindowToFront(connectionEditor);
-
-    startConnectionEditorDragging(
-        connectionEditor,
-        editorHeader
-    );
-
     console.log(
         "Opened connection editor for",
         room.name,
@@ -598,7 +590,11 @@ function selectConnection(entry, connectionElement) {
 
     // Redraw so the newly selected connection receives its visual highlight.
     renderMap();
-    console.log("Selected connection:", entry);
+
+    console.log(
+        "Selected connection:",
+        entry
+    );
 }
 
 
@@ -643,20 +639,30 @@ function selectConnectionDirection() {
 
     removeConnectionContextOptions(connectionOptions);
 
-    const directionOptions = document.createElement("div");
+    const directionOptions =
+        document.createElement("div");
 
     directionOptions.classList.add(
         "connection-editor-direction-options"
     );
 
-    const leftButton = document.createElement("button");
-    leftButton.textContent = "←";
+    const leftButton =
+        document.createElement("button");
 
-    const bothButton = document.createElement("button");
-    bothButton.textContent = "↔";
+    leftButton.textContent =
+        "←";
 
-    const rightButton = document.createElement("button");
-    rightButton.textContent = "→";
+    const bothButton =
+        document.createElement("button");
+
+    bothButton.textContent =
+        "↔";
+
+    const rightButton =
+        document.createElement("button");
+
+    rightButton.textContent =
+        "→";
 
     leftButton.addEventListener(
         "click",
@@ -685,11 +691,21 @@ function selectConnectionDirection() {
         }
     );
 
-    directionOptions.appendChild(leftButton);
-    directionOptions.appendChild(bothButton);
-    directionOptions.appendChild(rightButton);
+    directionOptions.appendChild(
+        leftButton
+    );
 
-    connectionOptions.after(directionOptions);
+    directionOptions.appendChild(
+        bothButton
+    );
+
+    directionOptions.appendChild(
+        rightButton
+    );
+
+    connectionOptions.after(
+        directionOptions
+    );
 }
 
 
@@ -702,9 +718,11 @@ function setConnectionDirection(direction) {
         return;
     }
 
-    const connection = selectedConnection.entry.connection;
+    const connection =
+        selectedConnection.entry.connection;
 
-    connection.directionTo = direction;
+    connection.directionTo =
+        direction;
 
     refreshSelectedConnection();
 }
@@ -721,18 +739,23 @@ function refreshSelectedConnection() {
         return;
     }
 
-    const entry = selectedConnection.entry;
-    const connection = entry.connection;
+    const entry =
+        selectedConnection.entry;
 
-    entry.roomA = getRoom(
-        connectionEditorContext.map,
-        connection.roomA
-    );
+    const connection =
+        entry.connection;
 
-    entry.roomB = getRoom(
-        connectionEditorContext.map,
-        connection.roomB
-    );
+    entry.roomA =
+        getRoom(
+            connectionEditorContext.map,
+            connection.roomA
+        );
+
+    entry.roomB =
+        getRoom(
+            connectionEditorContext.map,
+            connection.roomB
+        );
 
     connectionOptions =
         updateConnectionElement(
@@ -758,11 +781,12 @@ function refreshSelectedConnection() {
         );
 
     if (endpointOptions) {
-        const currentRoom = getSelectedEndpointRoom(
-            connectionEditorContext,
-            selectedConnection,
-            selectedEndpoint
-        );
+        const currentRoom =
+            getSelectedEndpointRoom(
+                connectionEditorContext,
+                selectedConnection,
+                selectedEndpoint
+            );
 
         if (currentRoom) {
             createEndpointSideOptions(
@@ -798,15 +822,7 @@ export function closeConnectionEditor() {
 
     clearGhostRooms();
 
-    connectionEditor.remove();
-
-    renderRooms(
-        connectionEditorContext.map,
-        connectionEditorContext.mapElement,
-        connectionEditorContext.connectionLayer,
-        connectionEditorContext.zoom,
-        connectionEditorContext.currentFloor
-    );
+    connectionEditorWindow.remove();
 
     if (closeEditorClickHandler) {
         connectionEditorContext.mapElement.removeEventListener(
@@ -823,6 +839,7 @@ export function closeConnectionEditor() {
     renderMap();
 
     connectionEditor = null;
+    connectionEditorWindow = null;
     editedRoom = null;
     selectedConnection = null;
     selectedEndpoint = null;
@@ -848,14 +865,14 @@ export function createConnection(
     );
 }
 
-export function closeNewConnectionContext (...args) {
+export function closeNewConnectionContext(...args) {
     return closeNewConnectionContextImpl(...args);
 }
 
-export function deleteConnection (...args) {
+export function deleteConnection(...args) {
     return deleteConnectionImpl(...args);
 }
 
-export function deleteConnections (...args) {
+export function deleteConnections(...args) {
     return deleteConnectionsImpl(...args);
 }

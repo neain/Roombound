@@ -3,7 +3,7 @@
 // ============================================================
 
 // Adds dragging behavior to an editor window using its header.
-export function startEditorDragging(
+function startEditorDragging(
     windowElement,
     header
 ) {

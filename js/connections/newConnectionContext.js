@@ -26,12 +26,16 @@ import {
     getDirectionSymbol
 } from "./connectionEditorUI.js";
 
+import {
+    createWindow
+} from "../window.js";
+
 
 // ============================================================
 // CONTEXT STATE
 // ============================================================
 
-// The currently displayed new-connection context, if any.
+// The currently displayed new-connection context window, if any.
 let newConnectionContext = null;
 
 // Temporary connection creation state.
@@ -61,22 +65,26 @@ export function openNewConnectionContext(
     direction = "both";
 
     newConnectionContext =
-        document.createElement("div");
+        createWindow(
+            "New Connection",
+            closeNewConnectionContext
+        );
 
-    newConnectionContext.classList.add(
+    newConnectionContext.element.classList.add(
         "new-connection-context"
+    );
+
+    newConnectionContext.header.classList.add(
+        "new-connection-context-header"
+    );
+
+    newConnectionContext.content.classList.add(
+        "new-connection-context-content"
     );
 
     // --------------------------------------------------------
     // Context header / live connection preview
     // --------------------------------------------------------
-
-    const contextHeader =
-        document.createElement("div");
-
-    contextHeader.classList.add(
-        "new-connection-context-header"
-    );
 
     const preview =
         document.createElement("div");
@@ -85,7 +93,9 @@ export function openNewConnectionContext(
         "new-connection-context-preview"
     );
 
-    contextHeader.appendChild(preview);
+    newConnectionContext.addHeaderElement(
+        preview
+    );
 
     // --------------------------------------------------------
     // Context content
@@ -325,24 +335,12 @@ export function openNewConnectionContext(
         secondRoomSection
     );
 
-    newConnectionContext.appendChild(
-        contextHeader
-    );
-
-    newConnectionContext.appendChild(
+    newConnectionContext.content.appendChild(
         contextContent
     );
 
-    newConnectionContext.appendChild(
+    newConnectionContext.content.appendChild(
         contextButtons
-    );
-
-    document.body.appendChild(
-        newConnectionContext
-    );
-
-    startNewConnectionContextDragging(
-        contextHeader
     );
 
     updateContext();
@@ -361,27 +359,27 @@ function updateContext() {
     }
 
     const firstRoomList =
-        newConnectionContext.querySelector(
+        newConnectionContext.element.querySelector(
             ".new-connection-context-room-list"
         );
 
     const secondRoomList =
-        newConnectionContext.querySelectorAll(
+        newConnectionContext.element.querySelectorAll(
             ".new-connection-context-room-list"
         )[1];
 
     const preview =
-        newConnectionContext.querySelector(
+        newConnectionContext.element.querySelector(
             ".new-connection-context-preview"
         );
 
     const directionButtons =
-        newConnectionContext.querySelectorAll(
+        newConnectionContext.element.querySelectorAll(
             ".new-connection-context-direction button"
         );
 
     const createButton =
-        newConnectionContext.querySelector(
+        newConnectionContext.element.querySelector(
             ".new-connection-context-buttons button:last-child"
         );
 
@@ -720,7 +718,7 @@ function updateContextPreviewSize(
         preview.scrollWidth;
 
     const contextWidth =
-        newConnectionContext.clientWidth;
+        newConnectionContext.element.clientWidth;
 
     if (previewWidth <= contextWidth) {
         return;
@@ -730,82 +728,8 @@ function updateContextPreviewSize(
         previewWidth -
         contextWidth;
 
-    newConnectionContext.style.width =
-        `${newConnectionContext.offsetWidth + widthIncrease + 20}px`;
-}
-
-
-// ============================================================
-// CONTEXT DRAGGING
-// ============================================================
-
-// Adds screen-space dragging behavior to the new connection context header.
-function startNewConnectionContextDragging(
-    contextHeader
-) {
-    let startMouseX;
-    let startMouseY;
-    let startContextX;
-    let startContextY;
-
-    function startDrag(event) {
-        event.preventDefault();
-
-        startMouseX = event.clientX;
-        startMouseY = event.clientY;
-
-        startContextX =
-            newConnectionContext.offsetLeft;
-
-        startContextY =
-            newConnectionContext.offsetTop;
-
-        document.addEventListener(
-            "mousemove",
-            drag
-        );
-
-        document.addEventListener(
-            "mouseup",
-            stopDrag
-        );
-    }
-
-    function drag(event) {
-        const mouseDeltaX =
-            event.clientX -
-            startMouseX;
-
-        const mouseDeltaY =
-            event.clientY -
-            startMouseY;
-
-        newConnectionContext.style.left =
-            `${startContextX + mouseDeltaX}px`;
-
-        newConnectionContext.style.top =
-            `${startContextY + mouseDeltaY}px`;
-
-        newConnectionContext.style.right =
-            "auto";
-    }
-
-    function stopDrag() {
-        document.removeEventListener(
-            "mousemove",
-            drag
-        );
-
-        document.removeEventListener(
-            "mouseup",
-            stopDrag
-        );
-    }
-
-    contextHeader.addEventListener(
-        "mousedown",
-        startDrag
-    );
+    newConnectionContext.element.style.width =
+        `${newConnectionContext.element.offsetWidth + widthIncrease + 20}px`;
 }
 
 
