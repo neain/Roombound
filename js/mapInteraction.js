@@ -134,6 +134,31 @@ export function initializeMapInteractions({
         return null;
     }
 
+    // Deletes the current room/group selection using the same deletion
+    // functions as the map context menu.
+    function deleteSelectedObjects() {
+        const selectedObjects =
+            [...getSelectedRooms()];
+
+        if (selectedObjects.length === 0) {
+            return;
+        }
+
+        for (const selectedObject of selectedObjects) {
+            if (isGroup(selectedObject)) {
+                deleteGroup(
+                    map,
+                    selectedObject
+                );
+            } else {
+                deleteRoom(
+                    map,
+                    selectedObject.roomID
+                );
+            }
+        }
+    }
+
     // ========================================================
     // CONTEXT MENU
     // ========================================================
@@ -953,17 +978,14 @@ export function initializeMapInteractions({
     // DOCUMENT EVENTS
     // ========================================================
 
-    // Handles standard room copy and paste shortcuts.
+    // Handles standard room copy, paste, and deletion shortcuts.
     //
-    // Copy stores the current room selection in the room clipboard. Paste creates
-    // new rooms from that clipboard data using the normal room duplication path.
+    // Copy stores the current room selection in the room clipboard. Paste
+    // creates new rooms from that clipboard data using the normal duplication
+    // path. Delete uses the same deletion functions as the context menu.
     document.addEventListener(
         "keydown",
         (event) => {
-            if (!event.ctrlKey) {
-                return;
-            }
-
             const target =
                 event.target;
 
@@ -976,7 +998,19 @@ export function initializeMapInteractions({
                 return;
             }
 
-                        if (event.key.toLowerCase() === "c") {
+            if (event.key === "Delete") {
+                event.preventDefault();
+
+                deleteSelectedObjects();
+
+                return;
+            }
+
+            if (!event.ctrlKey) {
+                return;
+            }
+
+            if (event.key.toLowerCase() === "c") {
                 const selectedRooms =
                     getSelectedRooms();
 
