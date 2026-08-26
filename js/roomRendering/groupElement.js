@@ -37,6 +37,8 @@ export function createGroupElement(
 ) {
     const groupElement = document.createElement("div");
     const groupRooms = [];
+    let nameBackgroundColor = "#ffffff";
+    let roomFoundAtNamePosition = false;
 
     for (const roomID of group.roomIDs) {
         const room = map.rooms.find(
@@ -79,6 +81,140 @@ export function createGroupElement(
         }
     }
 
+    // Determine which room is visually behind the center of the group name.
+    //
+    // Rooms are checked through their rendered DOM elements so the result
+    // respects the current visual stacking order. The last matching room in
+    // DOM order is the room currently appearing on top.
+    const nameX =
+        group.position.x +
+        group.size.width / 2;
+
+    const nameY =
+        group.position.y +
+        group.size.height / 2;
+
+    const roomElements =
+        mapElement.querySelectorAll(".room");
+
+    for (const roomElement of roomElements) {
+        const roomID =
+            roomElement.dataset.roomId;
+
+        const room =
+            map.rooms.find(
+                (mapRoom) => mapRoom.roomID === roomID
+            );
+
+        if (!room) {
+            continue;
+        }
+
+        const roomRight =
+            room.position.x +
+            room.size.width;
+
+        const roomBottom =
+            room.position.y +
+            room.size.height;
+
+        if (
+            nameX >= room.position.x &&
+            nameX <= roomRight &&
+            nameY >= room.position.y &&
+            nameY <= roomBottom
+        ) {
+            roomFoundAtNamePosition = true;
+            nameBackgroundColor =
+                room.color || null;
+        }
+    }
+
+    // Determines whether black or white text provides better contrast against
+    // the supplied six-digit hexadecimal room color.
+    const getContrastingTextColor = (color) => {
+        if (!/^#[0-9a-fA-F]{6}$/.test(color)) {
+            return null;
+        }
+
+        const red =
+            parseInt(color.slice(1, 3), 16) / 255;
+
+        const green =
+            parseInt(color.slice(3, 5), 16) / 255;
+
+        const blue =
+            parseInt(color.slice(5, 7), 16) / 255;
+
+        const redLinear =
+            red <= 0.03928
+                ? red / 12.92
+                : ((red + 0.055) / 1.055) ** 2.4;
+
+        const greenLinear =
+            green <= 0.03928
+                ? green / 12.92
+                : ((green + 0.055) / 1.055) ** 2.4;
+
+        const blueLinear =
+            blue <= 0.03928
+                ? blue / 12.92
+                : ((blue + 0.055) / 1.055) ** 2.4;
+
+        const luminance =
+            0.2126 * redLinear +
+            0.7152 * greenLinear +
+            0.0722 * blueLinear;
+
+        return luminance > 0.179
+            ? "#000000"
+            : "#ffffff";
+    };
+
+    const groupName =
+        document.createElement("div");
+
+    groupName.classList.add("group-name");
+    groupName.textContent =
+        group.name;
+
+    groupName.style.position =
+        "absolute";
+
+    groupName.style.left =
+        "0";
+
+    groupName.style.top =
+        "0";
+
+    groupName.style.width =
+        "100%";
+
+    groupName.style.height =
+        "100%";
+
+    groupName.style.display =
+        "flex";
+
+    groupName.style.alignItems =
+        "center";
+
+    groupName.style.justifyContent =
+        "center";
+
+    const textColor =
+        roomFoundAtNamePosition &&
+        !nameBackgroundColor
+            ? "#ffffff"
+            : getContrastingTextColor(
+                nameBackgroundColor
+            );
+
+    if (textColor) {
+        groupName.style.color =
+            textColor;
+    }
+
     groupElement.classList.add("group");
     groupElement.dataset.groupId = group.groupID;
 
@@ -111,6 +247,13 @@ export function createGroupElement(
             group.size.height,
             zoom
         )}px`;
+
+    groupName.style.fontSize =
+        `${16 * zoom}px`;
+
+    groupElement.appendChild(
+        groupName
+    );
 
     // --------------------------------------------------------
     // Map interaction

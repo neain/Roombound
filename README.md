@@ -867,6 +867,7 @@ Current Step: Polish List (see header)
 
 55. add options menu. ideas are below
 60. add ability to save a map/url combination so you can hand it to a friend and they just load it without any extra work. should just be an export button in the main file list?
+* make it work like the loadURL in that you give it a URL of a map... and IF it loads without any issues... then we can give the user a link with https://neain.github.io/Roombound/?map= and then the url they just gave us.
 
 * options menu items: 
 Change the default color of rooms and room text. 
