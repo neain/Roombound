@@ -2,25 +2,13 @@
 // IMPORTS
 // ============================================================
 
-// Room rendering router.
-// CURRENT: renderRooms()
-// If changing how room deletion refreshes the room display, inspect:
-//   ../roomRenderer.js
-import {
-    renderRooms
-} from "../roomRenderer.js";
-
 import {
     getConfirmDelete
 } from "../options.js";
 
-// Connection rendering.
-// CURRENT: renderConnections()
-// If changing how room deletion affects connection display, inspect:
-//   ../connectionRenderer.js
 import {
-    renderConnections
-} from "../connectionRenderer.js";
+    renderMap
+} from "../mapRenderer.js"
 
 // Deletes a room from the map by ID and removes any connections that
 // reference it. Then redraws the affected map elements.
@@ -31,11 +19,7 @@ import {
 // is removed.
 export function deleteRoom(
     map,
-    roomID,
-    mapElement,
-    connectionLayer,
-    zoom,
-    currentFloor
+    roomID
 ) {
     const roomIndex = map.rooms.findIndex(
         (room) => room.roomID === roomID
@@ -69,20 +53,6 @@ export function deleteRoom(
         (conn) => conn.roomA !== roomID && conn.roomB !== roomID
     );
 
-    renderRooms(
-        map,
-        mapElement,
-        connectionLayer,
-        zoom,
-        currentFloor
-    );
-
-    renderConnections({
-        map,
-        connectionLayer,
-        zoom,
-        currentFloor
-    });
-
+    renderMap();
     return true;
 }

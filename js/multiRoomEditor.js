@@ -745,11 +745,7 @@ function deleteSelectedRooms() {
         if (isGroup(room)) {
             deleteGroup(
                 editorContext.map,
-                room,
-                editorContext.mapElement,
-                editorContext.connectionLayer,
-                editorContext.zoom,
-                editorContext.currentFloor
+                room
             );
 
             continue;
@@ -757,11 +753,7 @@ function deleteSelectedRooms() {
 
         deleteRoom(
             editorContext.map,
-            room.roomID,
-            editorContext.mapElement,
-            editorContext.connectionLayer,
-            editorContext.zoom,
-            editorContext.currentFloor
+            room.roomID
         );
     }
 

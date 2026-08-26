@@ -14,6 +14,10 @@ import {
 } from "../connectionRenderer.js";
 
 import {
+    deleteConnection
+} from "./connection.js";
+
+import {
     getRoomsInEndpointRange,
     getSelectedEndpointRoom,
     getSelectedEndpointPoint
@@ -110,7 +114,6 @@ export function selectConnectionEndpoint(
         state
     );
 
-    // BEGIN EDIT
     // renderConnections() now expects a mapView object rather than
     // positional arguments.
     renderConnections({
@@ -119,7 +122,6 @@ export function selectConnectionEndpoint(
         zoom: connectionEditorContext.zoom,
         currentFloor: connectionEditorContext.currentFloor
     });
-    // END EDIT
 }
 
 
@@ -323,6 +325,8 @@ export function setConnectionEndpointRoom(
     const connection =
         selectedConnection.entry.connection;
 
+    // Removing the final connected endpoint deletes the connection instead
+    // of leaving a double-null connection in map.connections.
     if (!roomID) {
         if (selectedEndpoint === "A") {
             connection.roomA = null;
@@ -330,6 +334,22 @@ export function setConnectionEndpointRoom(
         } else {
             connection.roomB = null;
             connection.roomBConnectionSide = null;
+        }
+
+        if (
+            connection.roomA === null &&
+            connection.roomB === null
+        ) {
+            deleteConnection(
+                connectionEditorContext.map,
+                connection
+            );
+
+            clearSelectedConnectionEndpoint();
+
+            state.selectedEndpoint = null;
+
+            return;
         }
 
         if (state.refreshSelectedConnection) {

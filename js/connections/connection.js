@@ -3,8 +3,8 @@
 // ============================================================
 
 import {
-    renderConnections
-} from "../connectionRenderer.js";
+    renderMap
+} from "../mapRenderer.js";
 
 
 // ============================================================
@@ -35,12 +35,7 @@ export function createConnection(
         connection
     );
 
-    renderConnections({
-        map,
-        connectionLayer,
-        zoom,
-        currentFloor
-    });
+    renderMap();
 
     console.log(
         `Created connection from ` +
@@ -49,4 +44,70 @@ export function createConnection(
     );
 
     return connection;
+}
+
+
+// ============================================================
+// CONNECTION DELETION
+// ============================================================
+
+// Deletes a single connection from the map.
+export function deleteConnection(
+    map,
+    connection,
+    render = true
+) {
+    if (!connection) {
+        return;
+    }
+
+    const connectionIndex =
+        map.connections.indexOf(connection);
+
+    if (connectionIndex === -1) {
+        return;
+    }
+
+    map.connections.splice(
+        connectionIndex,
+        1
+    );
+
+    if (render) {
+        renderMap();
+    }
+
+    console.log(
+        "Deleted connection:",
+        connection
+    );
+}
+
+
+// Deletes multiple connections from the map in one operation.
+export function deleteConnections(
+    map,
+    connections
+) {
+    if (
+        !connections ||
+        connections.length === 0
+    ) {
+        return;
+    }
+
+    for (const connection of connections) {
+        deleteConnection(
+            map,
+            connection,
+            false
+        );
+    }
+
+    renderMap();
+
+    console.log(
+        "Deleted connections:",
+        connections
+    );
 }

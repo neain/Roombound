@@ -53,8 +53,8 @@ import {
 import {
     openConnectionEditor,
     closeConnectionEditor,
-    closeNewConnectionContext
-
+    closeNewConnectionContext,
+    deleteConnections
 } from "./connectionEditor.js";
 
 import {
@@ -69,6 +69,7 @@ import {
 
 import {
     createGroup,
+    deleteGroup,
     isGroup
 } from "./group.js";
 
@@ -202,7 +203,6 @@ export function initializeMapInteractions({
                         map,
                         mapElement,
                         mapView.connectionLayer,
-                        mapView.zoom,
                         mapView.currentFloor
                     );
                 }
@@ -342,7 +342,41 @@ export function initializeMapInteractions({
 
             // Delete is separated from the normal room actions because it is
             // destructive and should not be mistaken for an editing action.
-            if (!isGroup(room)) {
+            if (isGroup(room)) {
+                const dissolveGroupMenuButton =
+                    document.createElement("button");
+
+                dissolveGroupMenuButton.classList.add(
+                    "menu-item",
+                    "menu-item-danger"
+                );
+
+                dissolveGroupMenuButton.textContent =
+                    "Dissolve Group";
+
+                dissolveGroupMenuButton.addEventListener(
+                    "click",
+                    () => {
+                        closeContextMenu();
+
+                        const deleted =
+                            deleteGroup(
+                                map,
+                                room
+                            );
+
+                        if (!deleted) {
+                            return;
+                        }
+                    }
+                );
+
+                addMenuSeparator(contextMenu);
+
+                contextMenu.appendChild(
+                    dissolveGroupMenuButton
+                );
+            } else {
                 const selectedRooms =
                     getSelectedRooms();
 
@@ -376,11 +410,7 @@ export function initializeMapInteractions({
 
                             deleteRoom(
                                 map,
-                                selectedRoom.roomID,
-                                mapElement,
-                                mapView.connectionLayer,
-                                mapView.zoom,
-                                mapView.currentFloor
+                                selectedRoom.roomID
                             );
                         }
                     }
@@ -424,6 +454,9 @@ export function initializeMapInteractions({
                 const editConnectionsMenuButton =
                     document.createElement("button");
 
+                const deleteConnectionsMenuButton =
+                    document.createElement("button");
+
                 editConnectionsMenuButton.classList.add(
                     "menu-item"
                 );
@@ -447,10 +480,36 @@ export function initializeMapInteractions({
                     }
                 );
 
+                deleteConnectionsMenuButton.classList.add(
+                    "menu-item",
+                    "menu-item-danger"
+                );
+
+                deleteConnectionsMenuButton.textContent =
+                    connections.length > 1
+                        ? "Delete Connections"
+                        : "Delete Connection";
+
+                deleteConnectionsMenuButton.addEventListener(
+                    "click",
+                    () => {
+                        closeContextMenu();
+
+                        deleteConnections(
+                            map,
+                            connections
+                        );
+                    }
+                );
+
                 addMenuSeparator(contextMenu);
 
                 contextMenu.appendChild(
                     editConnectionsMenuButton
+                );
+
+                contextMenu.appendChild(
+                    deleteConnectionsMenuButton
                 );
             }
         }
@@ -607,7 +666,6 @@ export function initializeMapInteractions({
                     map,
                     mapElement,
                     mapView.connectionLayer,
-                    mapView.zoom,
                     mapView.currentFloor
                 );
 

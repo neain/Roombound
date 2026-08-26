@@ -90,7 +90,6 @@ export function openRoomEditor(
     map,
     mapElement,
     connectionLayer,
-    zoom,
     currentFloor
 ) {
     console.log(
@@ -106,7 +105,6 @@ export function openRoomEditor(
         map,
         mapElement,
         connectionLayer,
-        zoom,
         currentFloor
     };
 
@@ -224,11 +222,7 @@ export function openRoomEditor(
                     const deleted =
                         deleteGroup(
                             editorContext.map,
-                            selectedRoom,
-                            editorContext.mapElement,
-                            editorContext.connectionLayer,
-                            editorContext.zoom,
-                            editorContext.currentFloor
+                            selectedRoom
                         );
 
                     if (!deleted) {
@@ -243,11 +237,7 @@ export function openRoomEditor(
                 const deleted =
                     deleteRoom(
                         editorContext.map,
-                        selectedRoom.roomID,
-                        editorContext.mapElement,
-                        editorContext.connectionLayer,
-                        editorContext.zoom,
-                        editorContext.currentFloor
+                        selectedRoom.roomID
                     );
 
                 if (!deleted) {

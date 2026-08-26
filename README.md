@@ -857,9 +857,6 @@ Current Step: Polish List (see header)
 42. move help button from load URL to hamburger menu
 * right clicking a room should allow you to delete it
 * right clicking groups needs to allow group dissolution
-
-CURRENTLY HERE. DELETING A GROUP IS NOT CALLING A MAP REFRESH. LEAVING TO CHASE THE REFRESH RABBIT.
-
 * right clicking a connection should allow you to delete it (not sure if this exists yet. check the connections menu)
 * fix the router for Delete Room. need to move a state level var.
 43. when grouping, replace all the questioning alert style boxes with a single context window with all the options
@@ -897,7 +894,6 @@ add a new users explanation box on an empty map refresh - a getting started sect
 * HoverExceptions in roomRenderer.js ... best to leave it as is? or invert it because we have FAR more fields that are not user facing than are. factor in how complex the refactor is going to be.
 
 ### Possible Bugs
-* check mapInteraction for code smells - that we have to look for the close/cancel button seems sus. prolly make a close() in each and just call that (see roomEditor.js for the right way to do it)
 
 
 ### Next Version Ideas

@@ -32,6 +32,7 @@
 //   ./connections/connection.js
 //       Connection-level operations.
 //       CURRENT: createConnection()
+//       CURRENT: deleteConnection()
 //
 //   ./connections/connectionEndpoints.js
 //       Endpoint room selection and attachment-side editing.
@@ -59,8 +60,8 @@
 // RELATED MODULES:
 //   ./connectionRenderer.js
 //       Connection rendering and map-side connection geometry.
-//       CURRENT: renderConnections()
-//       CURRENT: setSelectedConnectionEndpoint()
+//       CURRENT: setSelectedConnection()
+//       CURRENT: clearSelectedConnection()
 //       CURRENT: clearSelectedConnectionEndpoint()
 //
 //   ./mapUtils.js
@@ -94,12 +95,11 @@ import {
 } from "./mapRenderer.js";
 
 // Connection rendering and connection geometry.
-// CURRENT: renderConnections(), setSelectedConnectionEndpoint(),
+// CURRENT: setSelectedConnection(), clearSelectedConnection(),
 //          clearSelectedConnectionEndpoint()
 // If working on how connections are drawn or positioned, inspect:
 //   ./connectionRenderer.js
 import {
-    renderConnections,
     setSelectedConnection,
     clearSelectedConnection,
     clearSelectedConnectionEndpoint
@@ -108,6 +108,12 @@ import {
 import {
     openNewConnectionContext
 } from "./connections/newConnectionContext.js";
+
+// Connection-level operations.
+import {
+    deleteConnection as deleteConnectionImpl,
+    deleteConnections as deleteConnectionsImpl
+} from "./connections/connection.js";
 
 // Connection endpoint editing.
 import {
@@ -144,6 +150,7 @@ import {
 import {
     closeNewConnectionContext as closeNewConnectionContextImpl
 } from "./connections/newConnectionContext.js";
+
 
 // ============================================================
 // CONNECTION EDITOR STATE
@@ -540,7 +547,7 @@ function openConnectionEditorWithConnections(
     }
 
     bringEditorWindowToFront(connectionEditor);
-    
+
     startConnectionEditorDragging(
         editorHeader,
         connectionEditor
@@ -776,13 +783,7 @@ function refreshSelectedConnection() {
         }
     }
 
-    // renderConnections() expects a mapView object.
-    renderConnections({
-        map: connectionEditorContext.map,
-        connectionLayer: connectionEditorContext.connectionLayer,
-        zoom: connectionEditorContext.zoom,
-        currentFloor: connectionEditorContext.currentFloor
-    });
+    renderMap();
 }
 
 
@@ -820,13 +821,7 @@ export function closeConnectionEditor() {
 
     // Redraw after clearing the endpoint selection so the visual marker
     // disappears from the map immediately.
-    // renderConnections() expects a mapView object.
-    renderConnections({
-        map: connectionEditorContext.map,
-        connectionLayer: connectionEditorContext.connectionLayer,
-        zoom: connectionEditorContext.zoom,
-        currentFloor: connectionEditorContext.currentFloor
-    });
+    renderMap();
 
     connectionEditor = null;
     editedRoom = null;
@@ -856,4 +851,12 @@ export function createConnection(
 
 export function closeNewConnectionContext (...args) {
     return closeNewConnectionContextImpl(...args);
+}
+
+export function deleteConnection (...args) {
+    return deleteConnectionImpl(...args);
+}
+
+export function deleteConnections (...args) {
+    return deleteConnectionsImpl(...args);
 }

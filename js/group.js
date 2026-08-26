@@ -9,6 +9,10 @@ import {
 } from "./mapUtils.js";
 
 import {
+    renderMap
+} from "./mapRenderer.js"
+
+import {
     getConfirmGroupDelete,
     getConfirmDelete
 } from "./options.js";
@@ -132,11 +136,7 @@ export function createGroup(
 // room-deletion confirmation.
 export function deleteGroup(
     map,
-    group,
-    mapElement,
-    connectionLayer,
-    zoom,
-    currentFloor
+    group
 ) {
     if (!group || !isGroup(group)) {
         return;
@@ -167,14 +167,7 @@ export function deleteGroup(
             [...group.roomIDs];
 
         for (const roomID of memberRoomIDs) {
-            deleteRoom(
-                map,
-                roomID,
-                mapElement,
-                connectionLayer,
-                zoom,
-                currentFloor
-            );
+            deleteRoom(map,roomID);
         }
     }
 
@@ -192,6 +185,7 @@ export function deleteGroup(
     }
 
     clearRoomSelection();
+    renderMap();
 }
 
 // Returns the group's bounding size based on its current member rooms.
