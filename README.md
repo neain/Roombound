@@ -865,20 +865,25 @@ Current Step: Polish List (see header)
 44. add delete button (keyboard) performing the same action as delete buttons in the editors
 45. add group name to its render and give it smart coloring.
 46. when saving a group... figure out how to leave color alone?
-47. when creating a group. the dom order MUST be preserved. its not currently.
+48. load file should clear the URL the same way new map does
+49. add a modifier key that allows a room to be not snapped to the grid. I wanted to avoid this but expected I would end up doing it at some point. check with GPT to see how deep into the code we would need to go. this may be a V update (was not a version update. was surprisingly simple)
+50. change the various UI windows to use the same createWindow function so that we can make future windows with far less effort.
 
-55. add options menu. ideas are below
-60. add ability to save a map/url combination so you can hand it to a friend and they just load it without any extra work. should just be an export button in the main file list?
-* make it work like the loadURL in that you give it a URL of a map... and IF it loads without any issues... then we can give the user a link with https://neain.github.io/Roombound/?map= and then the url they just gave us.
 
+65. add options menu. ideas are below
 * options menu items: 
 Change the default color of rooms and room text. 
 change the default size of rooms. 
 change the size of the connection endpoint selector square.
 Change the color of the selected connection / room / endpoint as well as its associated editer window
 Give the user the ability to have a floor 0. default is floor 1, floor 2, and floor -1 with nothing in between.
-Confirm before deleting? (add tooltip that with this checked, deleting a combined room will also delete any rooms that were combined... maybe add a 'sub' checkbox that checking that will determine group deletion)
-sub option - auto delete sub rooms? (add tooltip with explanation)
+Confirm before deleting? (add tooltip that with this checked, you will break apart combined rooms with no check)
+Group sub room option - auto delete sub rooms? (add tooltip with explanation, the var should already exist)
+
+70. add ability to save a map/url combination so you can hand it to a friend and they just load it without any extra work. should just be an export button in the main file list?
+* make it work like the loadURL in that you give it a URL of a map... and IF it loads without any issues... then we can give the user a link with https://neain.github.io/Roombound/?map= and then the url they just gave us.
+
+
 
 * add tutorial to web page: GitHub sharing walkthrough
 Loading a Map from a URL
@@ -899,7 +904,6 @@ add a new users explanation box on an empty map refresh - a getting started sect
 
 ### Possible Bugs
 * check connectionEditorDragging.js in /connections/ I removed it export, so kill it later if nothing missed it.
-* Ctrl + Mousewheel caused a code explosion. fix it! I need to examine my space ship from up close!
 
 ### Next Version Ideas
 #### The Great Grouping V1.1
@@ -1048,6 +1052,10 @@ room references and attachment sides directly.
 
 #### Undo V1.4
 Add undo/redo (Ctrl+Z / Ctrl+Y). This may be as simple as tracking map-level changes: any edit or operation that changes the map is saved as a history step, and undo restores the previous state. Redo restores the state that was undone. The exact history approach and what constitutes a single change will need to be determined when this feature is implemented.
+
+#### Z-Order V1.5
+* replace the dom ordering with a real Z-Order or even just array list so that refreshing the screen (such as on a zoom) doesnt mess up room re-ordering
+* when creating a group. the order MUST be preserved. its not currently. (moved to V1.5 as even after chasing a bunch of things it was messing up)
 
 ## 14. Initial MVP
 

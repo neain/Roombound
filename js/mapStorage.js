@@ -340,6 +340,9 @@ export async function loadMapFromUrl(
  *
  * The File System Access API is used when available so the selected file can
  * become the map's associated file for future Save operations.
+ *
+ * Returns true when a map was successfully loaded and false when loading was
+ * cancelled or failed.
  */
 export async function loadMap(
     map
@@ -370,7 +373,7 @@ export async function loadMap(
 
             if (!isValidMapData(data)) {
                 alert("Invalid Roombound map file.");
-                return;
+                return false;
             }
 
             currentFileHandle = fileHandle;
@@ -384,11 +387,11 @@ export async function loadMap(
                 `Map loaded from ${fileHandle.name}`
             );
 
-            return;
+            return true;
         } catch (error) {
             // Cancelling the picker is normal.
             if (error.name === "AbortError") {
-                return;
+                return false;
             }
 
             alert(
@@ -396,54 +399,78 @@ export async function loadMap(
                 error.message
             );
 
-            return;
+            return false;
         }
     }
 
     // Fallback for browsers without the File System Access API.
-    const input = document.createElement("input");
+    return new Promise(
+        (resolve) => {
+            const input = document.createElement("input");
 
-    input.type = "file";
-    input.accept = ".json,application/json";
+            input.type = "file";
+            input.accept = ".json,application/json";
 
-    input.addEventListener(
-        "change",
-        (event) => {
-            const file =
-                event.target.files[0];
-
-            if (!file) {
-                return;
-            }
-
-            const reader =
-                new FileReader();
-
-            reader.onload =
+            input.addEventListener(
+                "change",
                 (event) => {
-                    try {
-                        const data =
-                            JSON.parse(event.target.result);
+                    const file =
+                        event.target.files[0];
 
-                        // The selected file cannot be associated with the map
-                        // without File System Access API support.
-                        currentFileHandle = null;
-
-                        loadMapFromData(
-                            map,
-                            data
-                        );
-                    } catch (error) {
-                        alert(
-                            "Could not read the map file.\n" +
-                            error.message
-                        );
+                    if (!file) {
+                        resolve(false);
+                        return;
                     }
-                };
 
-            reader.readAsText(file);
+                    const reader =
+                        new FileReader();
+
+                    reader.onload =
+                        (event) => {
+                            try {
+                                const data =
+                                    JSON.parse(event.target.result);
+
+                                if (!isValidMapData(data)) {
+                                    alert("Invalid Roombound map file.");
+                                    resolve(false);
+                                    return;
+                                }
+
+                                // The selected file cannot be associated with
+                                // the map without File System Access API support.
+                                currentFileHandle = null;
+
+                                loadMapFromData(
+                                    map,
+                                    data
+                                );
+
+                                resolve(true);
+                            } catch (error) {
+                                alert(
+                                    "Could not read the map file.\n" +
+                                    error.message
+                                );
+
+                                resolve(false);
+                            }
+                        };
+
+                    reader.onerror =
+                        () => {
+                            alert(
+                                "Could not read the map file."
+                            );
+
+                            resolve(false);
+                        };
+
+                    reader.readAsText(file);
+                }
+            );
+
+            input.click();
         }
     );
-
-    input.click();
 }

@@ -45,3 +45,20 @@ export function getGroupDefaults() {
 export function setGroupDefaults(value) {
     groupDefaults = value;
 }
+
+// ============================================================
+// GRID SNAPPING
+// ============================================================
+
+// Default room snapping behavior.
+let defaultSnapToGrid = true;
+
+// Returns whether rooms should snap to the grid by default.
+export function getDefaultSnapToGrid() {
+    return defaultSnapToGrid;
+}
+
+// Sets the default room snapping behavior.
+export function setDefaultSnapToGrid(value) {
+    defaultSnapToGrid = Boolean(value);
+}

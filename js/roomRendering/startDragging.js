@@ -9,7 +9,8 @@
 import {
     gridToWorldPixels,
     gridToPixels,
-    pixelsToGrid
+    pixelsToGrid,
+    GRID_SIZE
 } from "../mapUtils.js";
 
 // Connection rendering.
@@ -35,6 +36,10 @@ import {
     getSelectedRooms
 } from "../roomRenderer.js";
 
+import {
+    getDefaultSnapToGrid
+} from "../options.js";
+
 
 // ============================================================
 // ROOM / GROUP DRAGGING
@@ -56,14 +61,16 @@ export function startDragging(
     zoom,
     currentFloor
 ) {
-    const startMouseX = event.clientX;
-    const startMouseY = event.clientY;
+    let startMouseX = event.clientX;
+    let startMouseY = event.clientY;
     let draggedRooms;
     let startPositions;
     let roomElements;
     let groupElements;
     let startGroupPositions;
     let hasDragged = false;
+    let snapToGrid =
+        getDefaultSnapToGrid() !== event.shiftKey;
 
     if (event.button !== 0) {
         return;
@@ -112,8 +119,8 @@ export function startDragging(
     draggedRooms =
         [...draggedRoomSet];
 
-    // Store every room's original position before movement begins. The mouse
-    // delta is calculated once and applied against these original positions.
+    // Store every room's original position before movement begins. These
+    // positions are also updated if the snapping mode changes during a drag.
     startPositions =
         draggedRooms.map(
             (draggedRoom) => ({
@@ -173,8 +180,52 @@ export function startDragging(
         }
     }
 
+    // Updates the drag baseline so changing the snapping mode does not cause
+    // the objects to jump to a new position.
+    function resetDragBaseline(
+        mouseX,
+        mouseY
+    ) {
+        startMouseX = mouseX;
+        startMouseY = mouseY;
+
+        for (const startPosition of startPositions) {
+            startPosition.x =
+                startPosition.room.position.x;
+
+            startPosition.y =
+                startPosition.room.position.y;
+        }
+
+        for (const [group] of groupElements) {
+            startGroupPositions.set(
+                group,
+                {
+                    x: group.position.x,
+                    y: group.position.y
+                }
+            );
+        }
+    }
+
     // Updates every dragged room and group using the same grid-space delta.
     function drag(event) {
+        const currentSnapToGrid =
+            getDefaultSnapToGrid() !== event.shiftKey;
+
+        // Shift changed the snapping mode during the drag. Start a new
+        // movement segment from the objects' current positions.
+        if (currentSnapToGrid !== snapToGrid) {
+            snapToGrid = currentSnapToGrid;
+
+            resetDragBaseline(
+                event.clientX,
+                event.clientY
+            );
+
+            return;
+        }
+
         const mouseDeltaX =
             event.clientX - startMouseX;
 
@@ -186,19 +237,30 @@ export function startDragging(
         }
 
         const deltaGridX =
-            pixelsToGrid(mouseDeltaX, zoom);
+            mouseDeltaX / (GRID_SIZE * zoom);
 
         const deltaGridY =
-            pixelsToGrid(mouseDeltaY, zoom);
+            mouseDeltaY / (GRID_SIZE * zoom);
 
-        // Apply the exact same grid delta to every room represented by the
-        // dragged room/group selection.
+        // Apply the same movement to every dragged room. When snapping is
+        // enabled, snap the resulting position rather than the movement delta
+        // so rooms always return to actual integer grid coordinates.
         for (const startPosition of startPositions) {
-            startPosition.room.position.x =
+            const newX =
                 startPosition.x + deltaGridX;
 
-            startPosition.room.position.y =
+            const newY =
                 startPosition.y + deltaGridY;
+
+            startPosition.room.position.x =
+                snapToGrid
+                    ? Math.round(newX)
+                    : newX;
+
+            startPosition.room.position.y =
+                snapToGrid
+                    ? Math.round(newY)
+                    : newY;
         }
 
         // Update the visible position of every dragged room.
@@ -226,17 +288,28 @@ export function startDragging(
                 )}px`;
         }
 
-        // Move each selected group's stored position by the same delta as its
-        // member rooms. The group's stored size never changes while dragging.
+        // Move each selected group's stored position by the same movement as
+        // its member rooms. The group's stored size never changes while
+        // dragging.
         for (const [group, groupElement] of groupElements) {
             const startGroupPosition =
                 startGroupPositions.get(group);
 
-            group.position.x =
+            const newX =
                 startGroupPosition.x + deltaGridX;
 
-            group.position.y =
+            const newY =
                 startGroupPosition.y + deltaGridY;
+
+            group.position.x =
+                snapToGrid
+                    ? Math.round(newX)
+                    : newX;
+
+            group.position.y =
+                snapToGrid
+                    ? Math.round(newY)
+                    : newY;
 
             groupElement.style.left =
                 `${gridToWorldPixels(

@@ -77,6 +77,11 @@ import {
     renderMap
 } from "./mapRenderer.js";
 
+import {
+    changeZoom,
+    ZOOM_STEP
+} from "./mapZoom.js";
+
 
 // ============================================================
 // MAP INTERACTION
@@ -326,8 +331,6 @@ export function initializeMapInteractions({
                             objectsOnCurrentFloor,
                             mapView.currentFloor
                         );
-
-                        renderMap();
                     }
                 );
 
@@ -866,9 +869,9 @@ export function initializeMapInteractions({
             event.preventDefault();
 
             if (event.deltaY < 0) {
-                changeZoom(mapView.zoom + zoomStep);
+                changeZoom(mapView.zoom + ZOOM_STEP);
             } else {
-                changeZoom(mapView.zoom - zoomStep);
+                changeZoom(mapView.zoom - ZOOM_STEP);
             }
         },
         { passive: false }

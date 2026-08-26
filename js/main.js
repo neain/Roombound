@@ -38,9 +38,7 @@ import {
 // If working on the zoom rail, zoom buttons, or zoom behavior, inspect:
 //   ./mapZoom.js
 import {
-    initializeMapZoom,
-    requestZoom,
-    getZoomStep
+    initializeMapZoom
 } from "./mapZoom.js";
 
 // Default map data used when Roombound loads.
@@ -183,14 +181,7 @@ function createNewMap() {
 
     // A new map has no associated saved file.
     clearCurrentFileHandle();
-
-    // A new map is a new browser-history state rather than a replacement
-    // for the map URL that created the previous state.
-    window.history.pushState(
-        {},
-        "",
-        window.location.pathname
-    );
+    clearMapUrl();
 
     // Return the viewport to the center of the new map.
     mapElement.scrollLeft =
@@ -198,6 +189,15 @@ function createNewMap() {
 
     mapElement.scrollTop =
         (MAP_SIZE * mapView.zoom - mapElement.clientHeight) / 2;
+}
+
+// Clears the map URL while preserving the current page.
+function clearMapUrl() {
+    window.history.pushState(
+        {},
+        "",
+        window.location.pathname
+    );
 }
 
 initializeMapZoom({
@@ -329,7 +329,14 @@ console.log(
 initializeMapMenu({
     saveMap: () => saveMap(map),
     saveMapAs: () => saveMapAs(map),
-    loadMap: () => loadMap(map),
+    loadMap: async () => {
+        const loaded =
+            await loadMap(map);
+
+        if (loaded) {
+            clearMapUrl();
+        }
+    },
     loadMapFromUrl: (url) =>
         loadMapFromUrl(map, url),
     refreshForNewMap: createNewMap,

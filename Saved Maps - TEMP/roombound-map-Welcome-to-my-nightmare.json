@@ -330,7 +330,8 @@
         "height": 2
       },
       "textSize": 16,
-      "shape": "star"
+      "shape": "star",
+      "color": "#ff0000"
     },
     {
       "roomID": "room_022",
@@ -347,7 +348,8 @@
         "height": 2
       },
       "textSize": 16,
-      "shape": "star"
+      "shape": "star",
+      "color": "#ff0000"
     },
     {
       "roomID": "room_023",
@@ -364,7 +366,8 @@
         "height": 2
       },
       "textSize": 16,
-      "shape": "star"
+      "shape": "star",
+      "color": "#ff0000"
     },
     {
       "roomID": "room_024",
@@ -381,7 +384,152 @@
         "height": 2
       },
       "textSize": 16,
-      "shape": "star"
+      "shape": "star",
+      "color": "#ff0000"
+    },
+    {
+      "roomID": "room_025",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 30,
+        "y": 18
+      },
+      "size": {
+        "width": 1,
+        "height": 1
+      },
+      "textSize": 16,
+      "shape": "star",
+      "color": "#eeff00"
+    },
+    {
+      "roomID": "room_026",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 32,
+        "y": 18
+      },
+      "size": {
+        "width": 1,
+        "height": 1
+      },
+      "textSize": 16,
+      "shape": "star",
+      "color": "#eeff00"
+    },
+    {
+      "roomID": "room_027",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 35,
+        "y": 18
+      },
+      "size": {
+        "width": 1,
+        "height": 1
+      },
+      "textSize": 16,
+      "shape": "star",
+      "color": "#eeff00"
+    },
+    {
+      "roomID": "room_028",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 37,
+        "y": 18
+      },
+      "size": {
+        "width": 1,
+        "height": 1
+      },
+      "textSize": 16,
+      "shape": "star",
+      "color": "#eeff00"
+    },
+    {
+      "roomID": "room_029",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 29,
+        "y": 18
+      },
+      "size": {
+        "width": 1,
+        "height": 1
+      },
+      "textSize": 16,
+      "shape": "star",
+      "color": "#eeff00"
+    },
+    {
+      "roomID": "room_030",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 31,
+        "y": 18
+      },
+      "size": {
+        "width": 1,
+        "height": 1
+      },
+      "textSize": 16,
+      "shape": "star",
+      "color": "#eeff00"
+    },
+    {
+      "roomID": "room_031",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 34,
+        "y": 18
+      },
+      "size": {
+        "width": 1,
+        "height": 1
+      },
+      "textSize": 16,
+      "shape": "star",
+      "color": "#eeff00"
+    },
+    {
+      "roomID": "room_032",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 36,
+        "y": 18
+      },
+      "size": {
+        "width": 1,
+        "height": 1
+      },
+      "textSize": 16,
+      "shape": "star",
+      "color": "#eeff00"
     }
   ],
   "groups": [
@@ -396,9 +544,17 @@
         "room_021",
         "room_022",
         "room_023",
-        "room_024"
+        "room_024",
+        "room_025",
+        "room_026",
+        "room_027",
+        "room_028",
+        "room_029",
+        "room_030",
+        "room_031",
+        "room_032"
       ],
-      "name": "Spaceship",
+      "name": "Spiceshit",
       "floor": 1,
       "position": {
         "x": 29,

@@ -8,7 +8,7 @@ import {
 
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 4;
-const ZOOM_STEP = 0.25;
+export const ZOOM_STEP = 0.25;
 
 const zoomControl = document.createElement("div");
 const zoomInButton = document.createElement("button");
@@ -18,6 +18,8 @@ const zoomHandle = document.createElement("button");
 const zoomOutButton = document.createElement("button");
 
 let isDraggingZoom = false;
+let mapElement;
+let mapView;
 
 
 // ============================================================
@@ -28,9 +30,12 @@ let isDraggingZoom = false;
  * Initializes the map zoom controls.
  */
 export function initializeMapZoom({
-    mapElement,
-    mapView
+    mapElement: applicationMapElement,
+    mapView: applicationMapView
 }) {
+    mapElement = applicationMapElement;
+    mapView = applicationMapView;
+
     zoomControl.classList.add("zoom-control");
     zoomControl.setAttribute("aria-label", "Map zoom controls");
 
@@ -217,11 +222,7 @@ function createZoomMarks(
 /**
  * Changes the zoom while keeping the viewport center on the same map point.
  */
-function changeZoom(
-    mapElement,
-    mapView,
-    newZoom
-) {
+export function changeZoom(newZoom) {
     const oldZoom = mapView.zoom;
     const centerX =
         mapElement.scrollLeft +
@@ -273,31 +274,4 @@ function updateZoomControl(zoomValue) {
         "aria-label",
         `Current zoom level: ${percentage}%`
     );
-}
-
-
-// ============================================================
-// EXTERNAL ZOOM API
-// ============================================================
-
-/**
- * Changes the map zoom to the requested value.
- */
-export function requestZoom(
-    mapElement,
-    mapView,
-    newZoom
-) {
-    changeZoom(
-        mapElement,
-        mapView,
-        newZoom
-    );
-}
-
-/**
- * Returns the configured zoom increment.
- */
-export function getZoomStep() {
-    return ZOOM_STEP;
 }
