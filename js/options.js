@@ -12,6 +12,24 @@ function getSavedOption(key) {
     return localStorage.getItem(`${STORAGE_PREFIX}${key}`);
 }
 
+// Clears all persisted Roombound options.
+
+export function clearSavedOptions() {
+    const keysToRemove = [];
+
+    for (let index = 0; index < localStorage.length; index++) {
+        const key = localStorage.key(index);
+
+        if (key?.startsWith(STORAGE_PREFIX)) {
+            keysToRemove.push(key);
+        }
+    }
+
+    for (const key of keysToRemove) {
+        localStorage.removeItem(key);
+    }
+}
+
 function parseBoolean(value) {
     return value === "true";
 }
@@ -68,6 +86,32 @@ export function setConfirmGroupDelete(value, save = true) {
     if (!save) {return;}
 
     saveOption("confirmGroupDelete", confirmGroupDelete);
+
+}
+
+// ============================================================
+// WINDOW OPTIONS
+// ============================================================
+
+let closeWindowsOnClick = true;
+
+// Returns whether open windows should close when the empty map is clicked.
+
+export function getCloseWindowsOnClick() {
+
+    return closeWindowsOnClick;
+
+}
+
+// Sets whether open windows should close when the empty map is clicked.
+
+export function setCloseWindowsOnClick(value, save = true) {
+
+    closeWindowsOnClick = Boolean(value);
+
+    if (!save) {return;}
+
+    saveOption("closeWindowsOnClick", closeWindowsOnClick);
 
 }
 
@@ -361,7 +405,7 @@ export function initializeOptions() {
         "connectionEndpointSelectorSize"
     );
 
-    if (savedConnectionEndpointSelectorSize !== null) {
+        if (savedConnectionEndpointSelectorSize !== null) {
         setConnectionEndpointSelectorSize(
             parseNumber(savedConnectionEndpointSelectorSize),
             false
@@ -372,6 +416,18 @@ export function initializeOptions() {
 
     if (savedAllowFloorZero !== null) {
         setAllowFloorZero(parseBoolean(savedAllowFloorZero), false);
+    }
+
+    const savedCloseWindowsOnClick =
+        getSavedOption("closeWindowsOnClick");
+
+    if (savedCloseWindowsOnClick !== null) {
+
+        setCloseWindowsOnClick(
+            parseBoolean(savedCloseWindowsOnClick),
+            false
+        );
+
     }
 
 }

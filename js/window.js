@@ -9,12 +9,25 @@
 // need to manipulate window geometry or lifecycle directly.
 //
 // Application-specific behavior remains in the calling module.
-//
 
+// ============================================================
+// WINDOW STATE
+// ============================================================
+
+const openWindows = new Set();
 
 // ============================================================
 // WINDOW CREATION
 // ============================================================
+
+// Closes all currently open windows.
+export function closeWindowsOnMapClick() {
+
+    for (const window of openWindows) {
+        window.remove();
+    }
+
+}
 
 // Creates and displays a floating window with the standard Roombound window
 // structure and behavior.
@@ -27,6 +40,68 @@ export function createWindow(
     const titleElement = document.createElement("span");
     const closeButton = document.createElement("button");
     const content = document.createElement("div");
+
+    const windowAPI = {
+        element: windowElement,
+        header,
+        title: titleElement,
+        closeButton,
+        content,
+
+        // Generic window geometry and lifecycle operations.
+        setSize: (
+            width,
+            height
+        ) => {
+            setWindowSize(
+                windowElement,
+                width,
+                height
+            );
+        },
+
+        getSize: () => {
+            return getWindowSize(windowElement);
+        },
+
+        setPosition: (
+            x,
+            y
+        ) => {
+            setWindowPosition(
+                windowElement,
+                x,
+                y
+            );
+        },
+
+        getPosition: () => {
+            return getWindowPosition(windowElement);
+        },
+
+        remove: () => {
+            openWindows.delete(windowAPI);
+            windowElement.remove();
+        },
+
+        onResize: (
+            callback
+        ) => {
+            observeWindowResize(
+                windowElement,
+                callback
+            );
+        },
+
+        addHeaderElement: (
+            element
+        ) => {
+            header.insertBefore(
+                element,
+                closeButton
+            );
+        }
+    };
 
     windowElement.classList.add("editor-window");
     header.classList.add("editor-window-header");
@@ -79,66 +154,9 @@ export function createWindow(
 
     bringEditorWindowToFront(windowElement);
 
-    return {
-        element: windowElement,
-        header,
-        title: titleElement,
-        closeButton,
-        content,
+    openWindows.add(windowAPI);
 
-        // Generic window geometry and lifecycle operations.
-        setSize: (
-            width,
-            height
-        ) => {
-            setWindowSize(
-                windowElement,
-                width,
-                height
-            );
-        },
-
-        getSize: () => {
-            return getWindowSize(windowElement);
-        },
-
-        setPosition: (
-            x,
-            y
-        ) => {
-            setWindowPosition(
-                windowElement,
-                x,
-                y
-            );
-        },
-
-        getPosition: () => {
-            return getWindowPosition(windowElement);
-        },
-
-        remove: () => {
-            windowElement.remove();
-        },
-
-        onResize: (
-            callback
-        ) => {
-            observeWindowResize(
-                windowElement,
-                callback
-            );
-        },
-
-        addHeaderElement: (
-            element
-        ) => {
-            header.insertBefore(
-                element,
-                closeButton
-            );
-        }
-    };
+    return windowAPI;
 }
 
 

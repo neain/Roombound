@@ -32,7 +32,10 @@ import {
     getConnectionEndpointSelectorSize,
     setConnectionEndpointSelectorSize,
     getAllowFloorZero,
-    setAllowFloorZero
+    setAllowFloorZero,
+    clearSavedOptions,
+    getCloseWindowsOnClick,
+    setCloseWindowsOnClick
 } from "./options.js";
 
 
@@ -163,6 +166,28 @@ export function openOptionsWindow() {
     );
 
     // --------------------------------------------------------
+    // Window Behavior
+    // --------------------------------------------------------
+
+    const windowBehaviorSection =
+        createSection(
+            "Window Behavior"
+        );
+
+    windowBehaviorSection.appendChild(
+        createCheckboxOption(
+            "Close windows when clicking empty map",
+            getCloseWindowsOnClick,
+            setCloseWindowsOnClick,
+            "When enabled, clicking empty map space closes open windows."
+        )
+    );
+
+    content.appendChild(
+        windowBehaviorSection
+    );
+
+    // --------------------------------------------------------
     // Deletion
     // --------------------------------------------------------
 
@@ -213,6 +238,50 @@ export function openOptionsWindow() {
 
     content.appendChild(
         groupingSection
+    );
+
+    // --------------------------------------------------------
+    // Reset
+    // --------------------------------------------------------
+
+    const resetSection =
+        createSection(
+            "Reset"
+        );
+
+    const resetButton =
+        document.createElement("button");
+
+    resetButton.textContent =
+        "Reset Options";
+
+    resetButton.title =
+        "Reset all options to their defaults. Unsaved work will be lost.";
+
+    resetButton.addEventListener(
+        "click",
+        () => {
+            const confirmed =
+                confirm(
+                    "Reset all options to their defaults?\n\n" +
+                    "Roombound will reload, and any unsaved work will be lost."
+                );
+
+            if (!confirmed) {
+                return;
+            }
+
+            clearSavedOptions();
+            window.location.reload();
+        }
+    );
+
+    resetSection.appendChild(
+        resetButton
+    );
+
+    content.appendChild(
+        resetSection
     );
 }
 

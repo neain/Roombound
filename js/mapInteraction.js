@@ -47,6 +47,14 @@ import {
 } from "./roomEditor.js";
 
 import {
+    getCloseWindowsOnClick
+} from "./options.js";
+
+import {
+    closeWindowsOnMapClick
+} from "./window.js";
+
+import {
     closeMultiRoomEditor
 } from "./multiRoomEditor.js";
 
@@ -843,11 +851,11 @@ export function initializeMapInteractions({
                     );
             }
 
-            if (event.target === mapElement || event.target === mapWorld) {
-                closeRoomEditor();
-                closeMultiRoomEditor();
-                closeConnectionEditor();
-                closeNewConnectionContext();
+            if (
+                getCloseWindowsOnClick() &&
+                (event.target === mapElement || event.target === mapWorld)
+            ) {
+                closeWindowsOnMapClick();
             }
         }
     );
