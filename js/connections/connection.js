@@ -17,10 +17,7 @@ export function createConnection(
     map,
     roomA,
     roomB,
-    directionTo,
-    connectionLayer,
-    zoom,
-    currentFloor
+    directionTo
 ) {
     const connection = {
         roomA: roomA?.roomID ?? null,

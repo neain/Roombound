@@ -23,6 +23,7 @@ export function initializeMapMenu({
     saveMapAs,
     loadMap,
     loadMapFromUrl,
+    openOptions,
     refreshForNewMap,
     hasMapContent
 }) {
@@ -149,9 +150,12 @@ export function initializeMapMenu({
     loadMapMenuButton.classList.add("menu-item-with-submenu");
     loadMapMenuButton.textContent = "Load Map";
 
-    optionsMenuButton.classList.add("menu-item","menu-item-disabled","menu-item-separated");
+    optionsMenuButton.classList.add(
+        "menu-item",
+        "menu-item-separated"
+    );
+
     optionsMenuButton.textContent = "Options";
-    optionsMenuButton.disabled = true;
 
     helpMenuButton.classList.add("menu-item");
     helpMenuButton.textContent = "Help";
@@ -397,6 +401,14 @@ export function initializeMapMenu({
         () => {
             closeMenu();
             openLoadUrlDialog();
+        }
+    );
+
+    optionsMenuButton.addEventListener(
+        "click",
+        () => {
+            closeMenu();
+            openOptions();
         }
     );
 

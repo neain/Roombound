@@ -11,6 +11,22 @@ import {
     openNewRoomContext
 } from "./newRoomContext.js";
 
+// Options.
+// CURRENT: initializeOptions()
+// If working on persistent application options, inspect:
+//   ./options.js
+import {
+    initializeOptions
+} from "./options.js";
+
+// Options window.
+// CURRENT: openOptionsWindow()
+// If working on the options UI, inspect:
+//   ./optionsWindow.js
+import {
+    openOptionsWindow
+} from "./optionsWindow.js";
+
 // Map rendering.
 // CURRENT: initializeMapRenderer()
 // If working on the complete visual redraw of the map, inspect:
@@ -136,6 +152,8 @@ const mapView = {
     zoom: 1,
     currentFloor: 1
 };
+
+initializeOptions();
 
 initializeMapRenderer({
     map,
@@ -339,6 +357,9 @@ initializeMapMenu({
     },
     loadMapFromUrl: (url) =>
         loadMapFromUrl(map, url),
+    openOptions: () => {
+        openOptionsWindow();
+    },
     refreshForNewMap: createNewMap,
     hasMapContent: () =>
         map.rooms.length > 0 ||

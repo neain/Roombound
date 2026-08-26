@@ -790,7 +790,7 @@ Steps 1–26 are currently working in prototype form.
 Current Step: Polish List (see header)
 
 
-### Polish List - Current Step 50
+### Polish List - Current Step 66
 1. Zoom bar + visible zoom level + possibly keyboard shortcuts.
 2. Hamburger menu with New Map, Save/Load, Options, etc.
 3. Swap the floor-selection arrows.
@@ -849,8 +849,6 @@ Current Step: Polish List (see header)
 * make the delete button work on the group.
 * make sure that two groups can be combined into a group
 * startDragging.js in /roomRendering/ keeps getting the currentFloor and the map object. but since currentFloor is part of the map object, remove that imported variable and refactor? (start checking for things like this in other files)
-39. 
-40. 
 41. right click context menu. when right clicking a room or? connection? have an option to open the connection editor.
 * connection between rooms
 * room context menu
@@ -870,19 +868,19 @@ Current Step: Polish List (see header)
 50. change the various UI windows to use the same createWindow function so that we can make future windows with far less effort.
 * editorWindowDragging.js and editorWindowStack.js got folded into window.js remove their exports to trace which files use them and re-direct them to window.js
 * hand GPT roomEditor and see what can be refactored to be... reduced in size. after we pulled out the shell code... its line count went UP
-   51. legacy code in roomEditor to save its window size to the map can be pulled out?
+51. legacy code in roomEditor to save its window size to the map can be pulled out?
 52. when editing connections in the connection editor... the ability to ADD a connection would be great.
-
-
 65. add options menu. ideas are below
 * options menu items: 
 Change the default color of rooms and room text. 
 change the default size of rooms. 
 change the size of the connection endpoint selector square.
-Change the color of the selected connection / room / endpoint as well as its associated editer window
 Give the user the ability to have a floor 0. default is floor 1, floor 2, and floor -1 with nothing in between.
 Confirm before deleting? (add tooltip that with this checked, you will break apart combined rooms with no check)
 Group sub room option - auto delete sub rooms? (add tooltip with explanation, the var should already exist)
+Snap to Grid - if true then moving a room will snap it to the grid and pressing shift will 'unlock' it from the grid. if false, then nothing snaps UNLESS you hold shift. (this exists already)
+
+   66. add cookies to keep options between sessions. this is both the options window and grouping options window. should be very simple?
 
 70. add ability to save a map/url combination so you can hand it to a friend and they just load it without any extra work. should just be an export button in the main file list?
 * make it work like the loadURL in that you give it a URL of a map... and IF it loads without any issues... then we can give the user a link with https://neain.github.io/Roombound/?map= and then the url they just gave us.

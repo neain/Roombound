@@ -14,8 +14,11 @@
 //
 // INTERNAL STATE:
 //   connectionEditor
+//   connectionEditorWindow
 //   connectionEditorContext
 //   editedRoom
+//   editorOpeningConnection
+//   connectionEntries
 //   selectedConnection
 //   selectedEndpoint
 //   connectionOptions
@@ -23,7 +26,9 @@
 // INTERNAL RESPONSIBILITIES:
 //   - Manage connection editor state.
 //   - Create and manage the main connection editor UI.
+//   - Build and refresh the displayed connection list.
 //   - Select connections and connection directions.
+//   - Create new connections from the editor.
 //   - Refresh connection display after changes.
 //   - Handle editor closing.
 //   - Provide the state bridge used by specialized connection modules.
@@ -33,6 +38,7 @@
 //       Connection-level operations.
 //       CURRENT: createConnection()
 //       CURRENT: deleteConnection()
+//       CURRENT: deleteConnections()
 //
 //   ./connections/connectionEndpoints.js
 //       Endpoint room selection and attachment-side editing.
@@ -115,6 +121,7 @@ import {
 
 // Connection-level operations.
 import {
+    createConnection as createConnectionImpl,
     deleteConnection as deleteConnectionImpl,
     deleteConnections as deleteConnectionsImpl
 } from "./connections/connection.js";
@@ -160,8 +167,15 @@ let connectionEditorWindow = null;
 // Map/rendering information needed when a connection is modified.
 let connectionEditorContext = null;
 
-// The room whose connections are currently being edited.
+// The room supplied when the editor was originally opened.
 let editedRoom = null;
+
+// The connection that caused the editor to open, if one exists.
+// Used only to provide deterministic context for creating new connections.
+let editorOpeningConnection = null;
+
+// The connection entries currently displayed by the editor.
+let connectionEntries = [];
 
 // The connection currently selected in the connection editor.
 let selectedConnection = null;
@@ -343,8 +357,7 @@ function openConnectionEditorWithConnections(
     zoom,
     currentFloor
 ) {
-    let initiallySelectedEntry = null;
-    let initiallySelectedElement = null;
+    let initiallySelectedConnection = null;
 
     connectionEditorContext = {
         map,
@@ -355,6 +368,8 @@ function openConnectionEditorWithConnections(
     };
 
     editedRoom = room;
+    editorOpeningConnection = selectedConnectionToOpen;
+    connectionEntries = connections;
 
     // Keep every room involved in the displayed connections visible while
     // the connection editor is open, regardless of floor.
@@ -362,7 +377,7 @@ function openConnectionEditorWithConnections(
 
     ghostRoomSet.add(room);
 
-    for (const entry of connections) {
+    for (const entry of connectionEntries) {
         if (entry.roomA) {
             ghostRoomSet.add(entry.roomA);
         }
@@ -382,7 +397,7 @@ function openConnectionEditorWithConnections(
         connectionEditor.remove();
     }
 
-    connectionEditorWindow  =
+    connectionEditorWindow =
         createWindow(
             "Connection Editor",
             closeConnectionEditor
@@ -420,7 +435,107 @@ function openConnectionEditorWithConnections(
         roomLabel
     );
 
-    if (connections.length === 0) {
+    connectionEditorWindow.content.appendChild(
+        editorContent
+    );
+
+    refreshConnectionList();
+
+    // Install the map-click listener after the opening click has finished.
+    // Otherwise the click that opened the editor would immediately close it.
+    //
+    // Only a click on the empty map background closes the editor.
+    // Clicking rooms, connections, or the editor itself leaves it open.
+    setTimeout(
+        () => {
+            if (!connectionEditor) {
+                return;
+            }
+
+            closeEditorClickHandler =
+                (event) => {
+                    if (!connectionEditor) {
+                        return;
+                    }
+
+                    if (
+                        connectionEditor.contains(event.target)
+                    ) {
+                        return;
+                    }
+
+                    if (
+                        event.target !== mapElement
+                    ) {
+                        return;
+                    }
+
+                    closeConnectionEditor();
+                };
+
+            mapElement.addEventListener(
+                "click",
+                closeEditorClickHandler
+            );
+        },
+        0
+    );
+
+    if (selectedConnectionToOpen) {
+        initiallySelectedConnection =
+            selectedConnectionToOpen;
+    }
+
+    if (initiallySelectedConnection) {
+        selectConnectionByConnection(
+            initiallySelectedConnection
+        );
+    }
+
+    console.log(
+        "Opened connection editor for",
+        room.name,
+        connectionEntries
+    );
+}
+
+
+// ============================================================
+// CONNECTION LIST
+// ============================================================
+
+// Rebuilds the visible connection list from the current connection entries.
+//
+// The map remains authoritative for connection data. The editor keeps the
+// displayed entry set so that adding a connection can expand the current
+// editor without changing what connections the editor was opened for.
+function refreshConnectionList(
+    connectionToSelect = null
+) {
+    if (!connectionEditorWindow) {
+        return;
+    }
+
+    const editorContent =
+        connectionEditorWindow.content.querySelector(
+            ".connection-editor-content"
+        );
+
+    if (!editorContent) {
+        return;
+    }
+
+    editorContent
+        .querySelectorAll(
+            ".connection-editor-connection"
+        )
+        .forEach(
+            (element) => {
+                element.remove();
+            }
+        );
+
+    if (connectionEntries.length === 0) {
         const emptyMessage =
             document.createElement("div");
 
@@ -433,9 +548,9 @@ function openConnectionEditorWithConnections(
     }
 
     // Build every connection with its editing controls already visible.
-    // Selecting a connection now highlights the existing row instead of
+    // Selecting a connection highlights the existing row instead of
     // creating a second layer of controls.
-    for (const entry of connections) {
+    for (const entry of connectionEntries) {
         const connectionElement =
             document.createElement("div");
 
@@ -482,72 +597,165 @@ function openConnectionEditorWithConnections(
         );
 
         if (
-            selectedConnectionToOpen &&
-            entry.connection === selectedConnectionToOpen
+            connectionToSelect &&
+            entry.connection === connectionToSelect
         ) {
-            initiallySelectedEntry = entry;
-            initiallySelectedElement = connectionElement;
+            selectConnection(
+                entry,
+                connectionElement
+            );
         }
     }
 
-    connectionEditorWindow.content.appendChild(
-        editorContent
+    // The editor's add-connection control occupies the entire width of a
+    // normal connection row.
+    const createConnectionElement =
+        document.createElement("div");
+
+    createConnectionElement.classList.add(
+        "connection-editor-connection",
+        "connection-editor-create"
     );
 
-    // Install the map-click listener after the opening click has finished.
-    // Otherwise the click that opened the editor would immediately close it.
-    //
-    // Only a click on the empty map background closes the editor.
-    // Clicking rooms, connections, or the editor itself leaves it open.
-    setTimeout(
-        () => {
-            if (!connectionEditor) {
-                return;
-            }
+    const createConnectionButton =
+        document.createElement("button");
 
-            closeEditorClickHandler =
-                (event) => {
-                    if (!connectionEditor) {
-                        return;
-                    }
+    createConnectionButton.textContent =
+        "Create New Connection";
 
-                    if (
-                        connectionEditor.contains(event.target)
-                    ) {
-                        return;
-                    }
+    createConnectionButton.addEventListener(
+        "click",
+        (event) => {
+            event.stopPropagation();
 
-                    if (
-                        event.target !== mapElement
-                    ) {
-                        return;
-                    }
+            addConnectionFromEditor();
+        }
+    );
 
-                    closeConnectionEditor();
-                };
+    createConnectionElement.appendChild(
+        createConnectionButton
+    );
 
-            mapElement.addEventListener(
-                "click",
-                closeEditorClickHandler
+    editorContent.appendChild(
+        createConnectionElement
+    );
+}
+
+
+// ============================================================
+// NEW CONNECTION
+// ============================================================
+
+// Determines which room should become Room A when creating a connection
+// from the current editor contents.
+//
+// The most frequently occurring room wins. If the counts tie, Room A from
+// the connection that opened the editor wins when possible. Otherwise the
+// first tied Room A provides a deterministic fallback. If no connections
+// exist, the originally supplied room is used.
+function getNewConnectionStartingRoom() {
+    if (connectionEntries.length === 0) {
+        return editedRoom;
+    }
+
+    const roomCounts =
+        new Map();
+
+    for (const entry of connectionEntries) {
+        if (entry.roomA) {
+            roomCounts.set(
+                entry.roomA,
+                (roomCounts.get(entry.roomA) || 0) + 1
             );
-        },
-        0
-    );
+        }
+
+        if (entry.roomB) {
+            roomCounts.set(
+                entry.roomB,
+                (roomCounts.get(entry.roomB) || 0) + 1
+            );
+        }
+    }
+
+    let highestCount = 0;
+
+    for (const count of roomCounts.values()) {
+        if (count > highestCount) {
+            highestCount = count;
+        }
+    }
+
+    const tiedRooms =
+        new Set();
+
+    for (const [room, count] of roomCounts) {
+        if (count === highestCount) {
+            tiedRooms.add(room);
+        }
+    }
 
     if (
-        initiallySelectedEntry &&
-        initiallySelectedElement
+        editorOpeningConnection &&
+        tiedRooms.has(
+            getRoom(
+                connectionEditorContext.map,
+                editorOpeningConnection.roomA
+            )
+        )
     ) {
-        selectConnection(
-            initiallySelectedEntry,
-            initiallySelectedElement
+        return getRoom(
+            connectionEditorContext.map,
+            editorOpeningConnection.roomA
         );
     }
 
-    console.log(
-        "Opened connection editor for",
-        room.name,
-        connections
+    for (const entry of connectionEntries) {
+        if (
+            entry.roomA &&
+            tiedRooms.has(entry.roomA)
+        ) {
+            return entry.roomA;
+        }
+    }
+
+    for (const room of tiedRooms) {
+        return room;
+    }
+
+    return editedRoom;
+}
+
+
+// Creates a new connection directly from the editor using the same defaults
+// as the normal low-level connection creator.
+function addConnectionFromEditor() {
+    if (!connectionEditorContext) {
+        return;
+    }
+
+    const startingRoom =
+        getNewConnectionStartingRoom();
+
+    const connection =
+        createConnectionImpl(
+            connectionEditorContext.map,
+            startingRoom,
+            null,
+            "both"
+        );
+
+    const entry = {
+        connection,
+        roomA: startingRoom,
+        roomB: null
+    };
+
+    connectionEntries.push(
+        entry
+    );
+
+    refreshConnectionList(
+        connection
     );
 }
 
@@ -595,6 +803,52 @@ function selectConnection(entry, connectionElement) {
         "Selected connection:",
         entry
     );
+}
+
+
+// Selects a connection by its underlying connection object after the visible
+// connection list has been rebuilt.
+function selectConnectionByConnection(connection) {
+    const entry =
+        connectionEntries.find(
+            (candidate) =>
+                candidate.connection === connection
+        );
+
+    if (!entry) {
+        return;
+    }
+
+    const elements =
+        connectionEditorWindow.content.querySelectorAll(
+            ".connection-editor-connection"
+        );
+
+    for (const element of elements) {
+        const options =
+            element.querySelector(
+                ".connection-editor-options"
+            );
+
+        if (!options) {
+            continue;
+        }
+
+        const matchingEntry =
+            connectionEntries.find(
+                (candidate) =>
+                    candidate.connection === connection
+            );
+
+        if (matchingEntry === entry) {
+            selectConnection(
+                entry,
+                element
+            );
+
+            return;
+        }
+    }
 }
 
 
@@ -841,6 +1095,8 @@ export function closeConnectionEditor() {
     connectionEditor = null;
     connectionEditorWindow = null;
     editedRoom = null;
+    editorOpeningConnection = null;
+    connectionEntries = [];
     selectedConnection = null;
     selectedEndpoint = null;
     connectionOptions = null;

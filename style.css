@@ -701,6 +701,15 @@ body {
     border: 2px solid black;
 }
 
+.connection-editor-create button {
+    width: 100%;
+
+    padding: 4px 8px;
+
+    text-align: center;
+
+    cursor: pointer;
+}
 
 /* ============================================================
    NEW ROOM CONTEXT
@@ -1377,4 +1386,80 @@ body {
 .floor-dropdown-item.selected {
     font-weight: bold;
     background: #ddd;
+}
+
+/* ============================================================
+   OPTIONS WINDOW
+   ============================================================ */
+
+/* --- Content --- */
+
+.options-window-content {
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+
+    padding-top: 6px;
+
+    flex: 1;
+    min-height: 0;
+
+    overflow: auto;
+}
+
+.options-window-section {
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+.options-window-section-title {
+    font-weight: bold;
+
+    border-bottom: 1px solid #999;
+
+    padding-bottom: 2px;
+}
+
+
+/* --- Individual Options --- */
+
+.options-window-field {
+    display: grid;
+
+    grid-template-columns: 1fr auto;
+
+    align-items: center;
+
+    gap: 10px;
+}
+
+.options-window-checkbox {
+    display: grid;
+
+    grid-template-columns: auto 1fr;
+
+    align-items: center;
+
+    gap: 8px;
+
+    cursor: pointer;
+}
+
+
+/* --- Inputs --- */
+
+.options-window-field input[type="number"] {
+    width: 70px;
+
+    padding: 4px 6px;
+}
+
+.options-window-field input[type="color"] {
+    width: 50px;
+    height: 30px;
+
+    padding: 0;
 }
