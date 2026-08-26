@@ -17,6 +17,14 @@ import {
     getConfirmDelete
 } from "./options.js";
 
+import {
+    getGroupDefaults
+} from "./options.js";
+
+import {
+    openCreateGroupOptionsWindow
+} from "./createGroupOptionsWindow.js";
+
 // ============================================================
 // GROUP
 // ============================================================
@@ -38,7 +46,11 @@ import {
 // labels should be cleared before the group is created. Notes from all
 // supplied objects are combined into the new group. Existing groups supplied
 // to this function are replaced by the newly created group.
-export function createGroup(
+// Creates a group from the supplied rooms and groups.
+//
+// When groupDefaults is enabled, the grouping options window is skipped and
+// both grouping options use their default enabled state.
+export async function createGroup(
     map,
     objects,
     floor
@@ -71,29 +83,29 @@ export function createGroup(
         return null;
     }
 
-    const clearLabels =
-        confirm(
-            "Clear the room labels from the combined room?"
-        );
+    // BEGIN EDIT
+    // Obtain the grouping options before modifying the map.
+    let groupOptions;
 
-    const hasNotes =
-        objects.some(
-            (object) => object.notes
-        );
-
-    let notes = "";
-
-    if (hasNotes) {
-        const preserveNotes =
-            confirm(
-                "Preserve notes?"
-            );
-
-        if (preserveNotes) {
-            notes =
-                getGroupedNotes(objects);
-        }
+    if (getGroupDefaults()) {
+        groupOptions = {
+            hideRoomLabels: true,
+            moveNotes: true
+        };
+    } else {
+        groupOptions =
+            await openCreateGroupOptionsWindow();
     }
+
+    if (!groupOptions) {
+        return null;
+    }
+
+    const notes =
+        groupOptions.moveNotes
+            ? getGroupedNotes(objects)
+            : "";
+    // END EDIT
 
     const group = {
         groupID: createGroupID(map),
@@ -105,10 +117,10 @@ export function createGroup(
         position: getGroupPosition(rooms),
         size: getGroupSize(rooms),
         notes,
-        clearLabels
+        clearLabels:
+            groupOptions.hideRoomLabels
     };
 
-    // BEGIN EDIT
     // Replace any groups used to create this group.
     map.groups =
         map.groups.filter(
@@ -117,10 +129,11 @@ export function createGroup(
         );
 
     map.groups.push(group);
-    // END EDIT
 
     clearRoomSelection();
     selectRoom(group);
+
+    renderMap();
 
     return group;
 }

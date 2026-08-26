@@ -31,6 +31,10 @@ import {
     isGroup
 } from "./group.js";
 
+import {
+    startEditorDragging
+} from "./editorWindowDragging.js";
+
 // ============================================================
 // MULTI-ROOM EDITOR STATE
 // ============================================================
@@ -187,9 +191,8 @@ export function openMultiRoomEditor(
         multiRoomEditor.style.right = "auto";
     }
 
-    startMultiRoomEditorDragging(
-        editorHeader
-    );
+    // Allow the editor to be repositioned by dragging its header.
+    startEditorDragging(multiRoomEditor,editorHeader);
 }
 
 

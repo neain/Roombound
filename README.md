@@ -860,6 +860,7 @@ Current Step: Polish List (see header)
 * right clicking a connection should allow you to delete it (not sure if this exists yet. check the connections menu)
 * fix the router for Delete Room. need to move a state level var.
 43. when grouping, replace all the questioning alert style boxes with a single context window with all the options
+* room editor on delete needs to refresh and close
 * when selecting a group, re-append all its grouped rooms so that they are 'on top' of any other rooms.
 44. add delete button (keyboard) performing the same action as delete buttons in the editors
 45. add group name to its render and give it smart coloring.
@@ -894,7 +895,7 @@ add a new users explanation box on an empty map refresh - a getting started sect
 * HoverExceptions in roomRenderer.js ... best to leave it as is? or invert it because we have FAR more fields that are not user facing than are. factor in how complex the refactor is going to be.
 
 ### Possible Bugs
-
+* check connectionEditorDragging.js in /connections/ I removed it export, so kill it later if nothing missed it.
 
 ### Next Version Ideas
 #### The Great Grouping V1.1

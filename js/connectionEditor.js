@@ -94,6 +94,10 @@ import {
     renderMap
 } from "./mapRenderer.js";
 
+import {
+    startEditorDragging as startConnectionEditorDragging
+} from "./editorWindowDragging.js";
+
 // Connection rendering and connection geometry.
 // CURRENT: setSelectedConnection(), clearSelectedConnection(),
 //          clearSelectedConnectionEndpoint()
@@ -131,11 +135,6 @@ import {
 import {
     updateConnectionElement
 } from "./connections/connectionEditorUI.js";
-
-// Connection editor dragging.
-import {
-    startConnectionEditorDragging
-} from "./connections/connectionEditorDragging.js";
 
 import {
     renderRooms,
@@ -549,8 +548,8 @@ function openConnectionEditorWithConnections(
     bringEditorWindowToFront(connectionEditor);
 
     startConnectionEditorDragging(
-        editorHeader,
-        connectionEditor
+        connectionEditor,
+        editorHeader
     );
 
     console.log(

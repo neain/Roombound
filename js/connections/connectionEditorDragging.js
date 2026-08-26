@@ -3,7 +3,7 @@
 // ============================================================
 
 // Adds dragging behavior to the connection editor's header.
-export function startConnectionEditorDragging(
+function startConnectionEditorDragging(
     editorHeader,
     connectionEditor
 ) {

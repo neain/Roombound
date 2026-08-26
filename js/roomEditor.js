@@ -30,6 +30,10 @@ import {
 // CURRENT: openConnectionEditor()
 import { openConnectionEditor } from "./connectionEditor.js";
 
+import {
+    startEditorDragging
+} from "./editorWindowDragging.js";
+
 
 // ============================================================
 // ROOM EDITOR STATE
@@ -226,11 +230,11 @@ export function openRoomEditor(
                         );
 
                     if (!deleted) {
+                        closeRoomEditor();
                         return;
                     }
 
                     closeRoomEditor();
-
                     return;
                 }
 
@@ -281,7 +285,7 @@ export function openRoomEditor(
         }
 
         // Allow the editor to be repositioned by dragging its header.
-        startEditorDragging(editorHeader);
+        startEditorDragging(roomEditor,editorHeader);
 
         editorContent.addEventListener(
             "input",
@@ -1084,79 +1088,4 @@ function calculateRoomTextSize(room) {
     document.body.removeChild(roomElement);
 
     return Math.max(1, textSize - 1);
-}
-
-
-// ============================================================
-// EDITOR DRAGGING
-// ============================================================
-
-// Adds dragging behavior to the room editor's header.
-//
-// This is separate from room dragging because the editor is a screen-space
-// UI element rather than a map-space object.
-function startEditorDragging(editorHeader) {
-    let startMouseX;
-    let startMouseY;
-    let startEditorX;
-    let startEditorY;
-
-    // Records the mouse/editor positions when the header is grabbed.
-    function startDrag(event) {
-        event.preventDefault();
-
-        startMouseX = event.clientX;
-        startMouseY = event.clientY;
-
-        startEditorX =
-            roomEditor.offsetLeft;
-
-        startEditorY =
-            roomEditor.offsetTop;
-
-        document.addEventListener(
-            "mousemove",
-            drag
-        );
-
-        document.addEventListener(
-            "mouseup",
-            stopDrag
-        );
-    }
-
-    // Moves the editor to follow the mouse.
-    function drag(event) {
-        const mouseDeltaX =
-            event.clientX - startMouseX;
-
-        const mouseDeltaY =
-            event.clientY - startMouseY;
-
-        roomEditor.style.left =
-            `${startEditorX + mouseDeltaX}px`;
-
-        roomEditor.style.top =
-            `${startEditorY + mouseDeltaY}px`;
-
-        roomEditor.style.right = "auto";
-    }
-
-    // Removes the temporary drag listeners when the editor is released.
-    function stopDrag() {
-        document.removeEventListener(
-            "mousemove",
-            drag
-        );
-
-        document.removeEventListener(
-            "mouseup",
-            stopDrag
-        );
-    }
-
-    editorHeader.addEventListener(
-        "mousedown",
-        startDrag
-    );
 }

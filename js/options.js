@@ -27,3 +27,21 @@ export function setConfirmGroupDelete(value) {
     confirmGroupDelete = value;
 }
 
+
+// ============================================================
+// GROUP OPTIONS
+// ============================================================
+
+let groupDefaults = false;
+
+// Returns whether grouping should use the default grouping options without
+// displaying the grouping-options window.
+export function getGroupDefaults() {
+    return groupDefaults;
+}
+
+// Sets whether grouping should use the default grouping options without
+// displaying the grouping-options window.
+export function setGroupDefaults(value) {
+    groupDefaults = value;
+}

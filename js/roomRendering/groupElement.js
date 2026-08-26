@@ -137,9 +137,20 @@ export function createGroupElement(
         (event) => {
             event.stopPropagation();
 
-            // Keep the group above its member rooms in the DOM so it remains
-            // the interaction surface after selection or other map updates.
-            groupElement.parentElement.appendChild(
+            // Keep the group and its member rooms above unrelated rooms in the
+            // DOM so the selected group remains the visible interaction surface.
+            for (const room of groupRooms) {
+                const roomElement =
+                    mapElement.querySelector(
+                        `.room[data-room-id="${room.roomID}"]`
+                    );
+
+                if (roomElement) {
+                    mapElement.appendChild(roomElement);
+                }
+            }
+
+            mapElement.appendChild(
                 groupElement
             );
 
