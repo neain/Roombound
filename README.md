@@ -864,6 +864,8 @@ Current Step: Polish List (see header)
 * when selecting a group, re-append all its grouped rooms so that they are 'on top' of any other rooms.
 44. add delete button (keyboard) performing the same action as delete buttons in the editors
 45. add group name to its render and give it smart coloring.
+46. when saving a group... figure out how to leave color alone?
+47. when creating a group. the dom order MUST be preserved. its not currently.
 
 55. add options menu. ideas are below
 60. add ability to save a map/url combination so you can hand it to a friend and they just load it without any extra work. should just be an export button in the main file list?
@@ -897,6 +899,7 @@ add a new users explanation box on an empty map refresh - a getting started sect
 
 ### Possible Bugs
 * check connectionEditorDragging.js in /connections/ I removed it export, so kill it later if nothing missed it.
+* Ctrl + Mousewheel caused a code explosion. fix it! I need to examine my space ship from up close!
 
 ### Next Version Ideas
 #### The Great Grouping V1.1

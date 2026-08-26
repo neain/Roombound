@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 1.1,
   "app": "Roombound",
   "editorSize": {
     "width": 400,
@@ -229,9 +229,190 @@
         "height": 5
       },
       "textSize": 16
+    },
+    {
+      "roomID": "room_015",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 31,
+        "y": 8
+      },
+      "size": {
+        "width": 5,
+        "height": 5
+      },
+      "textSize": 16,
+      "shape": "diamond"
+    },
+    {
+      "roomID": "room_017",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 29,
+        "y": 14
+      },
+      "size": {
+        "width": 4,
+        "height": 4
+      },
+      "textSize": 16,
+      "shape": "triangle"
+    },
+    {
+      "roomID": "room_018",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 32,
+        "y": 4
+      },
+      "size": {
+        "width": 3,
+        "height": 5
+      },
+      "textSize": 16,
+      "shape": "triangle"
+    },
+    {
+      "roomID": "room_019",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 31,
+        "y": 12
+      },
+      "size": {
+        "width": 5,
+        "height": 5
+      },
+      "textSize": 16,
+      "shape": "hexagon"
+    },
+    {
+      "roomID": "room_020",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 34,
+        "y": 14
+      },
+      "size": {
+        "width": 4,
+        "height": 4
+      },
+      "textSize": 16,
+      "shape": "triangle"
+    },
+    {
+      "roomID": "room_021",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 29,
+        "y": 17
+      },
+      "size": {
+        "width": 2,
+        "height": 2
+      },
+      "textSize": 16,
+      "shape": "star"
+    },
+    {
+      "roomID": "room_022",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 31,
+        "y": 17
+      },
+      "size": {
+        "width": 2,
+        "height": 2
+      },
+      "textSize": 16,
+      "shape": "star"
+    },
+    {
+      "roomID": "room_023",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 34,
+        "y": 17
+      },
+      "size": {
+        "width": 2,
+        "height": 2
+      },
+      "textSize": 16,
+      "shape": "star"
+    },
+    {
+      "roomID": "room_024",
+      "name": "New Room",
+      "floor": 1,
+      "notes": "",
+      "connections": [],
+      "position": {
+        "x": 36,
+        "y": 17
+      },
+      "size": {
+        "width": 2,
+        "height": 2
+      },
+      "textSize": 16,
+      "shape": "star"
     }
   ],
-  "groups": [],
+  "groups": [
+    {
+      "groupID": "group_001",
+      "roomIDs": [
+        "room_015",
+        "room_017",
+        "room_018",
+        "room_019",
+        "room_020",
+        "room_021",
+        "room_022",
+        "room_023",
+        "room_024"
+      ],
+      "name": "Spaceship",
+      "floor": 1,
+      "position": {
+        "x": 29,
+        "y": 4
+      },
+      "size": {
+        "width": 9,
+        "height": 15
+      },
+      "notes": "",
+      "clearLabels": true,
+      "textSize": 16
+    }
+  ],
   "connections": [
     {
       "roomA": null,
