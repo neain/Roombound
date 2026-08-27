@@ -2,6 +2,10 @@ import {
     renderMap
 } from "./mapRenderer.js";
 
+import {
+    getAllowFloorZero
+} from "./options.js";
+
 
 // ============================================================
 // ROOMBOUND FLOOR CONTROL
@@ -12,16 +16,6 @@ import {
 // changing floors can trigger the normal map re-render.
 //
 // ============================================================
-
-// ============================================================
-// FLOOR SETTINGS
-// ============================================================
-
-// Whether the hidden/debug floor 0 should be available to the user.
-//
-// FUTURE: This should eventually be supplied by the Options menu rather
-// than being hardcoded here.
-const SHOW_FLOOR_ZERO = false;
 
 // ============================================================
 // FLOOR HELPERS
@@ -91,7 +85,7 @@ function getFloorOptions(map) {
 function getAdjacentFloor(currentFloor, direction) {
     let floor = currentFloor + direction;
 
-    if (!SHOW_FLOOR_ZERO && floor === 0) {
+    if (floor === 0 && !getAllowFloorZero()) {
         floor += direction;
     }
 

@@ -27,8 +27,6 @@ import {
     setDefaultNewRoomHeight,
     getDefaultNewRoomColor,
     setDefaultNewRoomColor,
-    getDefaultNewRoomTextColor,
-    setDefaultNewRoomTextColor,
     getConnectionEndpointSelectorSize,
     setConnectionEndpointSelectorSize,
     getAllowFloorZero,
@@ -82,14 +80,6 @@ export function openOptionsWindow() {
             "Default room color",
             getDefaultNewRoomColor,
             setDefaultNewRoomColor
-        )
-    );
-
-    roomDefaultsSection.appendChild(
-        createColorOption(
-            "Default room text color",
-            getDefaultNewRoomTextColor,
-            setDefaultNewRoomTextColor
         )
     );
 

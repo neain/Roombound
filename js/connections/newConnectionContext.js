@@ -15,8 +15,8 @@
 // ============================================================
 
 import {
-    CONNECTION_ROOM_RANGE
-} from "../mapUtils.js";
+    getConnectionEndpointSelectorSize
+} from "../options.js";
 
 import {
     createConnection
@@ -642,23 +642,26 @@ function getRoomsInRange(
 
     const rooms = [];
 
+    const endpointSelectorSize =
+        getConnectionEndpointSelectorSize();
+
     const rangeLeft =
         sourceRoom.position.x -
-        CONNECTION_ROOM_RANGE;
+        endpointSelectorSize;
 
     const rangeTop =
         sourceRoom.position.y -
-        CONNECTION_ROOM_RANGE;
+        endpointSelectorSize;
 
     const rangeRight =
         sourceRoom.position.x +
         sourceRoom.size.width +
-        CONNECTION_ROOM_RANGE;
+        endpointSelectorSize;
 
     const rangeBottom =
         sourceRoom.position.y +
         sourceRoom.size.height +
-        CONNECTION_ROOM_RANGE;
+        endpointSelectorSize;
 
     for (const room of map.rooms) {
         if (

@@ -190,13 +190,9 @@ export function setDefaultSnapToGrid(value, save = true) {
 
 let defaultNewRoomColor = "#333333";
 
-// Default text color for newly created rooms.
-
-let defaultNewRoomTextColor = "#ffffff";
-
 // Default width for newly created rooms, in grid units.
 
-let defaultNewRoomWidth = 5;
+let defaultNewRoomWidth = 10;
 
 // Default height for newly created rooms, in grid units.
 
@@ -219,26 +215,6 @@ export function setDefaultNewRoomColor(value, save = true) {
     if (!save) {return;}
 
     saveOption("defaultNewRoomColor", defaultNewRoomColor);
-
-}
-
-// Returns the default text color for newly created rooms.
-
-export function getDefaultNewRoomTextColor() {
-
-    return defaultNewRoomTextColor;
-
-}
-
-// Sets the default text color for newly created rooms.
-
-export function setDefaultNewRoomTextColor(value, save = true) {
-
-    defaultNewRoomTextColor = value;
-
-    if (!save) {return;}
-
-    saveOption("defaultNewRoomTextColor", defaultNewRoomTextColor);
 
 }
 
@@ -381,12 +357,6 @@ export function initializeOptions() {
 
     if (savedDefaultNewRoomColor !== null) {
         setDefaultNewRoomColor(savedDefaultNewRoomColor, false);
-    }
-
-    const savedDefaultNewRoomTextColor = getSavedOption("defaultNewRoomTextColor");
-
-    if (savedDefaultNewRoomTextColor !== null) {
-        setDefaultNewRoomTextColor(savedDefaultNewRoomTextColor, false);
     }
 
     const savedDefaultNewRoomWidth = getSavedOption("defaultNewRoomWidth");

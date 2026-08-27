@@ -32,11 +32,6 @@ export const MAP_SIZE = 10020;
 // The map uses its center as the origin for grid coordinates.
 export const MAP_ORIGIN = MAP_SIZE / 2;
 
-
-// Maximum grid-space distance used when finding rooms that can be connected
-// to a connection endpoint.
-export const CONNECTION_ROOM_RANGE = 10;
-
 export const CONNECTION_CLICK_RANGE = 2;
 
 

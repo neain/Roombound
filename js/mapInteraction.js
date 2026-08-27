@@ -106,6 +106,11 @@ export function initializeMapInteractions({
     openMultiRoomEditor,
     createConnection
 }) {
+console.log(
+    "OPEN NEW ROOM CONTEXT FUNCTION:",
+    openNewRoomContext
+);
+
     let isPanning = false;
     let hasPanned = false;
     let panStartX;
@@ -473,6 +478,11 @@ export function initializeMapInteractions({
                 () => {
                     closeContextMenu();
 
+console.log(
+    "CALLING OPEN NEW ROOM CONTEXT:",
+    openNewRoomContext
+);
+
                     openNewRoomContext(
                         mapView,
                         mapElement,
@@ -720,6 +730,11 @@ export function initializeMapInteractions({
                 event.clientY -
                 mapRect.top +
                 mapElement.scrollTop;
+
+console.log(
+    "CALLING OPEN NEW ROOM CONTEXT:",
+    openNewRoomContext
+);
 
             openNewRoomContext(
                 mapView,

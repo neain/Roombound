@@ -7,9 +7,12 @@
 // If working on connection search ranges or map lookups, inspect:
 //   ../mapUtils.js
 import {
-    CONNECTION_ROOM_RANGE,
     getRoom
 } from "../mapUtils.js";
+
+import {
+    getConnectionEndpointSelectorSize
+} from "../options.js";
 
 
 // ============================================================
@@ -65,17 +68,19 @@ export function getRoomsInEndpointRange(
         const roomBottom =
             roomTop + room.size.height;
 
+        const ConnectionEndpointSelectorSize = getConnectionEndpointSelectorSize();
+
         const rangeLeft =
-            endpoint.x - CONNECTION_ROOM_RANGE;
+            endpoint.x - ConnectionEndpointSelectorSize;
 
         const rangeTop =
-            endpoint.y - CONNECTION_ROOM_RANGE;
+            endpoint.y - ConnectionEndpointSelectorSize;
 
         const rangeRight =
-            endpoint.x + CONNECTION_ROOM_RANGE;
+            endpoint.x + ConnectionEndpointSelectorSize;
 
         const rangeBottom =
-            endpoint.y + CONNECTION_ROOM_RANGE;
+            endpoint.y + ConnectionEndpointSelectorSize;
 
         if (
             roomRight >= rangeLeft &&

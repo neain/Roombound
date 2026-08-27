@@ -9,10 +9,13 @@ import {
 } from "../connectionRenderer.js";
 
 import {
-    CONNECTION_ROOM_RANGE,
     getRoom,
     gridToPixels
 } from "../mapUtils.js";
+
+import {
+    getConnectionEndpointSelectorSize
+} from "../options.js";
 
 // Removes the existing connection graphics and redraws every connection
 // currently stored in the map.
@@ -594,7 +597,7 @@ export function renderConnections(mapView) {
 
             const rangeSize =
                 gridToPixels(
-                    CONNECTION_ROOM_RANGE * 2,
+                    getConnectionEndpointSelectorSize() * 2,
                     zoom
                 );
 

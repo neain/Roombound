@@ -790,7 +790,7 @@ Steps 1–26 are currently working in prototype form.
 Current Step: Polish List (see header)
 
 
-### Polish List - Current Step 67
+### Polish List - Current Step 65
 1. Zoom bar + visible zoom level + possibly keyboard shortcuts.
 2. Hamburger menu with New Map, Save/Load, Options, etc.
 3. Swap the floor-selection arrows.
@@ -870,6 +870,7 @@ Current Step: Polish List (see header)
 * hand GPT roomEditor and see what can be refactored to be... reduced in size. after we pulled out the shell code... its line count went UP
 51. legacy code in roomEditor to save its window size to the map can be pulled out?
 52. when editing connections in the connection editor... the ability to ADD a connection would be great.
+64. add persistance to keep options between sessions. 
 65. add options menu. ideas are below
 * options menu items: 
 Change the default color of rooms and room text. 
@@ -879,7 +880,7 @@ Give the user the ability to have a floor 0. default is floor 1, floor 2, and fl
 Confirm before deleting? (add tooltip that with this checked, you will break apart combined rooms with no check)
 Group sub room option - auto delete sub rooms? (add tooltip with explanation, the var should already exist)
 Snap to Grid - if true then moving a room will snap it to the grid and pressing shift will 'unlock' it from the grid. if false, then nothing snaps UNLESS you hold shift. (this exists already)
-66. add persistance to keep options between sessions. 
+
    67. remove obsolete close() from ALL the windows.
 68. Verify window.js is the single place deciding how all open windows get closed.
 

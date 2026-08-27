@@ -22,6 +22,11 @@ import {
     createWindow
 } from "./window.js";
 
+import {
+    getDefaultNewRoomWidth,
+    getDefaultNewRoomHeight,
+    getDefaultNewRoomColor
+} from "./options.js";
 
 // ============================================================
 // CONTEXT STATE
@@ -49,7 +54,11 @@ export function openNewRoomContext(
     renderMap,
     mapPosition = null
 ) {
+    console.log("start of openNewRoomContext");
+
     closeNewRoomContext();
+
+    console.log("start of openNewRoomContext... after the close");
 
     creationContext = {
         mapView,
@@ -448,6 +457,15 @@ function createTemporaryRoom(
     let worldX;
     let worldY;
 
+    const roomWidth =
+        getDefaultNewRoomWidth();
+
+    const roomHeight =
+        getDefaultNewRoomHeight();
+
+    const roomColor =
+        getDefaultNewRoomColor();
+
     for (const room of map.rooms) {
         const match =
             room.roomID.match(/^room_(\d+)$/);
@@ -464,7 +482,10 @@ function createTemporaryRoom(
     }
 
     roomNumber =
-        String(highestRoomNumber + 1).padStart(3, "0");
+        String(highestRoomNumber + 1).padStart(
+            3,
+            "0"
+        );
 
     if (mapPosition) {
         worldX =
@@ -499,17 +520,21 @@ function createTemporaryRoom(
         notes: "",
         connections: [],
         position: {
-            x: Math.round(worldX - 2.5),
-            y: Math.round(worldY - 2.5)
+            x: Math.round(
+                worldX - roomWidth / 2
+            ),
+            y: Math.round(
+                worldY - roomHeight / 2
+            )
         },
         size: {
-            width: 5,
-            height: 5
+            width: roomWidth,
+            height: roomHeight
         },
+        color: roomColor,
         textSize: 16
     };
 }
-
 
 // ============================================================
 // CONTEXT UPDATE
@@ -541,7 +566,6 @@ function updateContext() {
         preview
     );
 }
-
 
 // ============================================================
 // CONTEXT SIZING
@@ -590,6 +614,11 @@ function createRoomFromContext() {
         mapView,
         renderMap
     } = creationContext;
+
+    console.log(
+        "ROOM BEING CREATED:",
+        room.size
+    );
 
     mapView.map.rooms.push(room);
 
