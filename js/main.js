@@ -19,14 +19,6 @@ import {
     initializeOptions
 } from "./options.js";
 
-// Options window.
-// CURRENT: openOptionsWindow()
-// If working on the options UI, inspect:
-//   ./optionsWindow.js
-import {
-    openOptionsWindow
-} from "./optionsWindow.js";
-
 // Map rendering.
 // CURRENT: initializeMapRenderer()
 // If working on the complete visual redraw of the map, inspect:
@@ -41,9 +33,6 @@ import {
 // If working on the Roombound JSON file format or file persistence, inspect:
 //   ./mapStorage.js
 import {
-    saveMap,
-    saveMapAs,
-    loadMap,
     loadMapFromUrl,
     loadMapFromData,
     clearCurrentFileHandle
@@ -344,27 +333,7 @@ console.log(
 // ============================================================
 
 // Connect the menu UI to the application's map operations.
-initializeMapMenu({
-    saveMap: () => saveMap(map),
-    saveMapAs: () => saveMapAs(map),
-    loadMap: async () => {
-        const loaded =
-            await loadMap(map);
-
-        if (loaded) {
-            clearMapUrl();
-        }
-    },
-    loadMapFromUrl: (url) =>
-        loadMapFromUrl(map, url),
-    openOptions: () => {
-        openOptionsWindow();
-    },
-    refreshForNewMap: createNewMap,
-    hasMapContent: () =>
-        map.rooms.length > 0 ||
-        map.connections.length > 0
-});
+initializeMapMenu({map,refreshForNewMap: createNewMap});
 
 // ============================================================
 // MAP INTERACTION INITIALIZATION

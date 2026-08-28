@@ -302,6 +302,24 @@ export function loadMapFromData(
 // LOAD FROM URL
 // ============================================================
 
+export async function validateMapUrl(url) {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+        throw new Error(
+            `The server returned ${response.status} ${response.statusText}.`
+        );
+    }
+
+    const data = await response.json();
+
+    if (!isValidMapData(data)) {
+        throw new Error("Invalid Roombound map file.");
+    }
+
+    return data;
+}
+
 /**
  * Loads a map JSON object from a URL.
  *
@@ -312,15 +330,8 @@ export async function loadMapFromUrl(
     map,
     url
 ) {
-    const response = await fetch(url);
-
-    if (!response.ok) {
-        throw new Error(
-            `The server returned ${response.status} ${response.statusText}.`
-        );
-    }
-
-    const data = await response.json();
+    const data =
+        await validateMapUrl(url);
 
     currentFileHandle = null;
 

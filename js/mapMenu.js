@@ -9,6 +9,7 @@
 //   - New Map confirmation dialog.
 //   - Load Map submenu.
 //   - Load-from-URL dialog.
+//   - Create Share Link dialog.
 //   - Dispatching Save/Load operations through callbacks supplied
 //     by main.js.
 //   - Dispatching map operations through callbacks supplied by main.js.
@@ -16,16 +17,32 @@
 // This module owns the menu UI and user interaction. Map operations remain
 // owned by their respective application modules.//
 
+// ============================================================
+// IMPORTS
+// ============================================================
 
-// Creates and initializes the hamburger menu and its associated dialogs.
-export function initializeMapMenu({
+// Map saving, loading, and URL validation.
+// If working on the Roombound JSON format, file persistence,
+// URL loading, or map validation, inspect:
+//   ./mapStorage.js
+import {
     saveMap,
     saveMapAs,
     loadMap,
-    loadMapFromUrl,
-    openOptions,
-    refreshForNewMap,
-    hasMapContent
+    validateMapUrl
+} from "./mapStorage.js";
+
+// Options window.
+// If working on the Options UI, inspect:
+//   ./optionsWindow.js
+import {
+    openOptionsWindow
+} from "./optionsWindow.js";
+
+// Creates and initializes the hamburger menu and its associated dialogs.
+export function initializeMapMenu({
+    map,
+    refreshForNewMap
 }) {
     // ========================================================
     // MENU ELEMENTS
@@ -57,11 +74,15 @@ export function initializeMapMenu({
     const loadFromFileMenuButton = document.createElement("button");
     const loadFromUrlMenuButton = document.createElement("button");
 
-    // Options placeholder.
+    // Create Share Link menu button.
+    const createShareLinkMenuButton = document.createElement("button");
+
+    // Options
     const optionsMenuButton = document.createElement("button");
 
     // General Help button.
     const helpMenuButton = document.createElement("button");
+
 
     // ========================================================
     // NEW MAP DIALOG ELEMENTS
@@ -125,6 +146,51 @@ export function initializeMapMenu({
 
 
     // ========================================================
+    // CREATE SHARE LINK DIALOG ELEMENTS
+    // ========================================================
+
+    // Create-share-link dialog overlay.
+    const createShareLinkOverlay =
+        document.createElement("div");
+
+    // Create-share-link dialog.
+    const createShareLinkDialog =
+        document.createElement("div");
+
+    // Dialog title.
+    const createShareLinkTitle =
+        document.createElement("h2");
+
+    // Dialog message.
+    const createShareLinkMessage =
+        document.createElement("p");
+
+    // URL input.
+    const createShareLinkInput =
+        document.createElement("input");
+
+    // Generated share link.
+    const createShareLinkResult =
+        document.createElement("a");
+
+    // Dialog buttons.
+    const createShareLinkButtons =
+        document.createElement("div");
+
+    // Create button.
+    const createShareLinkButton =
+        document.createElement("button");
+
+    // Cancel button.
+    const cancelCreateShareLinkButton =
+        document.createElement("button");
+
+    // Help button.
+    const createShareLinkHelpButton =
+        document.createElement("button");
+
+
+    // ========================================================
     // MENU CONFIGURATION
     // ========================================================
 
@@ -150,6 +216,9 @@ export function initializeMapMenu({
     loadMapMenuButton.classList.add("menu-item-with-submenu");
     loadMapMenuButton.textContent = "Load Map";
 
+    createShareLinkMenuButton.classList.add("menu-item");
+    createShareLinkMenuButton.textContent = "Create Share Link";
+
     optionsMenuButton.classList.add(
         "menu-item",
         "menu-item-separated"
@@ -159,6 +228,7 @@ export function initializeMapMenu({
 
     helpMenuButton.classList.add("menu-item");
     helpMenuButton.textContent = "Help";
+
 
     // ========================================================
     // LOAD SUBMENU CONFIGURATION
@@ -186,6 +256,7 @@ export function initializeMapMenu({
     menuPanel.appendChild(saveMapMenuButton);
     menuPanel.appendChild(saveMapAsMenuButton);
     menuPanel.appendChild(loadMapMenuButton);
+    menuPanel.appendChild(createShareLinkMenuButton);
 
     menuPanel.appendChild(optionsMenuButton);
 
@@ -195,6 +266,7 @@ export function initializeMapMenu({
     menuControl.appendChild(menuPanel);
 
     document.body.appendChild(menuControl);
+
 
     // ========================================================
     // NEW MAP DIALOG CONFIGURATION
@@ -282,6 +354,108 @@ export function initializeMapMenu({
 
 
     // ========================================================
+    // CREATE SHARE LINK DIALOG CONFIGURATION
+    // ========================================================
+
+    createShareLinkOverlay.classList.add(
+        "create-share-link-overlay"
+    );
+
+    createShareLinkOverlay.style.display = "none";
+
+    createShareLinkDialog.classList.add(
+        "create-share-link-dialog"
+    );
+
+    createShareLinkTitle.textContent =
+        "Create Share Link";
+
+    createShareLinkMessage.textContent =
+        "Enter the web address of a Roombound map JSON file.";
+
+    createShareLinkInput.type = "url";
+    createShareLinkInput.placeholder =
+        "https://example.com/roombound-map.json";
+    createShareLinkInput.setAttribute(
+        "aria-label",
+        "Map URL"
+    );
+
+    createShareLinkResult.textContent =
+        "Roombound Map URL";
+
+    createShareLinkResult.setAttribute(
+        "aria-label",
+        "Roombound share link"
+    );
+
+    createShareLinkResult.style.display =
+        "none";
+
+    createShareLinkButtons.classList.add(
+        "create-share-link-buttons"
+    );
+
+    createShareLinkButton.classList.add(
+        "create-share-link-create"
+    );
+    createShareLinkButton.textContent =
+        "Create Share Link";
+
+    cancelCreateShareLinkButton.classList.add(
+        "create-share-link-cancel"
+    );
+    cancelCreateShareLinkButton.textContent =
+        "Cancel";
+
+    createShareLinkHelpButton.classList.add(
+        "create-share-link-help"
+    );
+    createShareLinkHelpButton.textContent =
+        "Help";
+
+    createShareLinkButtons.appendChild(
+        createShareLinkButton
+    );
+
+    createShareLinkButtons.appendChild(
+        cancelCreateShareLinkButton
+    );
+
+    createShareLinkButtons.appendChild(
+        createShareLinkHelpButton
+    );
+
+    createShareLinkDialog.appendChild(
+        createShareLinkTitle
+    );
+
+    createShareLinkDialog.appendChild(
+        createShareLinkMessage
+    );
+
+    createShareLinkDialog.appendChild(
+        createShareLinkInput
+    );
+
+    createShareLinkDialog.appendChild(
+        createShareLinkResult
+    );
+
+    createShareLinkDialog.appendChild(
+        createShareLinkButtons
+    );
+
+    createShareLinkOverlay.appendChild(
+        createShareLinkDialog
+    );
+
+    document.body.appendChild(
+        createShareLinkOverlay
+    );
+
+
+    // ========================================================
     // MENU VISIBILITY
     // ========================================================
 
@@ -327,11 +501,13 @@ export function initializeMapMenu({
     function openNewMapDialog() {
         closeMenu();
 
-        if (!hasMapContent()) {
-            refreshForNewMap();
-            return;
-        }
-
+    if (
+        map.rooms.length === 0 &&
+        map.connections.length === 0
+    ) {
+        refreshForNewMap();
+        return;
+    }
         newMapOverlay.style.display = "flex";
     }
 
@@ -351,7 +527,40 @@ export function initializeMapMenu({
         loadUrlOverlay.style.display = "flex";
         loadUrlInput.focus();
     }
+    
+    // Clears the map URL while preserving the current page.
+    function clearMapUrl() {
+        window.history.pushState(
+            {},
+            "",
+            window.location.pathname
+        );
+    }
 
+
+
+    // ========================================================
+    // CREATE SHARE LINK HELPERS
+    // ========================================================
+
+    // Closes the Create Share Link dialog.
+    function closeCreateShareLinkDialog() {
+        createShareLinkOverlay.style.display = "none";
+    }
+
+    function openCreateShareLinkDialog() {
+        createShareLinkInput.value = "";
+        createShareLinkResult.removeAttribute("href");
+        createShareLinkResult.style.display = "none";
+
+        createShareLinkButton.textContent =
+            "Create Share Link";
+
+        shareLinkReady = false;
+
+        createShareLinkOverlay.style.display = "flex";
+        createShareLinkInput.focus();
+    }
 
     // ========================================================
     // MENU EVENTS
@@ -376,7 +585,7 @@ export function initializeMapMenu({
         "click",
         () => {
             closeMenu();
-            saveMap();
+            saveMap(map);
         }
     );
 
@@ -384,15 +593,21 @@ export function initializeMapMenu({
         "click",
         () => {
             closeMenu();
-            saveMapAs();
+            saveMapAs(map);
         }
     );
 
     loadFromFileMenuButton.addEventListener(
         "click",
-        () => {
+        async () => {
             closeMenu();
-            loadMap();
+
+            const loaded =
+                await loadMap(map);
+
+            if (loaded) {
+                clearMapUrl();
+            }
         }
     );
 
@@ -404,11 +619,19 @@ export function initializeMapMenu({
         }
     );
 
+    createShareLinkMenuButton.addEventListener(
+        "click",
+        () => {
+            closeMenu();
+            openCreateShareLinkDialog();
+        }
+    );
+
     optionsMenuButton.addEventListener(
         "click",
         () => {
             closeMenu();
-            openOptions();
+            openOptionsWindow();
         }
     );
 
@@ -424,6 +647,7 @@ export function initializeMapMenu({
             );
         }
     );
+
 
     // ========================================================
     // NEW MAP EVENTS
@@ -480,7 +704,7 @@ export function initializeMapMenu({
 
     loadUrlButton.addEventListener(
         "click",
-        async () => {
+        () => {
             const url = loadUrlInput.value.trim();
 
             if (!url) {
@@ -488,15 +712,19 @@ export function initializeMapMenu({
                 return;
             }
 
-            try {
-                await loadMapFromUrl(url);
-                closeLoadUrlDialog();
-            } catch (error) {
-                alert(
-                    "Could not load the map from that URL.\n\n" +
-                    error.message
-                );
-            }
+            const currentUrl =
+                new URL(window.location.href);
+
+            currentUrl.search = "";
+            currentUrl.hash = "";
+
+            currentUrl.searchParams.set(
+                "map",
+                url
+            );
+
+            window.location.href =
+                currentUrl.toString();
         }
     );
 
@@ -536,6 +764,109 @@ export function initializeMapMenu({
             }
 
             closeLoadUrlDialog();
+        }
+    );
+
+
+    // ========================================================
+    // CREATE SHARE LINK EVENTS
+    // ========================================================
+
+    let shareLinkReady = false;
+
+    createShareLinkButton.addEventListener(
+        "click",
+        async () => {
+            if (shareLinkReady) {
+                try {
+                    await navigator.clipboard.writeText(
+                        createShareLinkResult.href
+                    );
+
+                    createShareLinkButton.textContent =
+                        "Copied!";
+
+                    setTimeout(() => {
+                        createShareLinkButton.textContent =
+                            "Copy URL";
+                    }, 1500);
+                } catch (error) {
+                    alert(
+                        "Could not copy the share link.\n\n" +
+                        error.message
+                    );
+                }
+
+                return;
+            }
+
+            const url =
+                createShareLinkInput.value.trim();
+
+            if (!url) {
+                alert("Please enter a map URL.");
+                return;
+            }
+
+            try {
+                await validateMapUrl(url);
+
+                createShareLinkResult.href =
+                    "https://neain.github.io/Roombound/?map=" +
+                    url;
+
+                createShareLinkResult.style.display =
+                    "block";
+
+                createShareLinkButton.textContent =
+                    "Copy URL";
+
+                shareLinkReady = true;
+            } catch (error) {
+                alert(
+                    "Could not create a share link.\n\n" +
+                    error.message
+                );
+            }
+        }
+    );
+
+    cancelCreateShareLinkButton.addEventListener(
+        "click",
+        closeCreateShareLinkDialog
+    );
+
+    createShareLinkHelpButton.addEventListener(
+        "click",
+        () => {
+            window.open(
+                "help.html#create-share-link",
+                "_blank",
+                "noopener"
+            );
+        }
+    );
+
+    createShareLinkInput.addEventListener(
+        "keydown",
+        (event) => {
+            if (event.key !== "Enter") {
+                return;
+            }
+
+            event.preventDefault();
+            createShareLinkButton.click();
+        }
+    );
+
+    createShareLinkOverlay.addEventListener(
+        "click",
+        (event) => {
+            if (event.target !== createShareLinkOverlay) {
+                return;
+            }
+
+            closeCreateShareLinkDialog();
         }
     );
 

@@ -370,6 +370,65 @@ body {
     cursor: pointer;
 }
 
+/* ============================================================
+   CREATE SHARE LINK
+   ============================================================ */
+
+.create-share-link-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0, 0, 0, 0.5);
+
+    z-index: 2000;
+}
+
+.create-share-link-dialog {
+    width: 420px;
+    max-width: calc(100vw - 40px);
+
+    padding: 20px;
+
+    color: black;
+    background: white;
+    border: 2px solid black;
+}
+
+.create-share-link-dialog h2 {
+    margin: 0 0 12px;
+
+    font-size: 1.2rem;
+}
+
+.create-share-link-dialog p {
+    margin: 0 0 12px;
+}
+
+.create-share-link-dialog input {
+    width: 100%;
+
+    padding: 6px 8px;
+}
+
+.create-share-link-buttons {
+    display: flex;
+    justify-content: flex-start;
+
+    gap: 6px;
+
+    margin-top: 16px;
+}
+
+.create-share-link-buttons button {
+    padding: 6px 10px;
+
+    cursor: pointer;
+}
 
 /* ============================================================
    EDITOR WINDOWS
@@ -1092,7 +1151,6 @@ body {
     color: black;
     background: white;
     border: none;
-    border-bottom: 1px solid #ddd;
 
     text-align: left;
     font-size: 14px;
@@ -1462,4 +1520,10 @@ body {
     height: 30px;
 
     padding: 0;
+}
+
+.create-share-link-dialog a {
+    display: block;
+    margin-top: 6px;
+    text-align: center;
 }
