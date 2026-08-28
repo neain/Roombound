@@ -790,7 +790,7 @@ Steps 1–26 are currently working in prototype form.
 Current Step: Polish List (see header)
 
 
-### Polish List - Current Step 65
+### Polish List - Current Step 72
 1. Zoom bar + visible zoom level + possibly keyboard shortcuts.
 2. Hamburger menu with New Map, Save/Load, Options, etc.
 3. Swap the floor-selection arrows.
@@ -897,8 +897,9 @@ The map must be accessible using an HTTP request from your browser. The server h
 If the browser reports a CORS error, Roombound cannot bypass it. Configure the server hosting the map to allow requests from the Roombound site.
 GitHub/GitHub Pages can be used to host maps for sharing.
 
-* fix default options room size
 * when the edit room box is summoned, give focus to the name field
+* Remove the buttons at the very bottom right of the map... maybe? probably? ask GPT.
+* remove the instant tooltip on the main map. its already fairly easy to get to the notes on any room, dont need a hover option.
 
 73.
 add a new users explanation box on an empty map refresh - a getting started section

@@ -192,7 +192,7 @@ let defaultNewRoomColor = "#333333";
 
 // Default width for newly created rooms, in grid units.
 
-let defaultNewRoomWidth = 10;
+let defaultNewRoomWidth = 5;
 
 // Default height for newly created rooms, in grid units.
 

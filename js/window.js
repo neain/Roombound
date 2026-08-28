@@ -24,7 +24,7 @@ const openWindows = new Set();
 export function closeWindowsOnMapClick() {
 
     for (const window of openWindows) {
-        window.remove();
+        window.close();
     }
 
 }
@@ -47,6 +47,10 @@ export function createWindow(
         title: titleElement,
         closeButton,
         content,
+
+        close: () => {
+            onClose();
+        },
 
         // Generic window geometry and lifecycle operations.
         setSize: (

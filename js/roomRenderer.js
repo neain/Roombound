@@ -119,7 +119,9 @@ export const hoverExceptions = [
     "position",
     "size",
     "editorSize",
-    "textSize"
+    "textSize",
+    "color",
+    "shape"
 ];
 
 // Rooms that should remain visible while the connection editor is open,
