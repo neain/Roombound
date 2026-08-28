@@ -900,6 +900,7 @@ GitHub/GitHub Pages can be used to host maps for sharing.
 * when the edit room box is summoned, give focus to the name field
 * Remove the buttons at the very bottom right of the map... maybe? probably? ask GPT.
 * remove the instant tooltip on the main map. its already fairly easy to get to the notes on any room, dont need a hover option.
+* Fix copy paste. its pasting a group object as a room object. also, change how paste works. needs to paste to the current floor.
 
 73.
 add a new users explanation box on an empty map refresh - a getting started section
