@@ -885,11 +885,10 @@ Snap to Grid - if true then moving a room will snap it to the grid and pressing 
 
 70. add ability to save a map/url combination so you can hand it to a friend and they just load it without any extra work. should just be an export button in the main file list?
 * make it work like the loadURL in that you give it a URL of a map... and IF it loads without any issues... then we can give the user a link with https://neain.github.io/Roombound/?map= and then the url they just gave us.
-
 71. remove most? of the items from the init into mapStorage. if 90% of them need the map... just hand it the map!
 
 
-
+72.
 * add tutorial to web page: GitHub sharing walkthrough
 Loading a Map from a URL
 Roombound can load a map directly from a URL:
@@ -898,6 +897,10 @@ The map must be accessible using an HTTP request from your browser. The server h
 If the browser reports a CORS error, Roombound cannot bypass it. Configure the server hosting the map to allow requests from the Roombound site.
 GitHub/GitHub Pages can be used to host maps for sharing.
 
+* fix default options room size
+* when the edit room box is summoned, give focus to the name field
+
+73.
 add a new users explanation box on an empty map refresh - a getting started section
 
 
@@ -1006,6 +1009,8 @@ planned connection-system rework.
 
 This refactor should happen after the current polish list is complete and
 before beginning the next-version connection rework.
+
+* update documentation
 
 #### Connection Endpoint Refactor V1.3
 

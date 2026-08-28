@@ -1,0 +1,294 @@
+/* ============================================================
+   ROOMBOUND HELP PAGE
+   ============================================================ */
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+
+    background: #eeeeee;
+    color: #222222;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+a {
+    color: #0000cc;
+    text-decoration: underline;
+}
+
+a:visited {
+    color: #551a8b;
+}
+
+a:hover {
+    color: #cc0000;
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.site-header {
+    position: fixed;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
+    z-index: 1000;
+
+    border-bottom: 3px double #666666;
+
+    background: #ffffff;
+}
+
+.header-inner {
+    width: min(900px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 8px 0 8px;
+}
+
+.site-header h1 {
+    margin: 0;
+
+    color: #003399;
+
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 34px;
+    letter-spacing: 2px;
+    line-height: 1.1;
+}
+
+.tagline {
+    margin: 0;
+
+    color: #666666;
+
+    font-family: "Times New Roman", serif;
+    font-size: 16px;
+    font-style: italic;
+    line-height: 1.1;
+}
+
+
+/* ============================================================
+   PAGE LAYOUT
+   ============================================================ */
+
+.page-layout {
+    position: relative;
+
+    width: min(900px, calc(100% - 40px));
+    margin: 0 auto;
+    padding-top: 115px;
+}
+
+#help-content {
+    width: min(680px, 100%);
+
+    padding: 24px 28px;
+
+    border: 1px solid #999999;
+
+    background: #ffffff;
+
+    box-sizing: border-box;
+}
+
+
+/* ============================================================
+   DOCUMENTATION
+   ============================================================ */
+
+#help-content h2 {
+    margin: 28px 0 10px;
+
+    padding-bottom: 3px;
+
+    border-bottom: 1px solid #999999;
+
+    color: #003399;
+
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 23px;
+}
+
+#help-content h2:first-child {
+    margin-top: 0;
+}
+
+#help-content h3 {
+    margin: 22px 0 6px;
+
+    color: #444444;
+
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 18px;
+}
+
+#help-content p {
+    margin: 10px 0;
+}
+
+#help-content hr {
+    margin: 28px 0;
+
+    border: 0;
+    border-top: 1px solid #aaaaaa;
+}
+
+.back-to-top {
+    margin-top: 35px !important;
+
+    text-align: right;
+
+    font-size: 12px;
+}
+
+
+/* ============================================================
+   FLOATING PAGE NAVIGATION
+   ============================================================ */
+
+.page-navigation {
+    position: fixed;
+
+    top: 120px;
+
+    margin-left: -210px;
+
+    width: 190px;
+
+    border: 1px solid #777777;
+
+    background: #eeeeee;
+
+    box-shadow: 3px 3px 0 #bbbbbb;
+}
+
+.navigation-title {
+    padding: 6px 8px;
+
+    border-bottom: 1px solid #777777;
+
+    background: #dddddd;
+
+    color: #222222;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.page-navigation ul {
+    margin: 0;
+    padding: 6px 0;
+
+    list-style: none;
+}
+
+.page-navigation li {
+    margin: 0;
+    padding: 0;
+}
+
+.page-navigation a {
+    display: block;
+
+    padding: 3px 8px;
+
+    font-size: 12px;
+}
+
+.page-navigation a:hover {
+    background: #ffffff;
+}
+
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+
+.site-footer {
+    width: min(900px, calc(100% - 40px));
+    margin: 35px auto 20px;
+
+    padding-top: 12px;
+
+    border-top: 3px double #666666;
+
+    color: #666666;
+
+    font-family: "Times New Roman", serif;
+    font-size: 12px;
+    text-align: center;
+}
+
+.site-footer p {
+    margin: 3px 0;
+}
+
+.footer-joke {
+    margin-top: 12px !important;
+
+    font-size: 11px;
+    font-style: italic;
+}
+
+
+/* ============================================================
+   SMALLER SCREENS
+   ============================================================ */
+
+@media (max-width: 1050px) {
+    .page-navigation {
+        position: static;
+
+        width: min(680px, 100%);
+        margin: 15px 0 0;
+    }
+
+    .page-navigation ul {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .page-navigation li {
+        margin-right: 4px;
+    }
+
+    .page-navigation a {
+        padding: 3px 7px;
+    }
+}
+
+@media (max-width: 600px) {
+    .header-inner,
+    .page-layout,
+    .site-footer {
+        width: calc(100% - 20px);
+    }
+
+    #help-content {
+        padding: 18px;
+    }
+
+    .site-header h1 {
+        font-size: 28px;
+    }
+}
+
+.home-link {
+    margin: 6px 0 0;
+
+    font-size: 12px;
+}

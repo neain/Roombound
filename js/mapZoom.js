@@ -70,16 +70,12 @@ export function initializeMapZoom({
 
     zoomInButton.addEventListener("click", () => {
         changeZoom(
-            mapElement,
-            mapView,
             mapView.zoom + ZOOM_STEP
         );
     });
 
     zoomOutButton.addEventListener("click", () => {
         changeZoom(
-            mapElement,
-            mapView,
             mapView.zoom - ZOOM_STEP
         );
     });
@@ -105,8 +101,6 @@ export function initializeMapZoom({
         }
 
         changeZoom(
-            mapElement,
-            mapView,
             steppedZoom
         );
     });
@@ -143,8 +137,6 @@ export function initializeMapZoom({
             Math.round(rawZoom / ZOOM_STEP) * ZOOM_STEP;
 
         changeZoom(
-            mapElement,
-            mapView,
             steppedZoom
         );
     });
@@ -209,8 +201,6 @@ function createZoomMarks(
             event.stopPropagation();
 
             changeZoom(
-                mapElement,
-                mapView,
                 markZoom
             );
         });
