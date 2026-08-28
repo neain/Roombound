@@ -4,7 +4,6 @@
 import {
     createRoomElement,
     renderGhostRooms,
-    roomTooltip,
     ghostRooms,
     createGroupElement
 } from "../roomRenderer.js";
@@ -22,11 +21,6 @@ export function renderRooms(
     currentFloor
 ) {
     const visibleRoomIDs = new Set();
-
-    if (!roomTooltip.parentElement) {
-        roomTooltip.classList.add("room-tooltip");
-        mapElement.appendChild(roomTooltip);
-    }
 
     mapElement.querySelectorAll(".room").forEach(
         (roomElement) => roomElement.remove()

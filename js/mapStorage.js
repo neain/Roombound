@@ -183,6 +183,7 @@ export async function saveMapAs(map) {
             const fileHandle =
                 await window.showSaveFilePicker({
                     suggestedName,
+                    startIn: "documents",
                     types: [
                         {
                             description: "Roombound Map",
@@ -362,6 +363,7 @@ export async function loadMap(
         try {
             const [fileHandle] =
                 await window.showOpenFilePicker({
+                    startIn: "documents",
                     types: [
                         {
                             description: "Roombound Map",

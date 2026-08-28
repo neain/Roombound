@@ -42,8 +42,7 @@ import {
 // Room selection without opening the room editor.
 import {
     selectRoomWithoutEditor,
-    openRoomEditor,
-    closeRoomEditor
+    openRoomEditor
 } from "./roomEditor.js";
 
 import {
@@ -55,13 +54,7 @@ import {
 } from "./window.js";
 
 import {
-    closeMultiRoomEditor
-} from "./multiRoomEditor.js";
-
-import {
     openConnectionEditor,
-    closeConnectionEditor,
-    closeNewConnectionContext,
     deleteConnections
 } from "./connectionEditor.js";
 

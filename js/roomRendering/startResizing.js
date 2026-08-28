@@ -19,14 +19,6 @@ import {
     renderConnections
 } from "../connectionRenderer.js";
 
-// Shared room-rendering helpers.
-// CURRENT: roomTooltip
-// If changing shared room rendering state or tooltip behavior, inspect:
-//   ./rendererHelper.js
-import {
-    roomTooltip
-} from "../roomRenderer.js";
-
 // Resizes a room while the bottom-right resize handle is dragged.
 //
 // The room's top-left position remains fixed. Width and height are stored in
@@ -50,8 +42,6 @@ export function startResizing(
     }
 
     event.preventDefault();
-
-    roomTooltip.style.display = "none";
 
     // Updates the room size while the mouse is moving.
     function resize(event) {

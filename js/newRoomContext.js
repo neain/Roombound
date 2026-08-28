@@ -515,7 +515,7 @@ function createTemporaryRoom(
 
     return {
         roomID: `room_${roomNumber}`,
-        name: "",
+        name: "Room ",
         floor: currentFloor,
         notes: "",
         connections: [],

@@ -8,8 +8,6 @@
 //   ../mapUtils.js
 import {
     gridToWorldPixels,
-    gridToPixels,
-    pixelsToGrid,
     GRID_SIZE
 } from "../mapUtils.js";
 
@@ -20,14 +18,6 @@ import {
 import {
     renderConnections
 } from "../connectionRenderer.js";
-
-// Shared room-rendering helpers.
-// CURRENT: roomTooltip
-// If changing shared room rendering state or tooltip behavior, inspect:
-//   ./rendererHelper.js
-import {
-    roomTooltip
-} from "../roomRenderer.js";
 
 // Room selection state.
 // The dragging system uses the current selection to determine whether the
@@ -77,8 +67,6 @@ export function startDragging(
     }
 
     event.preventDefault();
-
-    roomTooltip.style.display = "none";
 
     // A group is represented visually by its member rooms. Convert a group
     // into those rooms before building the actual movement list.

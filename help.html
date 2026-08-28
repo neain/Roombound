@@ -20,7 +20,7 @@
         <main id="help-content">
 
             <section>
-                <h2>Welcome to Roombound!</h2>
+                <h2><marquee behavior="alternate" direction="left" scrollamount="6" >WELCOME TO ROOMBOUND!</marquee></h2>
 
                 <p>
                     So, what is Roombound?
@@ -83,8 +83,37 @@
 
                 <h2>Rooms</h2>
 
+                <h3>What is a Room?</h3>
+
+                <p> 
+                    A room is just an indicator that <strong>something</strong> happens there. In a normal TTRPG, that's usually a room. You fight goblins and orcs, find and (hopefully) disable traps, discover treasure, solve puzzles—you do any and everything inside of a room.
+                </p><p>
+                    In Roombound, a room is a logical unit where you can set its name, how large it is (really only useful when compared to other rooms), what color it is (if color helps it mean anything special to you), what shape it is (I tend to leave mine as very basic shapes based on what the battle map gave us, or use a star to remind myself that a room has something important), and a notes section where you can put any text you want.
+                </p>
+
                 <p>
-                    More information about rooms will be available here.
+                    <strong>Moving Rooms.</strong><br>
+                    To move a room, you just need to click and drag the room. If you have multiple rooms selected (see <a href="#selection">Selection</a> below), dragging one of the selected rooms will drag all of them.
+                </p>
+
+                <p>
+                    <strong>Editing Rooms.</strong><br>
+                    There are two easy ways to edit a room. Double click on the room (this will only ever pull up the room editor for that specific room), or you can right click a room and select <a href="#room-editor">"Open Room Editor"</a> (this should always be the very top option).
+                </p>
+                <h2 id="room-editor">Room Editor</h2>
+                <p><img src="./help_me/screenshots/room_1.png" alt="Room Options">
+                    <ul>
+                        <li><strong>Name</strong>: changing this field will change the name you can see on the room</li>
+                        <li><strong>Floor</strong>: you may have made and filled out a room on the wrong floor. This lets you move the room without deleting it and remaking it.</li>
+                        <li><strong>Shape</strong>: There are 7 different shapes, Rectangle, Circle, Triangle, Diamond, Hexagon, Octagon, and a Star. there is no real change on any layer other than visual, but it can be nice to set a room to something else because it either fits the battle map better, or reminds you that there was something special there.</li>
+                        <li><strong>Color</strong>: this is both a text field and a color picker depending on your need. you can find a color that you like in the picker, and then copy it to be used again later.</li>
+                        <li><strong>Notes</strong>: Anything text based can go in here. (see example screenshot above)</li>
+                    </ul><ul>
+                        <li><strong>Save</strong>: This will save what you have changed in the room (note that the title of the room editor will let you know that <i>something</i> has changed.) </li>
+                        <li><strong>Edit Connections</strong>: This will bring you to the connection editor with all the connections that this room is a part of (see <a href="#connections">Connections</a> below)</li>
+                        <li><strong>Delete</strong>: Hitting this will delete the room that you selected. This can be changed in the <a href="#options">Options</a> window.</li>
+                        <li><strong>Cancel</strong>: Hitting this button will cancel any changes and the room will not change.</li>
+                    </ul>
                 </p>
 
                 <h2>Groups</h2>
@@ -93,7 +122,7 @@
                     More information about groups will be available here.
                 </p>
 
-                <h2>Connections</h2>
+                <h2 id="connections">Connections</h2>
 
                 <p>
                     More information about connections will be available here.

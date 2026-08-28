@@ -4,8 +4,6 @@
 import {
     startResizing,
     startDragging,
-    getRoomHoverInfo,
-    roomTooltip,
     isRoomSelected,
     addRoomToSelection,
     selectRoom,
@@ -125,29 +123,6 @@ export function createRoomElement(
     );
 
     roomElement.appendChild(resizeHandle);
-
-    roomElement.addEventListener(
-        "mouseenter",
-        (event) => {
-            roomTooltip.textContent =
-                getRoomHoverInfo(room);
-
-            roomTooltip.style.left =
-                `${event.clientX + 10}px`;
-
-            roomTooltip.style.top =
-                `${event.clientY + 10}px`;
-
-            roomTooltip.style.display = "block";
-        }
-    );
-
-    roomElement.addEventListener(
-        "mouseleave",
-        () => {
-            roomTooltip.style.display = "none";
-        }
-    );
 
     roomElement.style.left =
         `${gridToWorldPixels(room.position.x, zoom)}px`;

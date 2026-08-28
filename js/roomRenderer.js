@@ -96,33 +96,8 @@ import {
 
 
 // ============================================================
-// ROOM RENDERING HELPERS
-// ============================================================
-
-// Builds the information displayed in a room tooltip.
-//
-// Internal room properties listed in hoverExceptions are excluded.
-import {
-    getRoomHoverInfo as getRoomHoverInfoImpl
-} from "./roomRendering/rendererHelper.js";
-
-
-// ============================================================
 // ROOM STATE
 // ============================================================
-
-// Room properties that should not be displayed in the room tooltip or editor.
-// These are structural/internal properties rather than normal room details.
-export const hoverExceptions = [
-    "roomID",
-    "connections",
-    "position",
-    "size",
-    "editorSize",
-    "textSize",
-    "color",
-    "shape"
-];
 
 // Rooms that should remain visible while the connection editor is open,
 // even when they are on another floor.
@@ -135,9 +110,6 @@ let roomClipboard = null;
 // Selection state is owned by the router because multiple room-selection
 // functions and other room-rendering functions need access to the same state.
 let selectedRooms = [];
-
-// Shared tooltip used when hovering over rooms.
-export const roomTooltip = document.createElement("div");
 
 // ============================================================
 // GHOST ROOM STATE
@@ -266,15 +238,6 @@ export function selectIntersectingRooms(...args) {
     return selectIntersectingRoomsImpl(...args);
 }
 
-
-// ============================================================
-// ROOM RENDERING HELPERS
-// ============================================================
-
-// Routes requests to build the information displayed in a room tooltip.
-export function getRoomHoverInfo(...args) {
-    return getRoomHoverInfoImpl(...args);
-}
 
 // ============================================================
 // ROOM DUPLICATION HELPERS

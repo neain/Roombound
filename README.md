@@ -901,9 +901,14 @@ GitHub/GitHub Pages can be used to host maps for sharing.
 * Remove the buttons at the very bottom right of the map... maybe? probably? ask GPT.
 * remove the instant tooltip on the main map. its already fairly easy to get to the notes on any room, dont need a hover option.
 * Fix copy paste. its pasting a group object as a room object. also, change how paste works. needs to paste to the current floor.
+* see if we can change the user visible fields in the editors to use Caps Case (or whatever its called)
+* add room shape into the default options
+* change how a connection connected to none side and null room, works. it needs to be visible.
 
-73.
-add a new users explanation box on an empty map refresh - a getting started section
+73. Done Early
+* New Getting Started window, using the existing generic window.
+* Two links — demo map + Help.
+* Persistent option controlling whether the window appears on empty-map load.
 
 
 * Nail down bugs
