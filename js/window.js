@@ -174,11 +174,15 @@ function setWindowSize(
     width,
     height
 ) {
-    windowElement.style.width =
-        `${width}px`;
+    if (width !== undefined) {
+        windowElement.style.width =
+            `${width}px`;
+    }
 
-    windowElement.style.height =
-        `${height}px`;
+    if (height !== undefined) {
+        windowElement.style.height =
+            `${height}px`;
+    }
 }
 
 

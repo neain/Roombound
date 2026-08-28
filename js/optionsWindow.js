@@ -18,6 +18,8 @@ import {
     getConfirmGroupDelete,
     setConfirmGroupDelete,
     getGroupDefaults,
+    getShowGettingStarted,
+    setShowGettingStarted,
     setGroupDefaults,
     getDefaultSnapToGrid,
     setDefaultSnapToGrid,
@@ -170,6 +172,15 @@ export function openOptionsWindow() {
             getCloseWindowsOnClick,
             setCloseWindowsOnClick,
             "When enabled, clicking empty map space closes open windows."
+        )
+    );
+
+    windowBehaviorSection.appendChild(
+        createCheckboxOption(
+            "Show Getting Started on empty maps",
+            getShowGettingStarted,
+            setShowGettingStarted,
+            "When enabled, the Getting Started window appears when an empty map is loaded."
         )
     );
 

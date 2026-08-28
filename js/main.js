@@ -11,11 +11,21 @@ import {
     openNewRoomContext
 } from "./newRoomContext.js";
 
+// Getting Started window.
+// CURRENT: openGettingStarted()
+// If working on the new-user introduction shown on empty maps,
+// inspect:
+//   ./gettingStartedWindow.js
+import {
+    openGettingStarted
+} from "./gettingStartedWindow.js";
+
 // Options.
 // CURRENT: initializeOptions()
 // If working on persistent application options, inspect:
 //   ./options.js
 import {
+    getShowGettingStarted,
     initializeOptions
 } from "./options.js";
 
@@ -354,6 +364,22 @@ initializeMapInteractions({
 // INITIAL MAP LOAD
 // ============================================================
 
+// Opens the Getting Started window when enabled and the current map is empty.
+function showGettingStartedIfNeeded() {
+    if (!getShowGettingStarted()) {
+        return;
+    }
+
+    if (
+        map.rooms.length !== 0 ||
+        map.groups.length !== 0
+    ) {
+        return;
+    }
+
+    openGettingStarted();
+}
+
 // Loads the map specified by the URL, or renders the default map when no
 // URL map has been supplied.
 async function initializeMap() {
@@ -402,5 +428,7 @@ initializeMap().then(
 
         mapElement.scrollTop =
             (MAP_SIZE * mapView.zoom - mapElement.clientHeight) / 2;
+
+        showGettingStartedIfNeeded();
     }
 );

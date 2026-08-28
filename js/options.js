@@ -179,43 +179,51 @@ export function setDefaultSnapToGrid(value, save = true) {
 
 }
 
-
+// ============================================================
+// NEW USER WINDOW
 // ============================================================
 
-// NEW ROOM DEFAULTS
 
+// Whether to show the Getting Started window when an empty map is loaded.
+let showGettingStarted = true;
+
+
+// Returns whether the Getting Started window should be shown.
+export function getShowGettingStarted() {
+    return showGettingStarted;
+}
+
+
+// Sets whether the Getting Started window should be shown.
+export function setShowGettingStarted(value, save = true) {
+    showGettingStarted = Boolean(value);
+    if (!save) {return;}
+    saveOption("showGettingStarted", showGettingStarted);
+}
+
+// ============================================================
+// NEW ROOM DEFAULTS
 // ============================================================
 
 // Default fill color for newly created rooms.
-
 let defaultNewRoomColor = "#333333";
 
 // Default width for newly created rooms, in grid units.
-
 let defaultNewRoomWidth = 5;
 
 // Default height for newly created rooms, in grid units.
-
 let defaultNewRoomHeight = 5;
 
 // Returns the default fill color for newly created rooms.
-
 export function getDefaultNewRoomColor() {
-
     return defaultNewRoomColor;
-
 }
 
 // Sets the default fill color for newly created rooms.
-
 export function setDefaultNewRoomColor(value, save = true) {
-
     defaultNewRoomColor = value;
-
     if (!save) {return;}
-
     saveOption("defaultNewRoomColor", defaultNewRoomColor);
-
 }
 
 // Returns the default width for newly created rooms.
@@ -357,6 +365,15 @@ export function initializeOptions() {
 
     if (savedDefaultNewRoomColor !== null) {
         setDefaultNewRoomColor(savedDefaultNewRoomColor, false);
+    }
+
+    const savedShowGettingStarted = getSavedOption("showGettingStarted");
+
+    if (savedShowGettingStarted !== null) {
+        setShowGettingStarted(
+            parseBoolean(savedShowGettingStarted),
+            false
+        );
     }
 
     const savedDefaultNewRoomWidth = getSavedOption("defaultNewRoomWidth");
