@@ -902,7 +902,6 @@ GitHub/GitHub Pages can be used to host maps for sharing.
 * Fix copy paste. its pasting a group object as a room object. also, change how paste works. needs to paste to the current floor.
 * see if we can change the user visible fields in the editors to use Caps Case (or whatever its called)
 * add room shape into the default options
-* change how a connection connected to none side and null room, works. it needs to be visible.
 * Change name of the multi-room editor TO Multi-Room Editor
 
 73. Done Early
@@ -914,13 +913,8 @@ GitHub/GitHub Pages can be used to host maps for sharing.
 * Nail down bugs
 * The URL for the github pages that is hosting the webpage based in github is https://neain.github.io/Roombound/ technicly at index.html, but thats implied.
 
-### Things for codex to decide when re-factoring the entire file
-* HoverExceptions in roomRenderer.js ... best to leave it as is? or invert it because we have FAR more fields that are not user facing than are. factor in how complex the refactor is going to be.
-
 ### Possible Bugs
-* check connectionEditorDragging.js in /connections/ I removed it export, so kill it later if nothing missed it.
-* editorWindowDragging.js and editorWindowStack.js lost their export functions. if something tries to call for them, it needs to be folded into the window.js ecosystem
-
+ 
 ### Next Version Ideas
 #### The Great Grouping V1.1
 See 'polish' step 38. That's what started this. What looked like a relatively
