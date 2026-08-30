@@ -116,29 +116,45 @@
                     </ul>
                 </p>
 
-                <h2>Groups</h2>
-
-                <p>
-                    More information about groups will be available here.
-                </p>
-
                 <h2 id="connections">Connections</h2>
 
                 <p>
-                    More information about connections will be available here.
+                    A connection is anything that would connect a room to another room. This could be as simple as a door or archway, or if your rooms are representing worlds in a game where there is interplanetary travel, they could be warp ways. and anything and everything in between. This generally wont be the trapped hallway unless you determine that the hall is then unimportant for the future and is just a means to get from one room to another.
+                </p>
+
+                <h2>Groups</h2>
+
+                <p>
+                    Groups are the internal name of what happens when you combine rooms. All a group is, is the combination of multiple rooms, into a single larger 'room'. In all ways, a group is just a room with a shape made up of other shapes. If you want to see a very basic application of this, check out the <a href="https://neain.github.io/Roombound/?map=https://raw.githubusercontent.com/neain/Roombound/refs/heads/main/Saved%20Maps%20-%20TEMP/roombound-map-Welcome-to-my-nightmare.json">demo map</a> and look to the right side of the screen for the group. 
+                </p><p>
+                    To group multiple rooms, all you need to do is <a href="#selection">select</a> them and then right click and select "Combine Rooms". Or if you already have the <a href="#multi-room_editor">Multi-Room Editor</a>  open, just ensure that the right rooms are <a href="#selection">selected</a> and click "Combine".
                 </p>
 
                 <h2>Saving &amp; Loading Maps</h2>
 
                 <p>
-                    More information about saving and loading maps will be
-                    available here.
-                </p>
+                    <strong>Saving</strong><br>
+                    To save a map to your comupter, you simply need to click in the Menu button in the top left of the map. Select Save, and then choose where to save it. By default it should open in your "My Documents" folder. This will save the map in the JSON file format which can then be loaded by Roombound once more into the same map.
+                </p><img src="./help_me/screenshots/saveLoad.png" alt="Saving and Loading"><p>
+                    <strong>Loading from File</strong><br>
+                    there are a few different ways to load a map, but the easiest by far is to load from file. Selecting this option will bring up the file menu and you can navigate to wherever you saved the map the previous time. By default, it should open in your "My Documents" folder.
+                </p><p><img src="./help_me/screenshots/saveLoad_2.png" alt="Saving and Loading">
+                </p><p id="load_from_url">
+                    <strong>Loading from URL</strong><br>
+                    You can instead, load a map from the internet. this requires that you know where online the map is stored. For example the demo map is stored at
+                <p> <a href="https://raw.githubusercontent.com/neain/Roombound/refs/heads/main/Saved%20Maps%20-%20TEMP/roombound-map-Welcome-to-my-nightmare.json">https://raw.githubusercontent.com/neain/Roombound/refs/heads/main/Saved%20Maps%20-%20TEMP/roombound-map-Welcome-to-my-nightmare.json</a> </p><p>
+                    and if you copy that URL and paste it into the URL section, that will load the demo map. (See <a href="#sharing_maps">Sharing Maps</a> for a more complete explination on how to do this yourself)
+                </p><img src="./help_me/screenshots/saveLoad_3.png" alt="Saving and Loading">
 
-                <h2>Sharing Maps</h2>
+                <h2 id="sharing_maps">Sharing Maps</h2>
 
                 <p>
-                    More information about sharing maps will be available here.
+                    To share a map, you need to know where it is stored online. One of the easiest places I know to store a map online that makes it accessable is from <a href="https://docs.github.com/en/get-started/onboarding/getting-started-with-your-github-account#part-1-configuring-your-github-account">GitHub</a>. Once you have made an account and uploaded your file, you will need to find the raw URL of your file. (<a href="https://docs.github.com/en/enterprise-cloud@latest/repositories/working-with-files/using-files/viewing-and-understanding-files#viewing-or-copying-the-raw-file-content">GitHub raw file documentation</a>)
+                </p><p>
+                    Once you have the URL of your file, you can select "Create Share Link" from the options menu and then enter your URL.
+                </p><p><img src="./help_me/screenshots/makeURL_1.png" alt="Make a share link"><img src="./help_me/screenshots/makeURL_2.png" alt="Make a share link"></p>
+                <p>
+                    When you hit "Create Share Link", Roombound will check to make sure that the file that is being loaded is a Roombound map, and as long as it is, will give you the URL that you can then easily hand off to your friends, to send them to Roombound with that exact map loaded. This is in fact, the exact process I used to make the demo map link that you have probably seen on this page.
                 </p>
                 <h2>Floor Control</h2>
 

@@ -899,11 +899,11 @@ GitHub/GitHub Pages can be used to host maps for sharing.
 
 * when the edit room box is summoned, give focus to the name field
 * Remove the buttons at the very bottom right of the map... maybe? probably? ask GPT.
-* remove the instant tooltip on the main map. its already fairly easy to get to the notes on any room, dont need a hover option.
 * Fix copy paste. its pasting a group object as a room object. also, change how paste works. needs to paste to the current floor.
 * see if we can change the user visible fields in the editors to use Caps Case (or whatever its called)
 * add room shape into the default options
 * change how a connection connected to none side and null room, works. it needs to be visible.
+* Change name of the multi-room editor TO Multi-Room Editor
 
 73. Done Early
 * New Getting Started window, using the existing generic window.
@@ -1074,6 +1074,9 @@ Add undo/redo (Ctrl+Z / Ctrl+Y). This may be as simple as tracking map-level cha
 #### Z-Order V1.5
 * replace the dom ordering with a real Z-Order or even just array list so that refreshing the screen (such as on a zoom) doesnt mess up room re-ordering
 * when creating a group. the order MUST be preserved. its not currently. (moved to V1.5 as even after chasing a bunch of things it was messing up)
+
+#### Mobile App V2.5
+* turn roombound into a mobile app. only a few issues with the gestures and some can be possibly solved by saving a small area for 'mouse only' gestures. panning and zooming specificly. long presses for right clicking. and seeing if I like the idea of removing shift as a modifier (or leaving it as an option only) and using that behavior as a default.
 
 ## 14. Initial MVP
 
