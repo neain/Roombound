@@ -161,21 +161,6 @@ initializeMapRenderer({
     mapView
 });
 
-// The toolbar displayed in the bottom-right corner of the map.
-const mapTools = document.createElement("div");
-
-// Button used to begin creating a new connection.
-const newConnectionButton = document.createElement("button");
-
-// Button used to begin creating a new room.
-const newRoomButton = document.createElement("button");
-
-// Tooltip displayed when hovering over the New Room button.
-const newRoomTooltip = document.createElement("div");
-
-// Tooltip displayed when hovering over the New Connection button.
-const newConnectionTooltip = document.createElement("div");
-
 // ============================================================
 // INITIAL DOM CONFIGURATION
 // ============================================================
@@ -223,83 +208,6 @@ initializeMapZoom({
 });
 
 // ============================================================
-// MAP TOOLS
-// ============================================================
-
-mapTools.classList.add("map-tools");
-
-newConnectionButton.classList.add("map-tool-button");
-newConnectionButton.textContent = "→+";
-newConnectionButton.setAttribute("aria-label", "New Connection");
-
-newRoomButton.classList.add("map-tool-button");
-newRoomButton.textContent = "+";
-newRoomButton.setAttribute("aria-label", "New Room");
-
-
-// ============================================================
-// MAP TOOL EVENTS
-// ============================================================
-
-// Start room creation when the New Room button is clicked.
-newRoomButton.addEventListener(
-    "click",
-    () => {
-        openNewRoomContext(
-            mapView,
-            mapElement,
-            renderMap
-        );
-    }
-);
-
-// Start connection creation from the currently selected room when the
-// New Connection button is clicked.
-newConnectionButton.addEventListener(
-    "click",
-    () => {
-        const selectedRooms =
-            getSelectedRooms();
-
-        // A new connection requires exactly one selected room as its starting
-        // endpoint. Multiple selected rooms are intentionally ambiguous.
-        if (selectedRooms.length !== 1) {
-            alert(
-                "Please select exactly one room before creating a new connection."
-            );
-            return;
-        }
-
-        createConnection(
-            mapView,
-            selectedRooms[0]
-        );
-    }
-);
-
-
-// ============================================================
-// MAP TOOL TOOLTIPS
-// ============================================================
-
-newRoomTooltip.classList.add("map-tool-tooltip");
-newRoomTooltip.textContent = "New Room";
-
-newRoomButton.appendChild(newRoomTooltip);
-
-newConnectionTooltip.classList.add("map-tool-tooltip");
-newConnectionTooltip.textContent = "New Connection";
-
-newConnectionButton.appendChild(newConnectionTooltip);
-
-
-// Add the map tool buttons to the toolbar and add the toolbar to the page.
-mapTools.appendChild(newConnectionButton);
-mapTools.appendChild(newRoomButton);
-
-document.body.appendChild(mapTools);
-
-// ============================================================
 // FLOOR CONTROL INITIALIZATION
 // ============================================================
 
@@ -322,7 +230,6 @@ mapElement.style.setProperty(
     "--grid-size",
     `${GRID_SIZE}px`
 );
-
 
 // ============================================================
 // DEBUG INFORMATION

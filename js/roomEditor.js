@@ -98,6 +98,11 @@ function isSelectedGroup() {
     );
 }
 
+// Converts a data property name into a user-visible field label.
+function getFieldLabel(key) {
+    return key.charAt(0).toUpperCase() + key.slice(1);
+}
+
 // Opens the room editor for a specific room or group.
 //
 // Groups use the same editor as rooms. Fields that do not apply to groups are
@@ -674,6 +679,11 @@ function updateRoomEditor() {
             fieldContainer.appendChild(input);
             editorContent.appendChild(fieldContainer);
 
+            if (key === "name") {
+                input.focus();
+                input.select();
+            }
+            
             continue;
         }
 
@@ -690,7 +700,11 @@ function updateRoomEditor() {
             `${key}: ${value}`;
 
         editorContent.appendChild(field);
+
+
     }
+
+
 
     // --------------------------------------------------------
     // Shape

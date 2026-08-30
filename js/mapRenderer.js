@@ -112,3 +112,8 @@ export function renderMap() {
 
     console.log("Zoom Level:", mapView.zoom);
 }
+
+// Returns the floor currently being displayed.
+export function getCurrentFloor() {
+    return mapView.currentFloor;
+}

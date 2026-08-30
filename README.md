@@ -903,6 +903,7 @@ GitHub/GitHub Pages can be used to host maps for sharing.
 * see if we can change the user visible fields in the editors to use Caps Case (or whatever its called)
 * add room shape into the default options
 * Change name of the multi-room editor TO Multi-Room Editor
+* shapes in the room editor are getting double fielded
 
 73. Done Early
 * New Getting Started window, using the existing generic window.
